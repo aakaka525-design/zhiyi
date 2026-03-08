@@ -1,0 +1,9 @@
+{
+    "name": "com.smarttranslator.ocr_host",
+    "description": "智译翻译 - 本地 OCR 服务 (PaddleOCR)",
+    "path": "/Users/xa/Desktop/projiect/zhiyi/native-host/ocr_host.py",
+    "type": "stdio",
+    "allowed_origins": [
+        "chrome-extension://hgmbmgjhcafbaafljbhmnclkhmejjmif/"
+    ]
+}

@@ -1,0 +1,344 @@
+/* ========================================
+   Popup 样式 - ISFJ Soft & Airy
+   ======================================== */
+
+.popup-container {
+    width: 380px;
+    min-height: 520px;
+    padding: 20px;
+    background-color: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 装饰性背景球 - 增加柔和感 */
+.popup-container::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    z-index: 0;
+}
+
+/* ===== 头部 ===== */
+.popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 1;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-icon {
+    width: 26px;
+    height: 26px;
+    color: var(--accent);
+}
+
+.logo-text {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: 0.5px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* ===== 语言选择器 ===== */
+.language-selector {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-secondary);
+    padding: 6px;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-color);
+}
+
+.language-selector .select {
+    flex: 1;
+    background: transparent;
+    border: none;
+    text-align: center;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.swap-btn {
+    width: 32px;
+    height: 32px;
+    background: var(--bg-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+    color: var(--accent);
+    transition: var(--transition);
+}
+
+.swap-btn:hover {
+    transform: rotate(180deg) scale(1.05);
+    background: var(--accent);
+    color: white;
+}
+
+/* ===== 输入区域 ===== */
+.input-section {
+    position: relative;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.input-section:focus-within {
+    background: white;
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent-light);
+}
+
+.input-section .textarea {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-size: 15px;
+    color: var(--text-primary);
+    resize: none;
+    min-height: 100px;
+    line-height: 1.6;
+}
+
+.input-section .textarea:focus {
+    outline: none;
+}
+
+.input-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-color);
+}
+
+.char-count {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-tertiary);
+}
+
+/* ===== 翻译按钮 ===== */
+.translate-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px var(--accent-glow);
+    transition: var(--transition);
+}
+
+.translate-btn:hover {
+    background: var(--accent-light);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px var(--accent-glow);
+}
+
+.translate-btn:active {
+    transform: translateY(0);
+}
+
+/* ===== 结果区域 ===== */
+.result-section {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+    display: none;
+    /* 初始隐藏 */
+    flex-direction: column;
+}
+
+.result-section.active {
+    display: flex;
+    animation: slideUp 0.4s ease;
+}
+
+.result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--bg-secondary);
+}
+
+.result-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.result-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.result-content {
+    padding: 16px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 15px;
+    color: var(--text-primary);
+    line-height: 1.7;
+}
+
+/* ===== 快捷功能 ===== */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.quick-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 10px;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.quick-btn:hover {
+    background: var(--bg-secondary);
+    border-color: var(--accent-light);
+    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.quick-btn svg {
+    color: var(--text-tertiary);
+    transition: var(--transition);
+}
+
+.quick-btn:hover svg {
+    color: var(--accent);
+    transform: scale(1.1);
+}
+
+/* ===== 底部 ===== */
+.popup-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 12px;
+}
+
+.service-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-xl);
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #D1D1D1;
+}
+
+.status-dot.active {
+    background: #A5D6A7;
+    /* 柔和绿 */
+    box-shadow: 0 0 8px rgba(165, 214, 167, 0.5);
+}
+
+.version {
+    font-size: 11px;
+    color: var(--text-tertiary);
+}
+
+/* ===== 动画 ===== */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ===== 通用组件 ===== */
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.btn-icon:hover {
+    background: var(--bg-secondary);
+    color: var(--accent);
+}
+
+.input {
+    outline: none;
+    transition: var(--transition);
+}

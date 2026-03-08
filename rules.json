@@ -1,0 +1,29 @@
+[
+    {
+        "id": 1,
+        "priority": 1,
+        "action": {
+            "type": "modifyHeaders",
+            "requestHeaders": [
+                {
+                    "header": "Referer",
+                    "operation": "set",
+                    "value": "https://www.toongod.org/"
+                },
+                {
+                    "header": "Origin",
+                    "operation": "set",
+                    "value": "https://www.toongod.org"
+                }
+            ]
+        },
+        "condition": {
+            "urlFilter": "*tngcdn.com/*",
+            "resourceTypes": [
+                "image",
+                "xmlhttprequest",
+                "other"
+            ]
+        }
+    }
+]

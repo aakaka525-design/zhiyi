@@ -1,0 +1,178 @@
+
+import { StorageManager } from '../../src/core/storage.js';
+
+let creatingOffscreen = null;
+
+async function ensureOffscreenDocument() {
+    const offscreenUrl = chrome.runtime.getURL('offscreen/offscreen.html');
+
+    const existingContexts = await chrome.runtime.getContexts({
+        contextTypes: ['OFFSCREEN_DOCUMENT'],
+        documentUrls: [offscreenUrl]
+    });
+
+    if (existingContexts.length > 0) return;
+
+    if (creatingOffscreen) {
+        await creatingOffscreen;
+        return;
+    }
+
+    creatingOffscreen = chrome.offscreen.createDocument({
+        url: offscreenUrl,
+        reasons: ['AUDIO_PLAYBACK'],
+        justification: 'Playing TTS audio for translation extension'
+    });
+
+    await creatingOffscreen;
+    creatingOffscreen = null;
+}
+
+export async function playAudioViaOffscreen(audioData, speed = 1.0) {
+    await ensureOffscreenDocument();
+    return chrome.runtime.sendMessage({ action: 'playAudio', audioData, speed });
+}
+
+export async function handleTestTTS(request) {
+    try {
+        const provider = request.provider || 'system';
+
+        // 对于系统语音，在 options 页面直接使用 speechSynthesis
+        if (provider === 'system') {
+            return { success: true, message: '系统语音无需测试API，请直接在页面使用' };
+        }
+
+        // 对于其他提供商，检查对应的 API Key 是否已配置
+        const settings = await StorageManager.getSettings();
+        let hasKey = false;
+
+        if (provider === 'openai' && settings.openaiApiKey) hasKey = true;
+        if (provider === 'google' && settings.geminiApiKey) hasKey = true;
+        if (provider === 'glm' && settings.deepseekApiKey) hasKey = true;
+
+        if (!hasKey) {
+            return { success: false, error: `请先配置 ${provider} 的 API Key` };
+        }
+
+        return { success: true, message: 'API Key 已配置' };
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+}
+
+export async function handleTTSGLM(request) {
+    try {
+        const apiKey = request.apiKey;
+        const voice = request.voice || 'tongtong';
+        const text = request.text;
+        const speed = request.speed || 1.0;
+
+        if (!apiKey) {
+            return { error: '缺少 ppinfra API Key' };
+        }
+
+        console.log('[TTS] GLM 后台请求:', { voice, textLen: text.length });
+
+        const response = await fetch('https://api.ppinfra.com/v3/glm-tts', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                input: text,
+                voice: voice,
+                speed: speed,
+                response_format: 'wav'
+            })
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            console.error('[TTS] GLM 响应错误:', errText);
+            return { error: errText };
+        }
+
+        const audioBlob = await response.blob();
+        const reader = new FileReader();
+        const audioData = await new Promise((resolve) => {
+            reader.onloadend = () => resolve(reader.result); // data:audio/wav;base64,...
+            reader.readAsDataURL(audioBlob);
+        });
+
+        console.log('[TTS] GLM 成功, 数据长度:', audioData.length);
+        return { audioData };
+    } catch (err) {
+        console.error('[TTS] GLM TTS 失败:', err);
+        return { error: err.message };
+    }
+}
+
+export async function handleTTSOpenAI(request) {
+    try {
+        const { apiKey, baseUrl, text, voice, speed } = request;
+        if (!apiKey) return { error: '缺少 OpenAI API Key' };
+
+        const response = await fetch(`${baseUrl || 'https://api.openai.com/v1'}/audio/speech`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'tts-1',
+                input: text,
+                voice: voice || 'nova',
+                speed: speed || 1.0
+            })
+        });
+
+        if (!response.ok) {
+            return { error: `OpenAI TTS 失败: ${response.status}` };
+        }
+
+        const audioBlob = await response.blob();
+        const reader = new FileReader();
+        const audioData = await new Promise((resolve) => {
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(audioBlob);
+        });
+
+        return { audioData };
+    } catch (err) {
+        console.error('[TTS] OpenAI 失败:', err);
+        return { error: err.message };
+    }
+}
+
+export async function handleTTSGoogle(request) {
+    try {
+        const { apiKey, text, voice, speed } = request;
+        if (!apiKey) return { error: '缺少 Gemini API Key' };
+
+        const voiceLang = voice ? voice.substring(0, 5) : 'cmn-CN';
+        const response = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                input: { text },
+                voice: { languageCode: voiceLang, name: voice || 'cmn-CN-Chirp3-HD-Aoede' },
+                audioConfig: { audioEncoding: 'MP3', speakingRate: speed || 1.0 }
+            })
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            return { error: err.error?.message || 'Google TTS 失败' };
+        }
+
+        const data = await response.json();
+        if (data.audioContent) {
+            return { audioData: `data:audio/mp3;base64,${data.audioContent}` };
+        }
+        return { error: 'No audio content' };
+    } catch (err) {
+        console.error('[TTS] Google 失败:', err);
+        return { error: err.message };
+    }
+}

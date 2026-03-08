@@ -1,0 +1,10 @@
+{
+    "extName": {
+        "message": "智译 - Smart Translator",
+        "description": "Extension name"
+    },
+    "extDescription": {
+        "message": "智能翻译插件 - 支持划词翻译、沉浸式翻译、图片OCR、PDF翻译",
+        "description": "Extension description"
+    }
+}

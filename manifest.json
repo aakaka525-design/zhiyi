@@ -1,0 +1,115 @@
+{
+  "manifest_version": 3,
+  "name": "智译 - Smart Translator",
+  "version": "1.0.0",
+  "description": "智能翻译插件 - 支持划词翻译、沉浸式翻译、图片OCR、PDF翻译",
+  "default_locale": "zh_CN",
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "32": "assets/icons/icon32.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "32": "assets/icons/icon32.png",
+      "48": "assets/icons/icon48.png"
+    },
+    "default_title": "智译翻译"
+  },
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "css": [
+        "content/content.css"
+      ],
+      "js": [
+        "content/modules/state.js",
+        "content/modules/utils.js",
+        "content/modules/selection.js",
+        "content/modules/sidebar.js",
+        "content/modules/float-window.js",
+        "content/modules/immersive.js",
+        "content/modules/translation-cache.js",
+        "content/modules/manga.js",
+        "content/modules/ocr.js",
+        "content/modules/ad-blocker.js",
+        "content/modules/floating-ball.js",
+        "content/content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "permissions": [
+    "activeTab",
+    "storage",
+    "contextMenus",
+    "scripting",
+    "offscreen",
+    "nativeMessaging",
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset_1",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
+  "options_page": "options/options.html",
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/*",
+        "src/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
+  "commands": {
+    "translate_selection": {
+      "suggested_key": {
+        "default": "Alt+T",
+        "mac": "Alt+T"
+      },
+      "description": "翻译选中文本"
+    },
+    "toggle_immersive": {
+      "suggested_key": {
+        "default": "Alt+I",
+        "mac": "Alt+I"
+      },
+      "description": "切换沉浸式翻译"
+    },
+    "toggle_sidebar": {
+      "suggested_key": {
+        "default": "Alt+S",
+        "mac": "Alt+S"
+      },
+      "description": "显示/隐藏侧边栏"
+    },
+    "toggle_float_window": {
+      "suggested_key": {
+        "default": "Alt+W",
+        "mac": "Alt+W"
+      },
+      "description": "显示/隐藏翻译小窗"
+    }
+  }
+}
