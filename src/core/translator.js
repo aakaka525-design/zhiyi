@@ -8,7 +8,6 @@ import { GoogleFreeTranslator } from './google-free.js';
 import { OpenAITranslator } from './openai.js';
 import { GeminiTranslator } from './gemini.js';
 import { DeepSeekTranslator } from './deepseek.js';
-import { QwenVLTranslator } from './qwenvl.js';
 import { OfflineTranslator } from './offline.js';
 
 
@@ -28,7 +27,6 @@ export class Translator {
             openai: new OpenAITranslator(this.settings.openaiApiKey, this.settings.openaiBaseUrl, this.settings.openaiModel),
             gemini: new GeminiTranslator(this.settings.geminiApiKey, this.settings.geminiModel),
             deepseek: new DeepSeekTranslator(this.settings.deepseekApiKey, this.settings.deepseekBaseUrl, this.settings.deepseekModel),
-            qwenvl: new QwenVLTranslator(this.settings.deepseekApiKey, this.settings.deepseekBaseUrl, 'qwen/qwen3-vl-30b-a3b-instruct'),
             offline: new OfflineTranslator(),
         };
 
@@ -55,11 +53,6 @@ export class Translator {
             this.settings.deepseekApiKey,
             this.settings.deepseekBaseUrl,
             this.settings.deepseekModel
-        );
-        this.providers.qwenvl.updateConfig(
-            this.settings.deepseekApiKey,
-            this.settings.deepseekBaseUrl,
-            'qwen/qwen3-vl-30b-a3b-instruct'
         );
     }
 

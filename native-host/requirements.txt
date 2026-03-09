@@ -1,5 +1,0 @@
-# 智译翻译 - Native OCR 依赖
-# 安装命令: pip install -r requirements.txt
-
-paddlepaddle
-paddleocr[doc-parser]>=2.9.0

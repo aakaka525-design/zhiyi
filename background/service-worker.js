@@ -6,12 +6,9 @@
 
 import { StorageManager } from '../src/core/storage.js';
 import { Translator } from '../src/core/translator.js';
-import { nativeOCR } from '../src/core/native-ocr.js';
 
 // Modules
 import { handleTestTTS, handleTTSGLM, handleTTSOpenAI, handleTTSGoogle } from './modules/tts.js';
-import { handleMangaImage } from './modules/manga.js';
-import { handleTranslateImageUrl, handleTranslateImage } from './modules/general_image.js';
 import { createContextMenus, setupMenuListeners } from './modules/menus.js';
 
 // 翻译器实例
@@ -55,28 +52,6 @@ async function handleMessage(request, sender) {
         case 'translateBatch':
             const results = await translator.translateBatch(request.texts, request.from, request.to);
             return { results };
-
-        case 'translateImageUrl':
-            return handleTranslateImageUrl(request, translator);
-
-        case 'translateImage':
-            return handleTranslateImage(request, translator);
-
-        case 'translateMangaImage':
-            return handleMangaImage(request, translator);
-
-        case 'testNativeOCR':
-            // 测试本地 Native OCR 连通性
-            try {
-                const available = await nativeOCR.checkAvailability();
-                if (available) {
-                    return { success: true, message: '本地 OCR 可用' };
-                } else {
-                    return { success: false, error: '本地 OCR 不可用，请检查安装' };
-                }
-            } catch (e) {
-                return { success: false, error: e.message };
-            }
 
         case 'testTTS': return handleTestTTS(request);
         case 'ttsGLM': return handleTTSGLM(request);

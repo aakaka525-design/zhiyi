@@ -59,26 +59,12 @@ function handleMessage(request, sender, sendResponse) {
             }
             break;
 
-        case 'ocrImage':
-            if (request.imageUrl) {
-                ST.handleOCR(request.imageUrl);
-            }
-            break;
-
-        case 'startOCR':
-            ST.startImageAreaSelection();
-            break;
-
         case 'toggleSidebar':
             ST.toggleSidebar();
             break;
 
         case 'toggleFloatWindow':
             ST.toggleFloatWindow();
-            break;
-
-        case 'toggleMangaMode':
-            ST.toggleMangaMode();
             break;
 
         case 'refreshSettings':

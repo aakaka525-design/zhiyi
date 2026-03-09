@@ -15,25 +15,18 @@ export function createContextMenus() {
             contexts: ['page'],
         });
 
-        // 翻译图片 (OCR)
-        chrome.contextMenus.create({
-            id: 'translate-image',
-            title: '翻译图片文字 (OCR)',
-            contexts: ['image'],
-        });
-
         // 分隔线
         chrome.contextMenus.create({
             id: 'separator',
             type: 'separator',
-            contexts: ['selection', 'page', 'image'],
+            contexts: ['selection', 'page'],
         });
 
         // 打开设置
         chrome.contextMenus.create({
             id: 'open-settings',
             title: '翻译设置',
-            contexts: ['selection', 'page', 'image'],
+            contexts: ['selection', 'page'],
         });
     });
 }
@@ -55,15 +48,6 @@ export function setupMenuListeners() {
                 chrome.tabs.sendMessage(tab.id, {
                     action: 'toggleImmersive',
                 });
-                break;
-
-            case 'translate-image':
-                if (info.srcUrl) {
-                    chrome.tabs.sendMessage(tab.id, {
-                        action: 'ocrImage',
-                        imageUrl: info.srcUrl,
-                    });
-                }
                 break;
 
             case 'open-settings':

@@ -15,24 +15,14 @@ window.SmartTranslator.state = {
     },
     settings: null,
     isImmersiveEnabled: false,
-    isMangaModeEnabled: false,
 };
 
 // 已处理的集合
-window.SmartTranslator.translatedImages = new Set();
 window.SmartTranslator.pendingTranslations = new Set();
-
-// 漫画翻译队列
-window.SmartTranslator.mangaQueue = {
-    items: [],
-    processing: 0,
-    maxConcurrent: 2,
-};
 
 // 观察器引用
 window.SmartTranslator.observers = {
     mutation: null,
-    manga: null,
 };
 
 // UI 元素引用

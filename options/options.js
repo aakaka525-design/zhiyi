@@ -31,15 +31,6 @@ const elements = {
     deepseekApiKey: document.getElementById('deepseek-api-key'),
     deepseekBaseUrl: document.getElementById('deepseek-base-url'),
     deepseekModel: document.getElementById('deepseek-model'),
-    mangaOcrEngine: document.getElementById('manga-ocr-engine'),
-    customMangaApiKey: document.getElementById('custom-manga-api-key'),
-    customMangaBaseUrl: document.getElementById('custom-manga-base-url'),
-    customMangaModel: document.getElementById('custom-manga-model'),
-    mangaFontStyle: document.getElementById('manga-font-style'),
-    ocrDetectorType: document.getElementById('ocr-detector-type'),
-    hybridCloudEngine: document.getElementById('hybrid-cloud-engine'),
-    testMangaEngine: document.getElementById('test-manga-engine'),
-    mangaEngineTestResult: document.getElementById('manga-engine-test-result'),
 
     // TTS 配置
     ttsProvider: document.getElementById('tts-provider'),
@@ -96,17 +87,6 @@ async function loadSettings() {
     elements.deepseekApiKey.value = settings.deepseekApiKey;
     elements.deepseekBaseUrl.value = settings.deepseekBaseUrl;
     elements.deepseekModel.value = settings.deepseekModel;
-    elements.mangaOcrEngine.value = settings.mangaOcrEngine || 'qwenvl-30b';
-    elements.customMangaApiKey.value = settings.customMangaApiKey || '';
-    elements.customMangaBaseUrl.value = settings.customMangaBaseUrl || '';
-    elements.customMangaModel.value = settings.customMangaModel || '';
-    elements.mangaFontStyle.value = settings.mangaFontStyle || 'sans-serif';
-    if (elements.ocrDetectorType) {
-        elements.ocrDetectorType.value = settings.ocrDetectorType || 'server';
-    }
-    if (elements.hybridCloudEngine) {
-        elements.hybridCloudEngine.value = settings.hybridCloudEngine || 'qwenvl';
-    }
 
     // TTS 设置
     elements.ttsProvider.value = settings.ttsProvider || 'system';
@@ -118,7 +98,6 @@ async function loadSettings() {
     elements.fishAudioApiKey.value = settings.fishAudioApiKey || '';
     elements.fishAudioVoice.value = settings.fishAudioVoice || '';
 
-    updateMangaConfigVisibility(settings.mangaOcrEngine || 'qwenvl-30b');
     updateTtsConfigVisibility(settings.ttsProvider || 'system');
 
     updateApiVisibility(settings.provider);
@@ -138,11 +117,6 @@ function bindEvents() {
     // 服务提供商切换显示对应配置
     elements.provider.addEventListener('change', (e) => {
         updateApiVisibility(e.target.value);
-    });
-
-    // 漫画引擎切换显示自定义配置
-    elements.mangaOcrEngine.addEventListener('change', (e) => {
-        updateMangaConfigVisibility(e.target.value);
     });
 
     // 深色模式切换
@@ -197,11 +171,7 @@ function bindEvents() {
     document.getElementById('test-openai')?.addEventListener('click', () => testApiConnection('openai'));
     document.getElementById('test-gemini')?.addEventListener('click', () => testApiConnection('gemini'));
     document.getElementById('test-deepseek')?.addEventListener('click', () => testApiConnection('deepseek'));
-    document.getElementById('test-custom-manga')?.addEventListener('click', () => testApiConnection('custom-manga'));
     document.getElementById('test-tts')?.addEventListener('click', testTTS);
-
-    // 漫画翻译引擎测试按钮
-    elements.testMangaEngine?.addEventListener('click', testMangaEngine);
 
     // TTS 服务商切换
     elements.ttsProvider.addEventListener('change', (e) => {
@@ -292,31 +262,6 @@ async function testApiConnection(provider) {
                 }
                 break;
             }
-
-            case 'custom-manga': {
-                const apiKey = document.getElementById('custom-manga-api-key')?.value.trim();
-                const baseUrl = document.getElementById('custom-manga-base-url')?.value.trim();
-
-                if (!apiKey) {
-                    throw new Error('请先填写 API Key');
-                }
-                if (!baseUrl) {
-                    throw new Error('请先填写 Base URL');
-                }
-
-                const response = await fetch(`${baseUrl}/models`, {
-                    method: 'GET',
-                    headers: { 'Authorization': `Bearer ${apiKey}` }
-                });
-
-                if (response.ok) {
-                    success = true;
-                    message = '✓';
-                } else {
-                    throw new Error(`${response.status}`);
-                }
-                break;
-            }
         }
 
         statusEl.textContent = message;
@@ -329,110 +274,6 @@ async function testApiConnection(provider) {
         btn.classList.remove('loading');
     }
 }
-
-// 测试漫画翻译引擎
-async function testMangaEngine() {
-    const btn = elements.testMangaEngine;
-    const statusEl = elements.mangaEngineTestResult;
-
-    if (!btn || !statusEl) return;
-
-    btn.disabled = true;
-    btn.textContent = '测试中...';
-    statusEl.textContent = '';
-    statusEl.style.color = '';
-
-    try {
-        const engine = elements.mangaOcrEngine.value;
-        let success = false;
-        let message = '';
-
-        if (engine === 'local-paddle' || engine === 'local-hybrid') {
-            // 测试本地 Native OCR 连通性
-            const response = await chrome.runtime.sendMessage({
-                action: 'testNativeOCR'
-            });
-
-            if (response && response.success) {
-                success = true;
-                message = '✓ 本地 OCR 可用';
-                if (engine === 'local-hybrid') {
-                    // 还需测试云端引擎
-                    const cloudEngine = elements.hybridCloudEngine?.value || 'qwenvl';
-                    if (cloudEngine === 'qwenvl') {
-                        const deepseekKey = elements.deepseekApiKey.value.trim();
-                        if (!deepseekKey) {
-                            message = '✓ 本地 OCR 可用，⚠️ 请配置 Qwen-VL API Key';
-                        } else {
-                            message = '✓ 本地 OCR 可用 + Qwen-VL';
-                        }
-                    } else {
-                        const geminiKey = elements.geminiApiKey.value.trim();
-                        if (!geminiKey) {
-                            message = '✓ 本地 OCR 可用，⚠️ 请配置 Gemini API Key';
-                        } else {
-                            message = '✓ 本地 OCR 可用 + Gemini';
-                        }
-                    }
-                }
-            } else {
-                throw new Error(response?.error || '本地 OCR 不可用');
-            }
-        } else if (engine === 'qwenvl-30b' || engine === 'qwenvl-8b') {
-            const apiKey = elements.deepseekApiKey.value.trim();
-            if (!apiKey) {
-                throw new Error('请配置 ppinfra API Key (Qwen-VL)');
-            }
-            const resp = await fetch('https://api.ppinfra.com/openai/models', {
-                headers: { 'Authorization': `Bearer ${apiKey}` }
-            });
-            if (resp.ok) {
-                success = true;
-                message = '✓ Qwen-VL 可用';
-            } else {
-                throw new Error(`HTTP ${resp.status}`);
-            }
-        } else if (engine === 'gemini') {
-            const apiKey = elements.geminiApiKey.value.trim();
-            if (!apiKey) {
-                throw new Error('请配置 Gemini API Key');
-            }
-            const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-            if (resp.ok) {
-                success = true;
-                message = '✓ Gemini 可用';
-            } else {
-                throw new Error(`HTTP ${resp.status}`);
-            }
-        } else if (engine === 'custom') {
-            const apiKey = elements.customMangaApiKey.value.trim();
-            const baseUrl = elements.customMangaBaseUrl.value.trim();
-            if (!apiKey || !baseUrl) {
-                throw new Error('请配置自定义 API');
-            }
-            const resp = await fetch(`${baseUrl}/models`, {
-                headers: { 'Authorization': `Bearer ${apiKey}` }
-            });
-            if (resp.ok) {
-                success = true;
-                message = '✓ 自定义 API 可用';
-            } else {
-                throw new Error(`HTTP ${resp.status}`);
-            }
-        }
-
-        statusEl.textContent = message;
-        statusEl.style.color = success ? 'var(--success)' : 'var(--warning)';
-
-    } catch (error) {
-        statusEl.textContent = `✗ ${error.message}`;
-        statusEl.style.color = 'var(--error)';
-    } finally {
-        btn.disabled = false;
-        btn.textContent = '🔍 测试连通性';
-    }
-}
-
 
 // 测试 TTS
 async function testTTS() {
@@ -510,13 +351,6 @@ async function saveSettings() {
         deepseekApiKey: elements.deepseekApiKey.value,
         deepseekBaseUrl: elements.deepseekBaseUrl.value,
         deepseekModel: elements.deepseekModel.value,
-        mangaOcrEngine: elements.mangaOcrEngine.value,
-        customMangaApiKey: elements.customMangaApiKey.value,
-        customMangaBaseUrl: elements.customMangaBaseUrl.value,
-        customMangaModel: elements.customMangaModel.value,
-        mangaFontStyle: elements.mangaFontStyle.value,
-        ocrDetectorType: elements.ocrDetectorType?.value || 'server',
-        hybridCloudEngine: elements.hybridCloudEngine?.value || 'qwenvl',
         darkMode: elements.enableDarkMode.checked,
         debugMode: elements.enableDebugMode.checked,
         ttsProvider: elements.ttsProvider.value,
@@ -552,17 +386,6 @@ function updateApiVisibility(provider) {
     openaiDiv.style.display = provider === 'openai' ? 'block' : 'none';
     geminiDiv.style.display = provider === 'gemini' ? 'block' : 'none';
     deepseekDiv.style.display = provider === 'deepseek' ? 'block' : 'none';
-}
-
-// 更新漫画配置区域可见性
-function updateMangaConfigVisibility(engine) {
-    const customDiv = document.getElementById('custom-manga-config');
-    const hybridDiv = document.getElementById('hybrid-cloud-engine-group');
-
-    customDiv.style.display = engine === 'custom' ? 'block' : 'none';
-    if (hybridDiv) {
-        hybridDiv.style.display = engine === 'local-hybrid' ? 'block' : 'none';
-    }
 }
 
 // 更新 TTS 配置区域可见性

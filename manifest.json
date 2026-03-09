@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "智译 - Smart Translator",
   "version": "1.0.0",
-  "description": "智能翻译插件 - 支持划词翻译、沉浸式翻译、图片OCR、PDF翻译",
+  "description": "智能翻译插件 - 支持划词翻译、沉浸式翻译、PDF翻译",
   "default_locale": "zh_CN",
   "icons": {
     "16": "assets/icons/icon16.png",
@@ -38,9 +38,6 @@
         "content/modules/sidebar.js",
         "content/modules/float-window.js",
         "content/modules/immersive.js",
-        "content/modules/translation-cache.js",
-        "content/modules/manga.js",
-        "content/modules/ocr.js",
         "content/modules/ad-blocker.js",
         "content/modules/floating-ball.js",
         "content/content.js"
@@ -53,23 +50,11 @@
     "storage",
     "contextMenus",
     "scripting",
-    "offscreen",
-    "nativeMessaging",
-    "declarativeNetRequest",
-    "declarativeNetRequestWithHostAccess"
+    "offscreen"
   ],
   "host_permissions": [
     "<all_urls>"
   ],
-  "declarative_net_request": {
-    "rule_resources": [
-      {
-        "id": "ruleset_1",
-        "enabled": true,
-        "path": "rules.json"
-      }
-    ]
-  },
   "options_page": "options/options.html",
   "web_accessible_resources": [
     {

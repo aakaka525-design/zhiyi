@@ -9,6 +9,24 @@ const STORAGE_KEYS = {
     FAVORITES: 'favorites',
 };
 
+const LEGACY_SETTINGS_KEYS = [
+    'mangaOcrEngine',
+    'ocrDetectorType',
+    'customMangaApiKey',
+    'customMangaBaseUrl',
+    'customMangaModel',
+    'mangaFontStyle',
+    'hybridCloudEngine',
+];
+
+function sanitizeSettings(settings = {}) {
+    const cleaned = { ...settings };
+    LEGACY_SETTINGS_KEYS.forEach((key) => {
+        delete cleaned[key];
+    });
+    return cleaned;
+}
+
 const DEFAULT_SETTINGS = {
     provider: 'google',     // 翻译服务: google, openai, gemini, offline
     sourceLang: 'auto',
@@ -27,19 +45,6 @@ const DEFAULT_SETTINGS = {
     deepseekApiKey: '',
     deepseekBaseUrl: 'https://api.ppinfra.com/openai',
     deepseekModel: 'deepseek/deepseek-ocr',
-
-
-    // 漫画翻译引擎: qwenvl-30b, qwenvl-8b, gemini, custom
-    mangaOcrEngine: 'qwenvl-30b',
-
-    // OCR 检测器类型: 'server' (精度高,较慢) 或 'mobile' (速度快,稍弱)
-    ocrDetectorType: 'server',
-
-    // 自定义漫画 API 配置
-    customMangaApiKey: '',
-    customMangaBaseUrl: '',
-    customMangaModel: '',
-    mangaFontStyle: 'sans-serif', // 漫画嵌字字体: sans-serif, rounded, handwritten, serif
     darkMode: false, // 深色模式
 
     // TTS 语音合成配置
@@ -74,7 +79,7 @@ export class StorageManager {
     static async getSettings() {
         try {
             const result = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
-            return { ...DEFAULT_SETTINGS, ...result[STORAGE_KEYS.SETTINGS] };
+            return { ...DEFAULT_SETTINGS, ...sanitizeSettings(result[STORAGE_KEYS.SETTINGS]) };
         } catch (error) {
             console.error('获取设置失败:', error);
             return DEFAULT_SETTINGS;
@@ -87,7 +92,7 @@ export class StorageManager {
     static async updateSettings(updates) {
         try {
             const current = await this.getSettings();
-            const newSettings = { ...current, ...updates };
+            const newSettings = sanitizeSettings({ ...current, ...updates });
             await chrome.storage.local.set({ [STORAGE_KEYS.SETTINGS]: newSettings });
             return newSettings;
         } catch (error) {

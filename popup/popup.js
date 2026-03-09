@@ -28,11 +28,9 @@ const elements = {
     btnHistory: document.getElementById('btn-history'),
     btnSettings: document.getElementById('btn-settings'),
     btnImmersive: document.getElementById('btn-immersive'),
-    btnOcr: document.getElementById('btn-ocr'),
     btnPdf: document.getElementById('btn-pdf'),
     btnSidebar: document.getElementById('btn-sidebar'),
     btnFloat: document.getElementById('btn-float'),
-    btnManga: document.getElementById('btn-manga'),
 };
 
 const MAX_CHARS = 5000;
@@ -199,22 +197,6 @@ function bindEvents() {
         }
     });
 
-    // OCR 翻译
-    elements.btnOcr.addEventListener('click', async () => {
-        try {
-            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            if (tab?.id && !tab.url?.startsWith('chrome://')) {
-                await chrome.tabs.sendMessage(tab.id, { action: 'startOCR' });
-                setTimeout(() => window.close(), 100);
-            } else {
-                showToast('此页面不支持该功能');
-            }
-        } catch (err) {
-            showToast('请刷新页面后重试');
-            console.error('OCR失败:', err);
-        }
-    });
-
     // PDF 翻译
     elements.btnPdf.addEventListener('click', () => {
         chrome.tabs.create({ url: 'options/options.html#pdf' });
@@ -252,21 +234,6 @@ function bindEvents() {
         }
     });
 
-    // 漫画翻译
-    elements.btnManga.addEventListener('click', async () => {
-        try {
-            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            if (tab?.id && !tab.url?.startsWith('chrome://')) {
-                await chrome.tabs.sendMessage(tab.id, { action: 'toggleMangaMode' });
-                setTimeout(() => window.close(), 100);
-            } else {
-                showToast('此页面不支持该功能');
-            }
-        } catch (err) {
-            showToast('请刷新页面后重试');
-            console.error('漫画翻译失败:', err);
-        }
-    });
 }
 
 
@@ -384,6 +351,7 @@ async function updateServiceDisplay() {
         'google': 'Google 翻译',
         'openai': 'OpenAI GPT',
         'gemini': 'Google Gemini',
+        'deepseek': 'DeepSeek',
         'offline': '离线翻译',
     };
     elements.currentService.textContent = providerNames[settings.provider] || 'Google 翻译';

@@ -52,12 +52,6 @@
                 action: () => ST.toggleImmersive && ST.toggleImmersive()
             },
             {
-                id: 'btn-manga',
-                icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/> <circle cx="8.5" cy="8.5" r="1.5"/> <polyline points="21 15 16 10 5 21"/>',
-                title: '漫画模式',
-                action: () => ST.manga && ST.manga.manualTrigger && ST.manga.manualTrigger()
-            },
-            {
                 id: 'btn-sidebar',
                 icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/> <line x1="9" y1="3" x2="9" y2="21"/>',
                 title: '侧边栏',
