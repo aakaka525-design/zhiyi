@@ -1,7 +1,13 @@
-
-import { StorageManager } from '../../src/core/storage.js';
-
 let creatingOffscreen = null;
+const DEFAULT_GOOGLE_TTS_VOICE = 'cmn-CN-Chirp3-HD-Aoede';
+
+function getGoogleTtsLanguageCode(voice = DEFAULT_GOOGLE_TTS_VOICE) {
+    const [language, region] = typeof voice === 'string' ? voice.split('-') : [];
+    if (language && region) {
+        return `${language}-${region}`;
+    }
+    return 'cmn-CN';
+}
 
 async function ensureOffscreenDocument() {
     const offscreenUrl = chrome.runtime.getURL('offscreen/offscreen.html');
@@ -31,33 +37,6 @@ async function ensureOffscreenDocument() {
 export async function playAudioViaOffscreen(audioData, speed = 1.0) {
     await ensureOffscreenDocument();
     return chrome.runtime.sendMessage({ action: 'playAudio', audioData, speed });
-}
-
-export async function handleTestTTS(request) {
-    try {
-        const provider = request.provider || 'system';
-
-        // 对于系统语音，在 options 页面直接使用 speechSynthesis
-        if (provider === 'system') {
-            return { success: true, message: '系统语音无需测试API，请直接在页面使用' };
-        }
-
-        // 对于其他提供商，检查对应的 API Key 是否已配置
-        const settings = await StorageManager.getSettings();
-        let hasKey = false;
-
-        if (provider === 'openai' && settings.openaiApiKey) hasKey = true;
-        if (provider === 'google' && settings.geminiApiKey) hasKey = true;
-        if (provider === 'glm' && settings.deepseekApiKey) hasKey = true;
-
-        if (!hasKey) {
-            return { success: false, error: `请先配置 ${provider} 的 API Key` };
-        }
-
-        return { success: true, message: 'API Key 已配置' };
-    } catch (err) {
-        return { success: false, error: err.message };
-    }
 }
 
 export async function handleTTSGLM(request) {
@@ -150,13 +129,14 @@ export async function handleTTSGoogle(request) {
         const { apiKey, text, voice, speed } = request;
         if (!apiKey) return { error: '缺少 Gemini API Key' };
 
-        const voiceLang = voice ? voice.substring(0, 5) : 'cmn-CN';
+        const selectedVoice = voice || DEFAULT_GOOGLE_TTS_VOICE;
+        const voiceLang = getGoogleTtsLanguageCode(selectedVoice);
         const response = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 input: { text },
-                voice: { languageCode: voiceLang, name: voice || 'cmn-CN-Chirp3-HD-Aoede' },
+                voice: { languageCode: voiceLang, name: selectedVoice },
                 audioConfig: { audioEncoding: 'MP3', speakingRate: speed || 1.0 }
             })
         });

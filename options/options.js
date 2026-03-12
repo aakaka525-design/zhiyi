@@ -4,12 +4,20 @@
  */
 
 import { StorageManager } from '../src/core/storage.js';
+import {
+    SHORTCUT_SETTINGS_URL,
+    buildSettingsSnapshot,
+    getSaveButtonLabel,
+    getShortcutSettingsToastMessage,
+    hasUnsavedChanges,
+} from './options-ui-state.js';
 
 // DOM 元素
 const elements = {
     navList: document.querySelector('.nav-list'),
     tabContents: document.querySelectorAll('.tab-content'),
     saveBtn: document.getElementById('save-btn'),
+    shortcutSettingsBtn: document.getElementById('shortcut-settings-btn'),
 
     // 设置项
     targetLang: document.getElementById('default-target-lang'),
@@ -39,14 +47,15 @@ const elements = {
     ttsVoiceOpenai: document.getElementById('tts-voice-openai'),
     ttsVoiceGoogle: document.getElementById('tts-voice-google'),
     ttsVoiceGlm: document.getElementById('tts-voice-glm'),
-    fishAudioApiKey: document.getElementById('fish-audio-api-key'),
-    fishAudioVoice: document.getElementById('fish-audio-voice'),
 
     // 历史记录
     historyList: document.getElementById('history-list'),
     clearHistoryBtn: document.getElementById('clear-history-btn'),
     historyTabs: document.querySelectorAll('.history-tab-btn')
 };
+
+let initialSettingsSnapshot = null;
+let hasPendingSettingsChanges = false;
 
 // 初始化
 async function init() {
@@ -95,12 +104,12 @@ async function loadSettings() {
     elements.ttsVoiceOpenai.value = settings.ttsVoice || 'nova';
     elements.ttsVoiceGoogle.value = settings.ttsVoice || 'cmn-CN-Chirp3-HD-Aoede';
     elements.ttsVoiceGlm.value = settings.ttsVoice || 'tongtong';
-    elements.fishAudioApiKey.value = settings.fishAudioApiKey || '';
-    elements.fishAudioVoice.value = settings.fishAudioVoice || '';
 
     updateTtsConfigVisibility(settings.ttsProvider || 'system');
 
     updateApiVisibility(settings.provider);
+    initialSettingsSnapshot = collectCurrentSettings();
+    setDirtyState(false);
 }
 
 // 绑定事件
@@ -149,6 +158,7 @@ function bindEvents() {
 
     // 保存按钮
     elements.saveBtn.addEventListener('click', saveSettings);
+    elements.shortcutSettingsBtn?.addEventListener('click', copyShortcutSettingsUrl);
 
     // 历史记录切换
     elements.historyTabs.forEach(btn => {
@@ -182,6 +192,9 @@ function bindEvents() {
     elements.ttsSpeed.addEventListener('input', (e) => {
         elements.ttsSpeedValue.textContent = e.target.value + 'x';
     });
+
+    bindDirtyTracking();
+    window.addEventListener('beforeunload', handleBeforeUnload);
 }
 
 // API 连通性测试
@@ -283,31 +296,106 @@ async function testTTS() {
     if (!btn || !statusEl) return;
 
     btn.classList.add('loading');
-    statusEl.textContent = '';
+    btn.disabled = true;
     statusEl.className = 'test-status';
+    statusEl.textContent = '正在测试...';
 
     try {
         const provider = elements.ttsProvider.value;
-        const testText = '您好，这是智译翻译的语音测试。';
+        const testText = '测试语音播放';
+        const speed = parseFloat(elements.ttsSpeed.value) || 1.0;
 
-        // 发送消息给 service-worker 测试 TTS
-        const response = await chrome.runtime.sendMessage({
-            action: 'testTTS',
-            text: testText,
-            provider: provider
-        });
-
-        if (response && response.success) {
-            statusEl.textContent = '✓ 播放成功';
+        if (provider === 'system') {
+            playSystemTtsTest(testText, speed);
+            statusEl.textContent = '✓ 已开始播放';
             statusEl.classList.add('success');
-        } else {
-            throw new Error(response?.error || '测试失败');
+            return;
+        }
+
+        const audioData = await requestTtsTestAudio(provider, testText, speed);
+        statusEl.textContent = '✓ 已开始播放';
+        statusEl.classList.add('success');
+        const playbackResponse = await chrome.runtime.sendMessage({
+            action: 'playAudioOffscreen',
+            audioData,
+            speed,
+        });
+        if (playbackResponse?.error) {
+            throw new Error(playbackResponse.error);
         }
     } catch (error) {
         statusEl.textContent = `✗ ${error.message}`;
         statusEl.classList.add('error');
     } finally {
         btn.classList.remove('loading');
+        btn.disabled = false;
+    }
+}
+
+function playSystemTtsTest(text, speed) {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'zh-CN';
+    utterance.rate = speed;
+    window.speechSynthesis.speak(utterance);
+}
+
+async function requestTtsTestAudio(provider, text, speed) {
+    switch (provider) {
+        case 'openai': {
+            const apiKey = elements.openaiApiKey.value.trim();
+            if (!apiKey) {
+                throw new Error('请先填写 OpenAI API Key');
+            }
+            const response = await chrome.runtime.sendMessage({
+                action: 'ttsOpenAI',
+                apiKey,
+                baseUrl: elements.openaiBaseUrl.value.trim() || 'https://api.openai.com/v1',
+                text,
+                voice: elements.ttsVoiceOpenai.value || 'nova',
+                speed,
+            });
+            if (response?.audioData) {
+                return response.audioData;
+            }
+            throw new Error(response?.error || 'OpenAI TTS 测试失败');
+        }
+        case 'google': {
+            const apiKey = elements.geminiApiKey.value.trim();
+            if (!apiKey) {
+                throw new Error('请先填写 Gemini API Key');
+            }
+            const response = await chrome.runtime.sendMessage({
+                action: 'ttsGoogle',
+                apiKey,
+                text,
+                voice: elements.ttsVoiceGoogle.value || 'cmn-CN-Chirp3-HD-Aoede',
+                speed,
+            });
+            if (response?.audioData) {
+                return response.audioData;
+            }
+            throw new Error(response?.error || 'Google TTS 测试失败');
+        }
+        case 'glm': {
+            const apiKey = elements.deepseekApiKey.value.trim();
+            if (!apiKey) {
+                throw new Error('请先填写 ppinfra API Key');
+            }
+            const response = await chrome.runtime.sendMessage({
+                action: 'ttsGLM',
+                apiKey,
+                text,
+                voice: elements.ttsVoiceGlm.value || 'tongtong',
+                speed,
+            });
+            if (response?.audioData) {
+                return response.audioData;
+            }
+            throw new Error(response?.error || 'GLM TTS 测试失败');
+        }
+        default:
+            throw new Error(`当前 TTS 测试不支持 ${provider}`);
     }
 }
 
@@ -336,43 +424,20 @@ function loadTab(name) {
 
 // 保存设置
 async function saveSettings() {
-    const settings = {
-        targetLang: elements.targetLang.value,
-        enableSelection: elements.enableSelection.checked,
-        enableShortcut: elements.enableShortcut.checked,
-        showFloatingBall: elements.showFloatingBall.checked,
-        enableAdBlock: elements.enableAdBlock.checked,
-        provider: elements.provider.value,
-        openaiApiKey: elements.openaiApiKey.value,
-        openaiBaseUrl: elements.openaiBaseUrl.value,
-        openaiModel: elements.openaiModel.value,
-        geminiApiKey: elements.geminiApiKey.value,
-        geminiModel: elements.geminiModel.value,
-        deepseekApiKey: elements.deepseekApiKey.value,
-        deepseekBaseUrl: elements.deepseekBaseUrl.value,
-        deepseekModel: elements.deepseekModel.value,
-        darkMode: elements.enableDarkMode.checked,
-        debugMode: elements.enableDebugMode.checked,
-        ttsProvider: elements.ttsProvider.value,
-        ttsSpeed: parseFloat(elements.ttsSpeed.value),
-        ttsVoice: (() => {
-            switch (elements.ttsProvider.value) {
-                case 'openai': return elements.ttsVoiceOpenai.value;
-                case 'google': return elements.ttsVoiceGoogle.value;
-                case 'glm': return elements.ttsVoiceGlm.value;
-                default: return '';
-            }
-        })(),
-        fishAudioApiKey: elements.fishAudioApiKey.value,
-        fishAudioVoice: elements.fishAudioVoice.value,
-    };
+    const settings = collectCurrentSettings();
 
     try {
         await StorageManager.updateSettings(settings);
         // 通知 background 刷新设置
-        chrome.runtime.sendMessage({ action: 'updateSettings', settings });
+        const response = await chrome.runtime.sendMessage({ action: 'updateSettings', settings });
+        if (response?.error) {
+            throw new Error(response.error);
+        }
+        initialSettingsSnapshot = settings;
+        setDirtyState(false);
         showToast('设置保存成功');
     } catch (err) {
+        refreshDirtyState();
         showToast('保存失败: ' + err.message, 'error');
     }
 }
@@ -393,12 +458,10 @@ function updateTtsConfigVisibility(provider) {
     const openaiTtsDiv = document.getElementById('openai-tts-config');
     const googleTtsDiv = document.getElementById('google-tts-config');
     const glmTtsDiv = document.getElementById('glm-tts-config');
-    const fishDiv = document.getElementById('fish-audio-config');
 
     openaiTtsDiv.style.display = provider === 'openai' ? 'block' : 'none';
     googleTtsDiv.style.display = provider === 'google' ? 'block' : 'none';
     glmTtsDiv.style.display = provider === 'glm' ? 'block' : 'none';
-    fishDiv.style.display = provider === 'fish' ? 'block' : 'none';
 }
 
 // 应用深色模式
@@ -408,6 +471,104 @@ function applyDarkMode(enabled) {
     } else {
         document.body.classList.remove('dark-mode');
     }
+}
+
+function getSelectedTtsVoice() {
+    switch (elements.ttsProvider.value) {
+        case 'openai':
+            return elements.ttsVoiceOpenai.value;
+        case 'google':
+            return elements.ttsVoiceGoogle.value;
+        case 'glm':
+            return elements.ttsVoiceGlm.value;
+        default:
+            return '';
+    }
+}
+
+function collectCurrentSettings() {
+    return buildSettingsSnapshot({
+        targetLang: elements.targetLang.value,
+        enableSelection: elements.enableSelection.checked,
+        enableShortcut: elements.enableShortcut.checked,
+        showFloatingBall: elements.showFloatingBall.checked,
+        enableAdBlock: elements.enableAdBlock.checked,
+        provider: elements.provider.value,
+        openaiApiKey: elements.openaiApiKey.value,
+        openaiBaseUrl: elements.openaiBaseUrl.value,
+        openaiModel: elements.openaiModel.value,
+        geminiApiKey: elements.geminiApiKey.value,
+        geminiModel: elements.geminiModel.value,
+        deepseekApiKey: elements.deepseekApiKey.value,
+        deepseekBaseUrl: elements.deepseekBaseUrl.value,
+        deepseekModel: elements.deepseekModel.value,
+        darkMode: elements.enableDarkMode.checked,
+        debugMode: elements.enableDebugMode.checked,
+        ttsProvider: elements.ttsProvider.value,
+        ttsSpeed: parseFloat(elements.ttsSpeed.value),
+        ttsVoice: getSelectedTtsVoice(),
+    });
+}
+
+function setDirtyState(isDirty) {
+    hasPendingSettingsChanges = isDirty;
+    elements.saveBtn.textContent = getSaveButtonLabel(isDirty);
+    elements.saveBtn.dataset.dirty = isDirty ? 'true' : 'false';
+}
+
+function refreshDirtyState() {
+    if (!initialSettingsSnapshot) return;
+    setDirtyState(hasUnsavedChanges(initialSettingsSnapshot, collectCurrentSettings()));
+}
+
+function bindDirtyTracking() {
+    const trackedFields = [
+        elements.targetLang,
+        elements.enableSelection,
+        elements.enableShortcut,
+        elements.showFloatingBall,
+        elements.enableAdBlock,
+        elements.enableDarkMode,
+        elements.enableDebugMode,
+        elements.provider,
+        elements.openaiApiKey,
+        elements.openaiBaseUrl,
+        elements.openaiModel,
+        elements.geminiApiKey,
+        elements.geminiModel,
+        elements.deepseekApiKey,
+        elements.deepseekBaseUrl,
+        elements.deepseekModel,
+        elements.ttsProvider,
+        elements.ttsSpeed,
+        elements.ttsVoiceOpenai,
+        elements.ttsVoiceGoogle,
+        elements.ttsVoiceGlm,
+    ];
+
+    trackedFields.forEach((field) => {
+        field?.addEventListener('input', refreshDirtyState);
+        field?.addEventListener('change', refreshDirtyState);
+    });
+}
+
+function handleBeforeUnload(event) {
+    if (!hasPendingSettingsChanges) return;
+    event.preventDefault();
+    event.returnValue = '';
+}
+
+async function copyShortcutSettingsUrl() {
+    let copied = false;
+
+    try {
+        await navigator.clipboard.writeText(SHORTCUT_SETTINGS_URL);
+        copied = true;
+    } catch (_) {
+        copied = false;
+    }
+
+    showToast(getShortcutSettingsToastMessage(copied), copied ? 'success' : 'error');
 }
 
 
@@ -430,34 +591,75 @@ async function loadHistoryList(type) {
 
 // 渲染历史记录（支持筛选）
 function renderHistoryList(data) {
+    elements.historyList.replaceChildren();
+
     if (data.length === 0) {
         elements.historyList.innerHTML = `<div class="history-empty">暂无${currentHistoryType === 'favorite' ? '收藏' : '历史'}记录</div>`;
         return;
     }
 
-    elements.historyList.innerHTML = data.map(item => `
-    <div class="card history-item fade-in" data-id="${item.id}">
-      <div class="setting-header">
-        <div class="tag tag-accent">${item.sourceLang} → ${item.targetLang}</div>
-        <div class="history-actions">
-          <button class="st-action-btn delete-item" data-id="${item.id}" title="删除">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-          </button>
-        </div>
-      </div>
-      <div style="margin-top: 12px;">
-        <div class="history-source">${item.source}</div>
-        <div class="history-target">${item.target}</div>
-      </div>
-      <div style="margin-top: 12px; font-size: 11px; color: var(--text-tertiary); display: flex; justify-content: space-between;">
-        <span>${item.provider || 'unknown'}</span>
-        <span>${new Date(item.timestamp).toLocaleString()}</span>
-      </div>
-    </div>
-  `).join('');
+    data.forEach((item) => {
+        elements.historyList.appendChild(createHistoryCard(item));
+    });
 
     // 绑定删除事件
     bindHistoryDeleteEvents();
+}
+
+function createHistoryCard(item) {
+    const card = document.createElement('div');
+    card.className = 'card history-item fade-in';
+    card.dataset.id = item.id;
+
+    const header = document.createElement('div');
+    header.className = 'setting-header';
+
+    const tag = document.createElement('div');
+    tag.className = 'tag tag-accent';
+    tag.textContent = `${item.sourceLang} → ${item.targetLang}`;
+
+    const actions = document.createElement('div');
+    actions.className = 'history-actions';
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'st-action-btn delete-item';
+    deleteBtn.dataset.id = item.id;
+    deleteBtn.title = '删除';
+    deleteBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>';
+
+    actions.appendChild(deleteBtn);
+    header.append(tag, actions);
+
+    const content = document.createElement('div');
+    content.style.marginTop = '12px';
+
+    const source = document.createElement('div');
+    source.className = 'history-source';
+    source.textContent = item.source;
+
+    const target = document.createElement('div');
+    target.className = 'history-target';
+    target.textContent = item.target;
+
+    content.append(source, target);
+
+    const meta = document.createElement('div');
+    meta.style.marginTop = '12px';
+    meta.style.fontSize = '11px';
+    meta.style.color = 'var(--text-tertiary)';
+    meta.style.display = 'flex';
+    meta.style.justifyContent = 'space-between';
+
+    const provider = document.createElement('span');
+    provider.textContent = item.provider || 'unknown';
+
+    const timestamp = document.createElement('span');
+    timestamp.textContent = new Date(item.timestamp).toLocaleString();
+
+    meta.append(provider, timestamp);
+    card.append(header, content, meta);
+
+    return card;
 }
 
 

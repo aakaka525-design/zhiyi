@@ -8,11 +8,53 @@ import { StorageManager } from '../src/core/storage.js';
 import { Translator } from '../src/core/translator.js';
 
 // Modules
-import { handleTestTTS, handleTTSGLM, handleTTSOpenAI, handleTTSGoogle } from './modules/tts.js';
+import { routeMessage } from './modules/message-router.js';
+import { handleTTSGLM, handleTTSOpenAI, handleTTSGoogle, playAudioViaOffscreen } from './modules/tts.js';
 import { createContextMenus, setupMenuListeners } from './modules/menus.js';
 
 // 翻译器实例
 let translator = null;
+const SETTINGS_STORAGE_KEY = 'settings';
+const COMMAND_ACTION_MAP = {
+    translate_selection: 'translateSelection',
+    toggle_immersive: 'toggleImmersive',
+    toggle_sidebar: 'toggleSidebar',
+    toggle_float_window: 'toggleFloatWindow',
+};
+
+const INSTALLED_MIGRATIONS = [
+    async function migrateLegacyOptInDefaults(details) {
+        if (details.reason !== 'update') {
+            return;
+        }
+
+        const result = await chrome.storage.local.get(SETTINGS_STORAGE_KEY);
+        const storedSettings =
+            result[SETTINGS_STORAGE_KEY] &&
+            typeof result[SETTINGS_STORAGE_KEY] === 'object' &&
+            !Array.isArray(result[SETTINGS_STORAGE_KEY])
+                ? result[SETTINGS_STORAGE_KEY]
+                : {};
+        const updates = {};
+
+        if (!Object.prototype.hasOwnProperty.call(storedSettings, 'showFloatingBall')) {
+            updates.showFloatingBall = true;
+        }
+        if (!Object.prototype.hasOwnProperty.call(storedSettings, 'enableAdBlock')) {
+            updates.enableAdBlock = true;
+        }
+        if (Object.keys(updates).length === 0) {
+            return;
+        }
+
+        await chrome.storage.local.set({
+            [SETTINGS_STORAGE_KEY]: {
+                ...storedSettings,
+                ...updates,
+            },
+        });
+    },
+];
 
 // 初始化
 async function init() {
@@ -28,6 +70,18 @@ async function init() {
 // 注册菜单监听器 (必须在顶层注册)
 setupMenuListeners();
 
+chrome.runtime.onInstalled.addListener((details) => {
+    runInstalledMigrations(details).catch((error) => {
+        console.error('安装迁移失败:', error);
+    });
+});
+
+chrome.commands.onCommand.addListener((command) => {
+    forwardCommandToActiveTab(command).catch((error) => {
+        console.error('快捷键处理失败:', error);
+    });
+});
+
 // 处理来自 popup 和 content script 的消息
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     handleMessage(request, sender)
@@ -41,33 +95,53 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 async function handleMessage(request, sender) {
+    const readyTranslator = await ensureReady();
+
+    return routeMessage(request, {
+        translator: readyTranslator,
+        storage: StorageManager,
+        tts: {
+            handleTTSGLM,
+            handleTTSOpenAI,
+            handleTTSGoogle,
+            playAudioViaOffscreen,
+        },
+    });
+}
+
+async function ensureReady() {
     if (!translator) {
         await init();
     }
 
-    switch (request.action) {
-        case 'translate':
-            return translator.translate(request.text, request.from, request.to, request.provider);
+    return translator;
+}
 
-        case 'translateBatch':
-            const results = await translator.translateBatch(request.texts, request.from, request.to);
-            return { results };
+async function forwardCommandToActiveTab(command) {
+    const action = COMMAND_ACTION_MAP[command];
+    if (!action) {
+        return;
+    }
 
-        case 'testTTS': return handleTestTTS(request);
-        case 'ttsGLM': return handleTTSGLM(request);
-        case 'ttsOpenAI': return handleTTSOpenAI(request);
-        case 'ttsGoogle': return handleTTSGoogle(request);
+    const settings = await StorageManager.getSettings();
+    if (settings.enableShortcut === false) {
+        return;
+    }
 
-        case 'getSettings':
-            return StorageManager.getSettings();
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.id) {
+        return;
+    }
 
-        case 'getHistory':
-            return StorageManager.getHistory();
+    try {
+        await chrome.tabs.sendMessage(tab.id, { action });
+    } catch (error) {
+        console.warn(`快捷键消息转发失败: ${command}`, error);
+    }
+}
 
-        default:
-            console.warn(`Unknown action: ${request.action}`);
-            // Return undefined/null for unknown action to avoid error on client side if they sent a message meant for someone else?
-            // Or return error.
-            return { error: 'Unknown action' };
+async function runInstalledMigrations(details) {
+    for (const migrate of INSTALLED_MIGRATIONS) {
+        await migrate(details);
     }
 }

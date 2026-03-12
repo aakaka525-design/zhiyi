@@ -5,6 +5,8 @@
 (function () {
     'use strict';
 
+    var ST = window.SmartTranslator = window.SmartTranslator || {};
+
     // 广告选择器列表 (更精确，避免误伤)
     const AD_SELECTORS = [
         // Google Ads (精确匹配)
@@ -131,6 +133,11 @@
 
     let observer = null;
     let styleElement = null;
+    let clickProtectionEnabled = false;
+    let originalWindowOpen = null;
+    let clickProtectionHandler = null;
+    let overlayCleanupIntervalId = null;
+    let initialized = false;
 
     // 注入隐藏广告的 CSS
     const injectStyles = () => {
@@ -221,19 +228,18 @@
     };
 
     // 点击劫持防护 - 阻止隐藏的广告链接和弹窗
-    let clickProtectionEnabled = false;
     const enableClickProtection = () => {
         if (clickProtectionEnabled) return;
         clickProtectionEnabled = true;
 
         // 强力拦截 window.open (阻止所有非本站的弹窗)
-        const originalOpen = window.open;
+        originalWindowOpen = originalWindowOpen || window.open;
         window.open = function (...args) {
             const url = args[0] || '';
 
             // 允许空 URL 或本站链接
             if (!url || url.includes(window.location.hostname) || url.startsWith('/') || url.startsWith('#')) {
-                return originalOpen.apply(this, args);
+                return originalWindowOpen.apply(this, args);
             }
 
             // 阻止所有外部弹窗 (大多数是广告)
@@ -244,7 +250,7 @@
         // 注意：移除了之前的 mousedown 处理器，因为它会误删正常内容
 
         // 页面级点击拦截 (捕获阶段) - 更保守，避免误删内容
-        document.addEventListener('click', (e) => {
+        clickProtectionHandler = (e) => {
             const target = e.target;
 
             // 1. 检查全屏透明覆盖层 (这是造成"点哪都弹广告"的元凶)
@@ -307,10 +313,11 @@
                     return false;
                 }
             }
-        }, true); // 使用捕获阶段，确保在这里就截断事件流
+        };
+        document.addEventListener('click', clickProtectionHandler, true); // 使用捕获阶段，确保在这里就截断事件流
 
         // 定期清理可疑覆盖层
-        setInterval(() => {
+        overlayCleanupIntervalId = window.setInterval(() => {
             document.querySelectorAll('div[style*="z-index: 9999"], div[style*="z-index:9999"], a[style*="z-index"]').forEach(el => {
                 const style = window.getComputedStyle(el);
                 const zIndex = parseInt(style.zIndex) || 0;
@@ -323,6 +330,23 @@
                 }
             });
         }, 3000);
+    };
+
+    const disableClickProtection = () => {
+        if (!clickProtectionEnabled) return;
+
+        if (clickProtectionHandler) {
+            document.removeEventListener('click', clickProtectionHandler, true);
+            clickProtectionHandler = null;
+        }
+        if (overlayCleanupIntervalId) {
+            window.clearInterval(overlayCleanupIntervalId);
+            overlayCleanupIntervalId = null;
+        }
+        if (originalWindowOpen) {
+            window.open = originalWindowOpen;
+        }
+        clickProtectionEnabled = false;
     };
 
 
@@ -387,31 +411,38 @@
     const disable = () => {
         removeStyles();
         stopObserver();
+        disableClickProtection();
         console.log('[智译] 广告屏蔽已禁用');
+    };
+
+    const applyAdBlockSetting = (enableAdBlock) => {
+        if (enableAdBlock === true) {
+            enable();
+            return;
+        }
+        disable();
     };
 
     // 初始化
     const init = () => {
-        const settings = window.ST?.state?.settings || {};
-        if (settings.enableAdBlock !== false) {
-            enable();
+        const settings = window.SmartTranslator?.state?.settings || {};
+        if (initialized) {
+            applyAdBlockSetting(settings.enableAdBlock);
+            return;
         }
+
+        initialized = true;
+        applyAdBlockSetting(settings.enableAdBlock);
 
         // 监听设置变化
         chrome.storage.onChanged.addListener((changes) => {
             if (changes.settings?.newValue) {
-                const newSettings = changes.settings.newValue;
-                if (newSettings.enableAdBlock === false) {
-                    disable();
-                } else {
-                    enable();
-                }
+                applyAdBlockSetting(changes.settings.newValue.enableAdBlock);
             }
         });
     };
 
     // 导出
-    window.ST = window.ST || {};
     ST.adBlocker = { init, enable, disable };
 
     // 页面加载后初始化

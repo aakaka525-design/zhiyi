@@ -157,9 +157,6 @@ ST.createSidebar = function () {
                 case 'glm':
                     await speakGLM(text, settings);
                     break;
-                case 'fish':
-                    await speakFish(text, settings);
-                    break;
                 default:
                     speakSystem(text, lang, speed);
             }
@@ -214,13 +211,7 @@ ST.createSidebar = function () {
             return;
         }
 
-        const voiceMap = {
-            'zh': 'cmn-CN-Chirp3-HD-Aoede',
-            'en': 'en-US-Chirp3-HD-Fenrir',
-            'ja': 'ja-JP-Wavenet-A',
-            'ko': 'ko-KR-Wavenet-A'
-        };
-        const voice = settings.ttsVoice || voiceMap[lang] || voiceMap['zh'];
+        const voice = settings.ttsVoice || ST.getDefaultGoogleTtsVoice(lang);
 
         const response = await ST.sendMessage({
             action: 'ttsGoogle',
@@ -261,25 +252,6 @@ ST.createSidebar = function () {
         }
     };
 
-    const speakFish = async (text, settings) => {
-        const apiKey = settings.fishAudioApiKey;
-        if (!apiKey) { speakSystem(text, 'zh', 1.0); return; }
-
-        const response = await ST.sendMessage({
-            action: 'ttsFish',
-            apiKey,
-            text,
-            voiceId: settings.fishAudioVoice,
-            speed: settings.ttsSpeed || 1.0
-        });
-
-        if (response?.audioData) {
-            await playAudioFromDataUrl(response.audioData, response.speed || 1.0);
-        } else {
-            throw new Error(response?.error || 'Fish Audio failed');
-        }
-    };
-
     speakSourceBtn.onclick = () => speak(input.value, sourceLangSelect.value);
     speakResultBtn.onclick = () => speak(resultContent.innerText, targetLangSelect.value);
 
@@ -302,13 +274,15 @@ ST.createSidebar = function () {
             if (response && response.text) {
                 resultCard.classList.add('active');
                 resultContent.innerText = response.text;
+                resultContent.style.color = '';
                 resultLang.innerText = `翻译结果 (${targetLangSelect.value})`;
                 // 刷新历史记录
                 setTimeout(() => ST.refreshSidebarHistory(), 500);
             }
         } catch (err) {
             resultCard.classList.add('active');
-            resultContent.innerHTML = `<span style="color: #ff5252">错误: ${err.message}</span>`;
+            resultContent.textContent = `错误: ${err.message}`;
+            resultContent.style.color = '#ff5252';
         } finally {
             translateBtn.innerText = '翻译';
             translateBtn.disabled = false;
@@ -328,24 +302,43 @@ ST.createSidebar = function () {
     ST.refreshSidebarHistory = async () => {
         try {
             const history = await ST.sendMessage({ action: 'getHistory' });
+            historyList.replaceChildren();
+
             if (history && history.length > 0) {
                 const top5 = history.slice(0, 5);
-                historyList.innerHTML = top5.map(item => `
-                    <div class="st-history-item" data-source="${item.source.replace(/"/g, '&quot;')}" data-target="${item.target.replace(/"/g, '&quot;')}">
-                        <div class="st-history-source">${item.source}</div>
-                        <div class="st-history-target">${item.target}</div>
-                    </div>
-                `).join('');
+                top5.forEach((item) => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'st-history-item';
+                    historyItem.dataset.source = item.source;
+                    historyItem.dataset.target = item.target;
 
-                // 历史记录点击事件
-                historyList.querySelectorAll('.st-history-item').forEach(el => {
-                    el.onclick = () => {
-                        input.value = el.dataset.source;
-                        resultContent.innerText = el.dataset.target;
+                    const sourceDiv = document.createElement('div');
+                    sourceDiv.className = 'st-history-source';
+                    sourceDiv.textContent = item.source;
+
+                    const targetDiv = document.createElement('div');
+                    targetDiv.className = 'st-history-target';
+                    targetDiv.textContent = item.target;
+
+                    historyItem.append(sourceDiv, targetDiv);
+                    historyItem.onclick = () => {
+                        input.value = historyItem.dataset.source;
+                        resultContent.innerText = historyItem.dataset.target;
+                        resultContent.style.color = '';
                         resultCard.classList.add('active');
                         translateBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     };
+
+                    historyList.appendChild(historyItem);
                 });
+            } else {
+                const emptyState = document.createElement('div');
+                emptyState.style.fontSize = '12px';
+                emptyState.style.color = '#999';
+                emptyState.style.textAlign = 'center';
+                emptyState.style.padding = '20px';
+                emptyState.textContent = '暂无记录';
+                historyList.appendChild(emptyState);
             }
         } catch (err) {
             console.error('加载历史记录失败:', err);
@@ -367,6 +360,9 @@ ST.createSidebar = function () {
  * 切换侧边栏显示
  */
 ST.toggleSidebar = function () {
+    if (!ST.ui.sidebar || !ST.ui.sidebarBtn) {
+        ST.createSidebar();
+    }
     const isActive = ST.ui.sidebar.classList.toggle('active');
     ST.ui.sidebarBtn.classList.toggle('sidebar-active');
 

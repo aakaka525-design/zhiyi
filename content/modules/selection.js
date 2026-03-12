@@ -136,38 +136,43 @@ ST.showBubble = async function (text) {
     document.body.appendChild(ST.ui.bubble);
 
     try {
-        ST.sendMessage({
+        const response = await ST.sendMessage({
             action: 'translate',
             text: text,
             from: ST.detectLanguage(text),
             to: ST.state.settings?.targetLang || 'zh'
-        }).then(response => {
-            const resultDiv = ST.ui.bubble?.querySelector('.st-bubble-result');
-            if (!resultDiv) return;
-
-            if (response && response.text) {
-                resultDiv.innerHTML = response.text;
-
-                // 绑定复制
-                const copyBtn = ST.ui.bubble.querySelector('#st-copy-btn');
-                if (copyBtn) {
-                    copyBtn.onclick = () => {
-                        navigator.clipboard.writeText(response.text);
-                        copyBtn.style.color = '#00c853';
-                        setTimeout(() => copyBtn.style.color = '', 1000);
-                    };
-                }
-            } else {
-                resultDiv.innerHTML = `<span style="color: #ff5252">翻译失败: ${response?.error || '未知错误'}</span>`;
-            }
         });
+
+        const resultDiv = ST.ui.bubble?.querySelector('.st-bubble-result');
+        if (!resultDiv) return;
+
+        if (response && response.text) {
+            renderBubbleMessage(resultDiv, response.text);
+
+            // 绑定复制
+            const copyBtn = ST.ui.bubble.querySelector('#st-copy-btn');
+            if (copyBtn) {
+                copyBtn.onclick = () => {
+                    navigator.clipboard.writeText(response.text);
+                    copyBtn.style.color = '#00c853';
+                    setTimeout(() => copyBtn.style.color = '', 1000);
+                };
+            }
+        } else {
+            renderBubbleMessage(resultDiv, `翻译失败: ${response?.error || '未知错误'}`, true);
+        }
     } catch (err) {
         const resultDiv = ST.ui.bubble?.querySelector('.st-bubble-result');
         if (resultDiv) {
-            resultDiv.innerHTML = `<span style="color: #ff5252">请求失败</span>`;
+            renderBubbleMessage(resultDiv, `请求失败: ${err.message || '未知错误'}`, true);
         }
     }
 };
+
+function renderBubbleMessage(container, message, isError = false) {
+    container.textContent = message;
+    container.style.color = isError ? '#ff5252' : '';
+}
 
 /**
  * 移除翻译气泡

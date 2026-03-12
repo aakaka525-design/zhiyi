@@ -4,6 +4,12 @@
  */
 
 var ST = window.SmartTranslator;
+const DEFAULT_GOOGLE_TTS_VOICES = Object.freeze({
+    zh: 'cmn-CN-Chirp3-HD-Aoede',
+    en: 'en-US-Chirp3-HD-Fenrir',
+    ja: 'ja-JP-Wavenet-A',
+    ko: 'ko-KR-Wavenet-A',
+});
 
 /**
  * Promise 封装消息发送到 Background
@@ -119,6 +125,10 @@ ST.detectLanguage = function (text) {
     }
 
     return 'en';
+};
+
+ST.getDefaultGoogleTtsVoice = function (lang) {
+    return DEFAULT_GOOGLE_TTS_VOICES[lang] || DEFAULT_GOOGLE_TTS_VOICES.zh;
 };
 
 /**

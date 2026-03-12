@@ -28,7 +28,6 @@ const elements = {
     btnHistory: document.getElementById('btn-history'),
     btnSettings: document.getElementById('btn-settings'),
     btnImmersive: document.getElementById('btn-immersive'),
-    btnPdf: document.getElementById('btn-pdf'),
     btnSidebar: document.getElementById('btn-sidebar'),
     btnFloat: document.getElementById('btn-float'),
 };
@@ -139,9 +138,14 @@ function bindEvents() {
     });
 
     // 朗读按钮
-    elements.btnSpeak.addEventListener('click', () => {
+    elements.btnSpeak.addEventListener('click', async () => {
         if (currentResult) {
-            speak(currentResult, elements.targetLang.value);
+            try {
+                await speak(currentResult, elements.targetLang.value);
+            } catch (err) {
+                console.error('朗读失败:', err);
+                showToast(err.message || '朗读失败');
+            }
         }
     });
 
@@ -195,11 +199,6 @@ function bindEvents() {
             showToast('请刷新页面后重试');
             console.error('沉浸式翻译失败:', err);
         }
-    });
-
-    // PDF 翻译
-    elements.btnPdf.addEventListener('click', () => {
-        chrome.tabs.create({ url: 'options/options.html#pdf' });
     });
 
     // 侧边栏
@@ -352,13 +351,16 @@ async function updateServiceDisplay() {
         'openai': 'OpenAI GPT',
         'gemini': 'Google Gemini',
         'deepseek': 'DeepSeek',
-        'offline': '离线翻译',
+        'offline': '离线翻译（仅英译中）',
     };
     elements.currentService.textContent = providerNames[settings.provider] || 'Google 翻译';
 }
 
 // 朗读文本
-function speak(text, lang) {
+async function speak(text, lang) {
+    const settings = await StorageManager.getSettings();
+    const provider = settings.ttsProvider || 'system';
+    const speed = settings.ttsSpeed || 1.0;
     const langMap = {
         'zh': 'zh-CN',
         'en': 'en-US',
@@ -366,9 +368,86 @@ function speak(text, lang) {
         'ko': 'ko-KR',
     };
 
+    if (provider !== 'system') {
+        const audioData = await requestTtsAudio(provider, text, lang, settings, speed);
+        const response = await chrome.runtime.sendMessage({
+            action: 'playAudioOffscreen',
+            audioData,
+            speed,
+        });
+        if (response?.error) {
+            throw new Error(response.error);
+        }
+        return;
+    }
+
     const utterance = new SpeechSynthesisUtterance(text);
+    speechSynthesis.cancel();
+    utterance.rate = speed;
     utterance.lang = langMap[lang] || lang;
     speechSynthesis.speak(utterance);
+}
+
+async function requestTtsAudio(provider, text, lang, settings, speed) {
+    switch (provider) {
+        case 'openai': {
+            if (!settings.openaiApiKey) {
+                throw new Error('请先在设置页配置 OpenAI TTS');
+            }
+            const response = await chrome.runtime.sendMessage({
+                action: 'ttsOpenAI',
+                apiKey: settings.openaiApiKey,
+                baseUrl: settings.openaiBaseUrl,
+                text,
+                voice: settings.ttsVoice || 'nova',
+                speed,
+            });
+            if (response?.audioData) {
+                return response.audioData;
+            }
+            throw new Error(response?.error || 'OpenAI TTS 失败');
+        }
+        case 'google': {
+            if (!settings.geminiApiKey) {
+                throw new Error('请先在设置页配置 Google TTS');
+            }
+            const voiceMap = {
+                zh: 'cmn-CN-Chirp3-HD-Aoede',
+                en: 'en-US-Chirp3-HD-Fenrir',
+                ja: 'ja-JP-Wavenet-A',
+                ko: 'ko-KR-Wavenet-A',
+            };
+            const response = await chrome.runtime.sendMessage({
+                action: 'ttsGoogle',
+                apiKey: settings.geminiApiKey,
+                text,
+                voice: settings.ttsVoice || voiceMap[lang] || voiceMap.zh,
+                speed,
+            });
+            if (response?.audioData) {
+                return response.audioData;
+            }
+            throw new Error(response?.error || 'Google TTS 失败');
+        }
+        case 'glm': {
+            if (!settings.deepseekApiKey) {
+                throw new Error('请先在设置页配置 GLM TTS');
+            }
+            const response = await chrome.runtime.sendMessage({
+                action: 'ttsGLM',
+                apiKey: settings.deepseekApiKey,
+                text,
+                voice: settings.ttsVoice || 'tongtong',
+                speed,
+            });
+            if (response?.audioData) {
+                return response.audioData;
+            }
+            throw new Error(response?.error || 'GLM TTS 失败');
+        }
+        default:
+            throw new Error(`当前未支持的 TTS 服务: ${provider}`);
+    }
 }
 
 // 显示提示

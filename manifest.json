@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "智译 - Smart Translator",
   "version": "1.0.0",
-  "description": "智能翻译插件 - 支持划词翻译、沉浸式翻译、PDF翻译",
+  "description": "智能翻译插件 - 支持划词翻译、沉浸式翻译、语音朗读和广告拦截",
   "default_locale": "zh_CN",
   "icons": {
     "16": "assets/icons/icon16.png",
@@ -49,7 +49,6 @@
     "activeTab",
     "storage",
     "contextMenus",
-    "scripting",
     "offscreen"
   ],
   "host_permissions": [

@@ -55,10 +55,10 @@ Popup/Content → sendMessage({ action, payload }) → Service Worker → 调用
 |--------|------|----------|------|
 | `translate` | Popup / Content | `src/core/translator.js` | 翻译文本 |
 | `translateBatch` | Content | `src/core/translator.js` | 批量翻译 |
-| `testTTS` | Options | `background/modules/tts.js` | 测试 TTS |
-| `ttsOpenAI` | Content | `background/modules/tts.js` | OpenAI TTS |
-| `ttsGoogle` | Content | `background/modules/tts.js` | Google TTS |
-| `ttsGLM` | Content | `background/modules/tts.js` | GLM TTS |
+| `ttsOpenAI` | Popup / Content / Options | `background/modules/tts.js` | OpenAI TTS 音频生成 |
+| `ttsGoogle` | Popup / Content / Options | `background/modules/tts.js` | Google TTS 音频生成 |
+| `ttsGLM` | Popup / Content / Options | `background/modules/tts.js` | GLM TTS 音频生成 |
+| `playAudioOffscreen` | Popup / Content / Options | `background/modules/tts.js` | 通过 Offscreen Document 播放音频 |
 | `getSettings` | Popup / Content | `src/core/storage.js` | 获取设置 |
 | `getHistory` | Popup | `src/core/storage.js` | 获取历史 |
 

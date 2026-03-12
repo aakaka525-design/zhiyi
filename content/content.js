@@ -9,12 +9,27 @@ var ST = window.SmartTranslator;
  * 加载设置
  */
 async function loadSettings() {
-    return new Promise((resolve) => {
-        chrome.runtime.sendMessage({ action: 'getSettings' }, (settings) => {
-            ST.state.settings = settings;
-            resolve(settings);
+    try {
+        const settings = await new Promise((resolve, reject) => {
+            const timer = setTimeout(() => reject(new Error('timeout')), 3000);
+            chrome.runtime.sendMessage({ action: 'getSettings' }, (response) => {
+                clearTimeout(timer);
+                if (chrome.runtime.lastError) {
+                    reject(new Error(chrome.runtime.lastError.message));
+                } else {
+                    resolve(response);
+                }
+            });
         });
-    });
+        ST.state.settings = settings;
+        return settings;
+    } catch (e) {
+        console.warn('[智译] Service Worker 未就绪，直接读取存储:', e.message);
+        const result = await chrome.storage.local.get('settings');
+        const settings = result.settings || {};
+        ST.state.settings = settings;
+        return settings;
+    }
 }
 
 /**
@@ -80,6 +95,9 @@ function handleMessage(request, sender, sendResponse) {
 chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName === 'local' && changes.settings) {
         ST.state.settings = changes.settings.newValue;
+        if (changes.settings.newValue?.showFloatingBall === true && ST.floatingBall?.init) {
+            ST.floatingBall.init();
+        }
         console.log('[智译] 设置已自动更新');
     }
 });
@@ -90,9 +108,10 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 async function init() {
     await loadSettings();
     bindEvents();
-    ST.createSidebar();
-    ST.createFloatWindow();
-    if (ST.floatingBall && ST.floatingBall.init) {
+    if (ST.state.settings?.enableAdBlock === true && ST.adBlocker?.init) {
+        ST.adBlocker.init();
+    }
+    if (ST.state.settings?.showFloatingBall === true && ST.floatingBall?.init) {
         ST.floatingBall.init();
     }
     console.log('[智译] 内容脚本已加载 (模块化版本)');

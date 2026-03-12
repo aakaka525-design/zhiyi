@@ -100,6 +100,10 @@ export class Translator {
                 to,
             };
         } catch (error) {
+            if (selectedProvider === 'offline') {
+                throw error;
+            }
+
             // 如果主服务失败，尝试回退到 Google 翻译
             if (selectedProvider !== 'google') {
                 console.warn(`${selectedProvider} 翻译失败，回退到 Google 翻译:`, error);
@@ -169,7 +173,7 @@ export class Translator {
         for (const [lang, pattern] of Object.entries(patterns)) {
             if (pattern.test(text)) {
                 // 日语检测需要更精确，因为也包含汉字
-                if (lang === 'ja' || (lang === 'zh' && !patterns.ja.test(text))) {
+                if (lang === 'ja' || lang === 'ko' || (lang === 'zh' && !patterns.ja.test(text))) {
                     return lang;
                 }
             }

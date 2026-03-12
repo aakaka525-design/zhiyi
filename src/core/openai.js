@@ -14,9 +14,11 @@ export class OpenAITranslator {
      * 更新配置
      */
     updateConfig(apiKey, baseUrl, model) {
-        this.apiKey = apiKey || this.apiKey;
-        this.baseUrl = (baseUrl || this.baseUrl).replace(/\/$/, '');
-        this.model = model || this.model;
+        this.apiKey = apiKey !== undefined ? apiKey : this.apiKey;
+        if (baseUrl !== undefined) {
+            this.baseUrl = baseUrl.replace(/\/$/, '');
+        }
+        this.model = model !== undefined ? model : this.model;
     }
 
     /**

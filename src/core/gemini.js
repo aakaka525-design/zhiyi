@@ -14,8 +14,8 @@ export class GeminiTranslator {
      * 更新配置
      */
     updateConfig(apiKey, model) {
-        this.apiKey = apiKey || this.apiKey;
-        this.model = model || this.model;
+        this.apiKey = apiKey !== undefined ? apiKey : this.apiKey;
+        this.model = model !== undefined ? model : this.model;
     }
 
     /**
@@ -41,9 +41,25 @@ export class GeminiTranslator {
         const sourceLang = langNames[from] || from;
         const targetLang = langNames[to] || to;
 
+        const promptRequirements = `要求：
+1. 只输出翻译结果，不要添加任何解释或额外内容
+2. 保持原文的语气和风格
+3. 对于专业术语，使用该领域的标准译法
+4. 对于人名、地名等专有名词，保留原文并在括号内注明译名（如适用）`;
+
         const prompt = from === 'auto'
-            ? `请将以下文本翻译成${targetLang}，只输出翻译结果，不要任何解释：\n\n${text}`
-            : `请将以下${sourceLang}文本翻译成${targetLang}，只输出翻译结果，不要任何解释：\n\n${text}`;
+            ? `你是一个专业的翻译助手。请将用户输入的文本翻译成${targetLang}。
+
+${promptRequirements}
+
+待翻译文本：
+${text}`
+            : `你是一个专业的翻译助手。请将以下${sourceLang}文本翻译成${targetLang}。
+
+${promptRequirements}
+
+待翻译文本：
+${text}`;
 
         try {
             const response = await fetch(
@@ -115,10 +131,17 @@ export class GeminiTranslator {
         // 格式化输入
         const formattedInput = texts.map((t, i) => `[${i + 1}] ${t}`).join('\n');
 
-        const prompt = `请将以下多段文本翻译成${targetLang}。
+        const prompt = `你是一个专业的翻译助手。请将用户输入的多段文本翻译成${targetLang}。
 
 输入格式：每行以 [编号] 开头
-输出格式：保持相同的编号格式，只输出翻译结果，不要任何解释
+输出格式：保持相同的编号格式，只输出翻译结果
+
+要求：
+1. 保持原文的语气和风格
+2. 每段翻译独立，但要注意上下文连贯性
+3. 对于专业术语，使用该领域的标准译法
+4. 对于人名、地名等专有名词，保留原文并在括号内注明译名（如适用）
+5. 不要添加任何解释或额外内容
 
 ${formattedInput}`;
 
@@ -138,6 +161,12 @@ ${formattedInput}`;
                             temperature: 0.3,
                             maxOutputTokens: 8192,
                         },
+                        safetySettings: [
+                            { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+                            { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+                            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+                            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+                        ],
                     }),
                 }
             );

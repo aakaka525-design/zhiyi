@@ -16,11 +16,8 @@ export class OfflineTranslator {
         if (this.loaded) return;
 
         try {
-            // 尝试加载词典文件
             const dictFiles = [
                 { key: 'en-zh', path: '/assets/dictionaries/en-zh.json' },
-                { key: 'ja-zh', path: '/assets/dictionaries/ja-zh.json' },
-                { key: 'ko-zh', path: '/assets/dictionaries/ko-zh.json' },
             ];
 
             for (const { key, path } of dictFiles) {
@@ -67,8 +64,12 @@ export class OfflineTranslator {
         const dictKey = `${sourceLang}-${to}`;
         const dict = this.dictionaries[dictKey];
 
+        if (dictKey !== 'en-zh') {
+            throw new Error('当前仅支持英译中离线翻译');
+        }
+
         if (!dict || Object.keys(dict).length === 0) {
-            throw new Error('离线词典不可用');
+            throw new Error('英译中离线词典不可用');
         }
 
         // 尝试整句匹配

@@ -5,7 +5,7 @@
 export class DeepSeekTranslator {
     constructor(apiKey = '', baseUrl = 'https://api.ppinfra.com/openai', model = 'deepseek/deepseek-ocr') {
         this.apiKey = apiKey;
-        this.baseUrl = baseUrl;
+        this.baseUrl = baseUrl.replace(/\/$/, '');
         this.model = model;
     }
 
@@ -13,9 +13,11 @@ export class DeepSeekTranslator {
      * 更新配置
      */
     updateConfig(apiKey, baseUrl, model) {
-        this.apiKey = apiKey || this.apiKey;
-        this.baseUrl = baseUrl || this.baseUrl;
-        this.model = model || this.model;
+        this.apiKey = apiKey !== undefined ? apiKey : this.apiKey;
+        if (baseUrl !== undefined) {
+            this.baseUrl = baseUrl.replace(/\/$/, '');
+        }
+        this.model = model !== undefined ? model : this.model;
     }
 
     /**

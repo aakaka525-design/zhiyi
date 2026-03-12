@@ -114,12 +114,11 @@ ST.createFloatWindow = function () {
                 });
                 if (response?.audioData) { await playAudio(response.audioData); return; }
             } else if (provider === 'google' && settings.geminiApiKey) {
-                const voiceMap = { 'zh': 'cmn-CN-Chirp3-HD-Aoede', 'en': 'en-US-Chirp3-HD-Fenrir', 'ja': 'ja-JP-Wavenet-A' };
                 const response = await ST.sendMessage({
                     action: 'ttsGoogle',
                     apiKey: settings.geminiApiKey,
                     text,
-                    voice: settings.ttsVoice || voiceMap[lang] || voiceMap['zh'],
+                    voice: settings.ttsVoice || ST.getDefaultGoogleTtsVoice(lang),
                     speed
                 });
                 if (response?.audioData) { await playAudio(response.audioData); return; }
@@ -132,15 +131,6 @@ ST.createFloatWindow = function () {
                     speed
                 });
                 if (response?.audioData) { await playAudio(response.audioData); return; }
-            } else if (provider === 'fish' && settings.fishAudioApiKey) {
-                const response = await ST.sendMessage({
-                    action: 'ttsFish',
-                    apiKey: settings.fishAudioApiKey,
-                    text,
-                    voiceId: settings.fishAudioVoice,
-                    speed
-                });
-                if (response?.audioData) { await playAudio(response.audioData, speed); return; }
             }
         } catch (err) {
             console.error('[TTS] 朗读失败:', err);

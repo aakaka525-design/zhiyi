@@ -30,11 +30,11 @@
 
 ---
 
-## 3. PDF 翻译
+## 3. PDF 模块（未开放入口）
 
-**触发方式**: Popup 中的「PDF翻译」入口。
+**触发方式**: 当前版本未在 Popup 中开放 PDF 入口。
 
-**说明**: 当前仓库保留 PDF 翻译入口和基础处理模块，核心逻辑位于 `src/core/pdf.js`。
+**说明**: 仓库仍保留基础处理模块 `src/core/pdf.js`，但产品入口暂未开放。
 
 **相关模块**: 见 [架构设计](./architecture.md) 中的 Popup、Service Worker 与 `src/core` 分层说明。
 
@@ -47,7 +47,6 @@
 - OpenAI TTS
 - Google Cloud TTS
 - GLM TTS
-- Fish Audio
 
 **播放方式**: 通过 Offscreen Document 在后台播放音频。
 
@@ -68,6 +67,7 @@
 **功能**:
 - 文本输入翻译
 - 语言选择
+- 基于当前 TTS 配置的朗读
 - 历史记录入口
 - 收藏管理
 - 功能快捷入口

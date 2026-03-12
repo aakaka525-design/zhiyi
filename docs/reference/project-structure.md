@@ -46,7 +46,6 @@ zhiyi/
 │   ├── gemini.js                # Google Gemini API
 │   ├── deepseek.js              # DeepSeek API
 │   ├── offline.js               # 离线翻译（内置词典）
-│   ├── tts.js                   # TTS 服务
 │   └── pdf.js                   # PDF 处理
 │
 ├── offscreen/                   # 离屏文档（音频播放）
@@ -84,6 +83,6 @@ zhiyi/
 |------|--------|------|
 | 内容脚本 (`content/modules/`) | 8 | JavaScript |
 | 后台模块 (`background/modules/`) | 3 | JavaScript |
-| 核心模块 (`src/core/`) | 9 | JavaScript |
+| 核心模块 (`src/core/`) | 8 | JavaScript |
 | 离屏文档 (`offscreen/`) | 2 | HTML / JavaScript |
-| **合计** | **22** | |
+| **合计** | **21** | |

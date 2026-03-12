@@ -13,6 +13,7 @@
     let container = null;
     let ball = null;
     let menu = null;
+    let initialized = false;
 
     let isDragging = false;
     let dragOffset = { x: 0, y: 0 };
@@ -55,7 +56,7 @@
                 id: 'btn-sidebar',
                 icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/> <line x1="9" y1="3" x2="9" y2="21"/>',
                 title: '侧边栏',
-                action: () => ST.sidebar && ST.sidebar.toggle && ST.sidebar.toggle()
+                action: () => ST.toggleSidebar && ST.toggleSidebar()
             }
         ];
 
@@ -241,44 +242,43 @@
     };
 
     // Lifecycle
+    const syncVisibility = (showFloatingBall) => {
+        if (showFloatingBall === true) {
+            if (!container) {
+                createOrb();
+            } else {
+                container.style.display = 'flex';
+            }
+            return;
+        }
+
+        if (container) {
+            container.style.display = 'none';
+        }
+    };
+
     const init = () => {
+        if (initialized) {
+            syncVisibility(ST.state.settings?.showFloatingBall);
+            return;
+        }
+
+        initialized = true;
         console.log('[SmartTranslator] FloatingBall init called');
         const settings = ST.state.settings || {};
         console.log('[SmartTranslator] Settings:', settings);
 
-        // Default to TRUE if undefined
-        if (settings.showFloatingBall !== false) {
-            console.log('[SmartTranslator] Creating Orb...');
-            createOrb();
-        } else {
-            console.log('[SmartTranslator] Orb disabled by setting');
-        }
+        syncVisibility(settings.showFloatingBall);
 
         chrome.storage.onChanged.addListener((changes) => {
             if (changes.settings?.newValue) {
                 const show = changes.settings.newValue.showFloatingBall;
                 console.log('[SmartTranslator] Setting changed, showFloatingBall:', show);
-                if (show === false && container) container.style.display = 'none';
-                if (show !== false) {
-                    if (!container) createOrb();
-                    else container.style.display = 'flex';
-                }
+                syncVisibility(show);
             }
         });
     };
 
     window.ST = window.ST || {};
     ST.floatingBall = { init };
-
-    // Self-init if ready (fallback)
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            // Check if content.js already initialized it to avoid double init
-            // But for now double init is safe-ish due to checks
-            console.log('[SmartTranslator] DOMContentLoaded self-init check');
-            if (!container) init();
-        });
-    } else {
-        // init(); // Rely on content.js to call valid init with settings
-    }
 })();

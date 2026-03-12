@@ -17,6 +17,8 @@ const LEGACY_SETTINGS_KEYS = [
     'customMangaModel',
     'mangaFontStyle',
     'hybridCloudEngine',
+    'fishAudioApiKey',
+    'fishAudioVoice',
 ];
 
 function sanitizeSettings(settings = {}) {
@@ -24,7 +26,14 @@ function sanitizeSettings(settings = {}) {
     LEGACY_SETTINGS_KEYS.forEach((key) => {
         delete cleaned[key];
     });
+    if (cleaned.ttsProvider === 'edge' || cleaned.ttsProvider === 'fish') {
+        cleaned.ttsProvider = 'system';
+    }
     return cleaned;
+}
+
+function getStoredSettings(result = {}) {
+    return sanitizeSettings(result[STORAGE_KEYS.SETTINGS]);
 }
 
 const DEFAULT_SETTINGS = {
@@ -48,18 +57,16 @@ const DEFAULT_SETTINGS = {
     darkMode: false, // 深色模式
 
     // TTS 语音合成配置
-    ttsProvider: 'system', // system, openai, edge, fish
+    ttsProvider: 'system', // system, openai, google, glm
     ttsVoice: '', // 具体声音ID，留空使用默认
     ttsSpeed: 1.0, // 语速 0.5-2.0
-
-    // Fish Audio 配置
-    fishAudioApiKey: '',
-    fishAudioVoice: '', // Fish Audio 声音ID
 
     // 功能开关
     enableSelection: true,    // 划词翻译
     enableHover: false,       // 悬停翻译
     enableShortcut: true,     // 快捷键
+    showFloatingBall: false,
+    enableAdBlock: false,
 
     // 显示设置
     showOriginal: true,       // 沉浸式翻译显示原文
@@ -79,10 +86,10 @@ export class StorageManager {
     static async getSettings() {
         try {
             const result = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
-            return { ...DEFAULT_SETTINGS, ...sanitizeSettings(result[STORAGE_KEYS.SETTINGS]) };
+            return { ...DEFAULT_SETTINGS, ...getStoredSettings(result) };
         } catch (error) {
             console.error('获取设置失败:', error);
-            return DEFAULT_SETTINGS;
+            return { ...DEFAULT_SETTINGS };
         }
     }
 
@@ -91,10 +98,11 @@ export class StorageManager {
      */
     static async updateSettings(updates) {
         try {
-            const current = await this.getSettings();
+            const result = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
+            const current = getStoredSettings(result);
             const newSettings = sanitizeSettings({ ...current, ...updates });
             await chrome.storage.local.set({ [STORAGE_KEYS.SETTINGS]: newSettings });
-            return newSettings;
+            return { ...DEFAULT_SETTINGS, ...newSettings };
         } catch (error) {
             console.error('更新设置失败:', error);
             throw error;

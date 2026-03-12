@@ -1,0 +1,3 @@
+API_key=your_api_key_here
+Base_URL=https://api.example.com/openai
+Model=your-model-name

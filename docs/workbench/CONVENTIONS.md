@@ -6,7 +6,7 @@
 
 - **项目名**: 智译 - Smart Translator
 - **类型**: Chrome 扩展 (Manifest V3)
-- **功能**: 划词翻译、沉浸式翻译、PDF、TTS、广告拦截
+- **功能**: 划词翻译、沉浸式翻译、TTS、广告拦截
 - **前端**: JavaScript ES6 Modules（无构建工具，无 TypeScript）
 - **后台**: Chrome Service Worker + Offscreen Document
 - **存储**: Chrome Storage API
