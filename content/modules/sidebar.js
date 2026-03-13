@@ -195,7 +195,7 @@ ST.createSidebar = function () {
             apiKey,
             baseUrl: settings.openaiBaseUrl,
             text,
-            voice: settings.ttsVoice || 'nova',
+            voice: settings.ttsVoiceOpenai || 'nova',
             speed: settings.ttsSpeed || 1.0
         });
 
@@ -213,7 +213,7 @@ ST.createSidebar = function () {
             return;
         }
 
-        const voice = settings.ttsVoice || ST.getDefaultGoogleTtsVoice(lang);
+        const voice = settings.ttsVoiceGoogle || ST.getDefaultGoogleTtsVoice(lang);
 
         const response = await ST.sendMessage({
             action: 'ttsGoogle',
@@ -237,7 +237,7 @@ ST.createSidebar = function () {
             return;
         }
 
-        const voice = settings.ttsVoice || 'tongtong';
+        const voice = settings.ttsVoiceGlm || 'tongtong';
 
         const response = await ST.sendMessage({
             action: 'ttsGLM',
@@ -256,6 +256,14 @@ ST.createSidebar = function () {
 
     speakSourceBtn.onclick = () => speak(input.value, sourceLangSelect.value);
     speakResultBtn.onclick = () => speak(resultContent.innerText, targetLangSelect.value);
+
+    // 键盘快捷翻译 — Enter 发送，Shift+Enter 换行
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+            e.preventDefault();
+            translateBtn.click();
+        }
+    });
 
     // 翻译逻辑
     translateBtn.onclick = async () => {
@@ -278,8 +286,17 @@ ST.createSidebar = function () {
                 resultContent.innerText = response.text;
                 resultContent.style.color = '';
                 resultLang.innerText = `翻译结果 (${targetLangSelect.value})`;
-                // 刷新历史记录
-                setTimeout(() => ST.refreshSidebarHistory(), 500);
+                await ST.sendMessage({
+                    action: 'addHistory',
+                    item: {
+                        source: text,
+                        target: response.text,
+                        sourceLang: sourceLangSelect.value,
+                        targetLang: targetLangSelect.value,
+                        provider: response.provider || '',
+                    }
+                });
+                await ST.refreshSidebarHistory();
             } else {
                 resultCard.classList.add('active');
                 resultContent.textContent = `翻译失败: ${response?.error || '未知错误'}`;

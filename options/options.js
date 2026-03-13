@@ -108,9 +108,9 @@ async function loadSettings() {
     elements.ttsProvider.value = settings.ttsProvider || 'system';
     elements.ttsSpeed.value = settings.ttsSpeed || 1.0;
     elements.ttsSpeedValue.textContent = (settings.ttsSpeed || 1.0) + 'x';
-    elements.ttsVoiceOpenai.value = settings.ttsVoice || 'nova';
-    elements.ttsVoiceGoogle.value = settings.ttsVoice || 'cmn-CN-Chirp3-HD-Aoede';
-    elements.ttsVoiceGlm.value = settings.ttsVoice || 'tongtong';
+    elements.ttsVoiceOpenai.value = settings.ttsVoiceOpenai || 'nova';
+    elements.ttsVoiceGoogle.value = settings.ttsVoiceGoogle || 'cmn-CN-Chirp3-HD-Aoede';
+    elements.ttsVoiceGlm.value = settings.ttsVoiceGlm || 'tongtong';
 
     updateTtsConfigVisibility(settings.ttsProvider || 'system');
 
@@ -170,9 +170,7 @@ function bindEvents() {
     // 历史记录切换
     elements.historyTabs.forEach(btn => {
         btn.addEventListener('click', () => {
-            elements.historyTabs.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            loadHistoryList(btn.getAttribute('data-type'));
+            switchHistoryTab(btn.getAttribute('data-type'));
         });
     });
 
@@ -180,7 +178,7 @@ function bindEvents() {
     elements.clearHistoryBtn.addEventListener('click', async () => {
         if (confirm('确定要清空所有翻译历史记录吗？')) {
             await StorageManager.clearHistory();
-            loadHistoryList('recent');
+            switchHistoryTab('recent');
         }
     });
 
@@ -425,8 +423,19 @@ function switchTab(target) {
 // 加载特定标签的内容
 function loadTab(name) {
     if (name === 'history') {
-        loadHistoryList('recent');
+        switchHistoryTab('recent');
     }
+}
+
+function switchHistoryTab(type) {
+    elements.historyTabs.forEach(b => b.classList.remove('active'));
+    const targetBtn = document.querySelector(`.history-tab-btn[data-type="${type}"]`);
+    if (targetBtn) targetBtn.classList.add('active');
+
+    const searchInput = document.getElementById('history-search');
+    if (searchInput) searchInput.value = '';
+
+    loadHistoryList(type);
 }
 
 // 保存设置
@@ -480,17 +489,12 @@ function applyDarkMode(enabled) {
     }
 }
 
-function getSelectedTtsVoice() {
-    switch (elements.ttsProvider.value) {
-        case 'openai':
-            return elements.ttsVoiceOpenai.value;
-        case 'google':
-            return elements.ttsVoiceGoogle.value;
-        case 'glm':
-            return elements.ttsVoiceGlm.value;
-        default:
-            return '';
-    }
+function collectTtsVoices() {
+    return {
+        ttsVoiceOpenai: elements.ttsVoiceOpenai.value,
+        ttsVoiceGoogle: elements.ttsVoiceGoogle.value,
+        ttsVoiceGlm: elements.ttsVoiceGlm.value,
+    };
 }
 
 function collectCurrentSettings() {
@@ -513,7 +517,7 @@ function collectCurrentSettings() {
         debugMode: elements.enableDebugMode.checked,
         ttsProvider: elements.ttsProvider.value,
         ttsSpeed: parseFloat(elements.ttsSpeed.value),
-        ttsVoice: getSelectedTtsVoice(),
+        ...collectTtsVoices(),
     });
 }
 

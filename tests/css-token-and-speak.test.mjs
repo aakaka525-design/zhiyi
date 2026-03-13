@@ -52,7 +52,7 @@ test('float-window source speech resolves language once and reuses it for Google
     );
     assert.match(
         source,
-        /voice: settings\.ttsVoice \|\| ST\.getDefaultGoogleTtsVoice\(resolvedLang\),/,
+        /voice: settings\.ttsVoiceGoogle \|\| ST\.getDefaultGoogleTtsVoice\(resolvedLang\),/,
     );
     assert.match(
         source,

@@ -20,7 +20,9 @@ function mergeDefaults(raw) {
         deepseekModel: 'deepseek/deepseek-ocr',
         darkMode: false,
         ttsProvider: 'system',
-        ttsVoice: '',
+        ttsVoiceOpenai: '',
+        ttsVoiceGoogle: '',
+        ttsVoiceGlm: '',
         ttsSpeed: 1.0,
         enableSelection: true,
         enableShortcut: true,
@@ -30,7 +32,19 @@ function mergeDefaults(raw) {
         fontSize: 14,
         debugMode: false,
     };
-    return { ...defaults, ...(raw || {}) };
+    const merged = { ...defaults, ...(raw || {}) };
+    if (raw?.ttsVoice) {
+        const provider = raw.ttsProvider || 'system';
+        if (provider === 'openai' && !merged.ttsVoiceOpenai) {
+            merged.ttsVoiceOpenai = raw.ttsVoice;
+        } else if (provider === 'google' && !merged.ttsVoiceGoogle) {
+            merged.ttsVoiceGoogle = raw.ttsVoice;
+        } else if (provider === 'glm' && !merged.ttsVoiceGlm) {
+            merged.ttsVoiceGlm = raw.ttsVoice;
+        }
+        delete merged.ttsVoice;
+    }
+    return merged;
 }
 
 /**

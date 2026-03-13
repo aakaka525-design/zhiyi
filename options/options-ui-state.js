@@ -20,7 +20,9 @@ export function buildSettingsSnapshot(settings) {
         debugMode: Boolean(settings.debugMode),
         ttsProvider: settings.ttsProvider || 'system',
         ttsSpeed: Number(settings.ttsSpeed) || 1,
-        ttsVoice: settings.ttsVoice || '',
+        ttsVoiceOpenai: settings.ttsVoiceOpenai || '',
+        ttsVoiceGoogle: settings.ttsVoiceGoogle || '',
+        ttsVoiceGlm: settings.ttsVoiceGlm || '',
     };
 }
 

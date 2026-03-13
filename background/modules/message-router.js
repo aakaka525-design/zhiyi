@@ -28,6 +28,9 @@ export async function routeMessage(request, deps) {
         case 'getHistory':
             return storage.getHistory();
 
+        case 'addHistory':
+            return storage.addHistory(request.item);
+
         case 'updateSettings':
             await translator.refreshSettings();
             return { success: true };

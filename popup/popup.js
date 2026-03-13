@@ -16,6 +16,7 @@ const elements = {
 
     charCount: document.getElementById('char-count'),
     currentService: document.getElementById('current-service'),
+    statusDot: document.querySelector('.status-dot'),
 
     // 按钮
     btnSwap: document.getElementById('btn-swap'),
@@ -95,15 +96,7 @@ async function saveLanguageSettings() {
 // 绑定事件
 function bindEvents() {
     // 输入框字符计数
-    elements.sourceText.addEventListener('input', () => {
-        const len = elements.sourceText.value.length;
-        elements.charCount.textContent = `${len} / ${MAX_CHARS}`;
-        if (len > MAX_CHARS) {
-            elements.charCount.style.color = 'var(--error)';
-        } else {
-            elements.charCount.style.color = 'var(--text-muted)';
-        }
-    });
+    elements.sourceText.addEventListener('input', updateCharCount);
 
     // 语言切换
     elements.btnSwap.addEventListener('click', () => {
@@ -119,6 +112,7 @@ function bindEvents() {
             if (currentResult) {
                 elements.sourceText.value = currentResult;
                 updateCharCount();
+                syncFavoriteState();
             }
         }
     });
@@ -319,6 +313,7 @@ async function checkSelectedText() {
 function updateCharCount() {
     const len = elements.sourceText.value.length;
     elements.charCount.textContent = `${len} / ${MAX_CHARS}`;
+    elements.charCount.style.color = len > MAX_CHARS ? 'var(--error)' : 'var(--text-muted)';
 }
 
 // 设置加载状态
@@ -390,6 +385,15 @@ async function updateServiceDisplay() {
         'offline': '离线翻译（仅英译中）',
     };
     elements.currentService.textContent = providerNames[settings.provider] || 'Google 翻译';
+
+    if (elements.statusDot) {
+        const hasKey = settings.provider === 'google'
+            || settings.provider === 'offline'
+            || (settings.provider === 'openai' && settings.openaiApiKey)
+            || (settings.provider === 'gemini' && settings.geminiApiKey)
+            || (settings.provider === 'deepseek' && settings.deepseekApiKey);
+        elements.statusDot.classList.toggle('active', !!hasKey);
+    }
 }
 
 // 朗读文本
@@ -439,7 +443,7 @@ async function requestTtsAudio(provider, text, lang, settings, speed) {
                 apiKey: settings.openaiApiKey,
                 baseUrl: settings.openaiBaseUrl,
                 text,
-                voice: settings.ttsVoice || 'nova',
+                voice: settings.ttsVoiceOpenai || 'nova',
                 speed,
             });
             if (response?.audioData) {
@@ -461,7 +465,7 @@ async function requestTtsAudio(provider, text, lang, settings, speed) {
                 action: 'ttsGoogle',
                 apiKey: settings.geminiApiKey,
                 text,
-                voice: settings.ttsVoice || voiceMap[lang] || voiceMap.zh,
+                voice: settings.ttsVoiceGoogle || voiceMap[lang] || voiceMap.zh,
                 speed,
             });
             if (response?.audioData) {
@@ -477,7 +481,7 @@ async function requestTtsAudio(provider, text, lang, settings, speed) {
                 action: 'ttsGLM',
                 apiKey: settings.deepseekApiKey,
                 text,
-                voice: settings.ttsVoice || 'tongtong',
+                voice: settings.ttsVoiceGlm || 'tongtong',
                 speed,
             });
             if (response?.audioData) {

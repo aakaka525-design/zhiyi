@@ -110,7 +110,7 @@ ST.createFloatWindow = function () {
                     apiKey: settings.openaiApiKey,
                     baseUrl: settings.openaiBaseUrl,
                     text,
-                    voice: settings.ttsVoice || 'nova',
+                    voice: settings.ttsVoiceOpenai || 'nova',
                     speed
                 });
                 if (response?.audioData) { await playAudio(response.audioData); return; }
@@ -119,7 +119,7 @@ ST.createFloatWindow = function () {
                     action: 'ttsGoogle',
                     apiKey: settings.geminiApiKey,
                     text,
-                    voice: settings.ttsVoice || ST.getDefaultGoogleTtsVoice(resolvedLang),
+                    voice: settings.ttsVoiceGoogle || ST.getDefaultGoogleTtsVoice(resolvedLang),
                     speed
                 });
                 if (response?.audioData) { await playAudio(response.audioData); return; }
@@ -128,7 +128,7 @@ ST.createFloatWindow = function () {
                     action: 'ttsGLM',
                     apiKey: settings.deepseekApiKey,
                     text,
-                    voice: settings.ttsVoice || 'tongtong',
+                    voice: settings.ttsVoiceGlm || 'tongtong',
                     speed
                 });
                 if (response?.audioData) { await playAudio(response.audioData); return; }
@@ -174,6 +174,16 @@ ST.createFloatWindow = function () {
                 resultArea.classList.add('active');
                 resultText.innerText = response.text;
                 resultText.style.color = '';
+                ST.sendMessage({
+                    action: 'addHistory',
+                    item: {
+                        source: text,
+                        target: response.text,
+                        sourceLang: 'auto',
+                        targetLang: targetLangSelect.value,
+                        provider: response.provider || '',
+                    }
+                });
             } else {
                 resultArea.classList.add('active');
                 resultText.textContent = `翻译失败: ${response?.error || '未知错误'}`;

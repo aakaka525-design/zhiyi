@@ -23,6 +23,19 @@ const LEGACY_SETTINGS_KEYS = [
 
 function sanitizeSettings(settings = {}) {
     const cleaned = { ...settings };
+    if ('ttsVoice' in cleaned) {
+        if (cleaned.ttsVoice) {
+            const provider = cleaned.ttsProvider || 'system';
+            if (provider === 'openai' && !cleaned.ttsVoiceOpenai) {
+                cleaned.ttsVoiceOpenai = cleaned.ttsVoice;
+            } else if (provider === 'google' && !cleaned.ttsVoiceGoogle) {
+                cleaned.ttsVoiceGoogle = cleaned.ttsVoice;
+            } else if (provider === 'glm' && !cleaned.ttsVoiceGlm) {
+                cleaned.ttsVoiceGlm = cleaned.ttsVoice;
+            }
+        }
+        delete cleaned.ttsVoice;
+    }
     LEGACY_SETTINGS_KEYS.forEach((key) => {
         delete cleaned[key];
     });
@@ -58,7 +71,9 @@ const DEFAULT_SETTINGS = {
 
     // TTS 语音合成配置
     ttsProvider: 'system', // system, openai, google, glm
-    ttsVoice: '', // 具体声音ID，留空使用默认
+    ttsVoiceOpenai: '',
+    ttsVoiceGoogle: '',
+    ttsVoiceGlm: '',
     ttsSpeed: 1.0, // 语速 0.5-2.0
 
     // 功能开关

@@ -29,7 +29,9 @@ test('hasUnsavedChanges returns false for identical settings snapshots', () => {
         debugMode: false,
         ttsProvider: 'system',
         ttsSpeed: 1,
-        ttsVoice: '',
+        ttsVoiceOpenai: '',
+        ttsVoiceGoogle: '',
+        ttsVoiceGlm: '',
     });
 
     assert.equal(hasUnsavedChanges(baseline, { ...baseline }), false);
@@ -55,7 +57,9 @@ test('hasUnsavedChanges returns true when any tracked setting changes', () => {
         debugMode: false,
         ttsProvider: 'system',
         ttsSpeed: 1,
-        ttsVoice: '',
+        ttsVoiceOpenai: '',
+        ttsVoiceGoogle: '',
+        ttsVoiceGlm: '',
     });
 
     const changed = {
