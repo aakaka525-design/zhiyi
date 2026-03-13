@@ -12,7 +12,7 @@ test('immersive translation uses accent tokens in both token scope and render pa
 
     assert.match(
         css,
-        /#st-floating-ball-container,\s*\.st-immersive-translation,\s*\.st-translation-separator,\s*#st-toast\s*\{/,
+        /#st-floating-ball-container,\s*(?:#smart-translator-icon,\s*)?\.st-immersive-translation,\s*\.st-translation-separator,\s*#st-toast\s*\{/,
     );
     assert.match(
         css,

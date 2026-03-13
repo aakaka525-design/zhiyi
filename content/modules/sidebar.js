@@ -317,6 +317,7 @@ ST.createSidebar = function () {
                     historyItem.className = 'st-history-item';
                     historyItem.dataset.source = item.source;
                     historyItem.dataset.target = item.target;
+                    historyItem.dataset.targetLang = item.targetLang || '';
 
                     const sourceDiv = document.createElement('div');
                     sourceDiv.className = 'st-history-source';
@@ -332,6 +333,12 @@ ST.createSidebar = function () {
                         resultContent.innerText = historyItem.dataset.target;
                         resultContent.style.color = '';
                         resultCard.classList.add('active');
+                        if (historyItem.dataset.targetLang) {
+                            targetLangSelect.value = historyItem.dataset.targetLang;
+                            resultLang.innerText = `翻译结果 (${historyItem.dataset.targetLang})`;
+                        } else {
+                            resultLang.innerText = '翻译结果';
+                        }
                         translateBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     };
 

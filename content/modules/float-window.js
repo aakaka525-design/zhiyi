@@ -91,6 +91,7 @@ ST.createFloatWindow = function () {
         const settings = ST.state.settings || {};
         const provider = settings.ttsProvider || 'system';
         const speed = settings.ttsSpeed || 1.0;
+        const resolvedLang = !lang || lang === 'auto' ? ST.detectLanguage(text) : lang;
 
         // 通用音频播放函数 - 使用 Offscreen 播放以避免 CSP 问题
         const playAudio = async (dataUrl, playbackSpeed = 1.0) => {
@@ -118,7 +119,7 @@ ST.createFloatWindow = function () {
                     action: 'ttsGoogle',
                     apiKey: settings.geminiApiKey,
                     text,
-                    voice: settings.ttsVoice || ST.getDefaultGoogleTtsVoice(lang),
+                    voice: settings.ttsVoice || ST.getDefaultGoogleTtsVoice(resolvedLang),
                     speed
                 });
                 if (response?.audioData) { await playAudio(response.audioData); return; }
@@ -137,7 +138,6 @@ ST.createFloatWindow = function () {
         }
         // 回退到系统语音
         const langMap = { zh: 'zh-CN', en: 'en-US', ja: 'ja-JP', ko: 'ko-KR' };
-        const resolvedLang = !lang || lang === 'auto' ? ST.detectLanguage(text) : lang;
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = speed;
@@ -145,7 +145,7 @@ ST.createFloatWindow = function () {
         window.speechSynthesis.speak(utterance);
     };
 
-    speakSourceBtn.onclick = () => speak(input.value);
+    speakSourceBtn.onclick = () => speak(input.value, 'auto');
     speakResultBtn.onclick = () => speak(resultText.innerText, targetLangSelect.value);
 
     // 回车翻译
