@@ -233,7 +233,8 @@ ST.startMutationObserver = function () {
         newElements = newElements.filter(el => {
             if (!el || !el.innerText) return false;
             const text = el.innerText.trim();
-            if (text.length < 5) return false;
+            const minLength = isTwitter ? 5 : 20;
+            if (text.length < minLength) return false;
             if (el.nextElementSibling?.classList.contains('st-immersive-wrapper')) return false;
             if (ST.pendingTranslations.has(el)) return false;
             if (ST.detectLanguage(text) === targetLang) return false;
@@ -259,11 +260,11 @@ ST.startMutationObserver = function () {
                     if (translation) {
                         ST.injectTranslation(el, translation);
                     }
-                    ST.pendingTranslations.delete(el);
                 });
             }
         } catch (err) {
             console.error('[智译] 动态内容翻译失败:', err);
+        } finally {
             newElements.forEach(el => ST.pendingTranslations.delete(el));
         }
     });

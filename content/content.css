@@ -28,6 +28,24 @@
     --error: #E57373;
 }
 
+#st-toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 24px;
+    background: var(--accent);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 2147483647;
+    animation: st-toast-fade-in 0.3s ease;
+}
+
 /* 划词翻译气泡容器 */
 #smart-translator-bubble {
     position: absolute;
@@ -63,6 +81,18 @@
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+@keyframes st-toast-fade-in {
+    from {
+        opacity: 0;
+        transform: translate(-50%, 8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
     }
 }
 

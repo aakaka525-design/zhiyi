@@ -182,14 +182,18 @@ function bindEvents() {
     // 收藏按钮
     elements.btnFavorite.addEventListener('click', async () => {
         if (currentResult && elements.sourceText.value) {
-            await StorageManager.addFavorite({
+            const result = await StorageManager.addFavorite({
                 source: elements.sourceText.value,
                 target: currentResult,
                 sourceLang: elements.sourceLang.value,
                 targetLang: elements.targetLang.value,
             });
-            showToast('已添加到收藏');
-            elements.btnFavorite.querySelector('svg').style.fill = 'var(--warning)';
+            if (result) {
+                showToast('已添加到收藏');
+            } else {
+                showToast('已在收藏中');
+            }
+            syncFavoriteState();
         }
     });
 
@@ -284,6 +288,7 @@ async function handleTranslate() {
             targetLang,
             provider: result.provider,
         });
+        await syncFavoriteState();
     } catch (error) {
         console.error('翻译失败:', error);
         showError(error.message || '翻译失败，请稍后重试');
@@ -355,6 +360,16 @@ function clearResult() {
     elements.resultSection.classList.remove('active', 'error-state');
     elements.resultContent.innerHTML = '';
     elements.btnFavorite.querySelector('svg').style.fill = 'none';
+}
+
+async function syncFavoriteState() {
+    const text = elements.sourceText.value.trim();
+    if (!text) {
+        elements.btnFavorite.querySelector('svg').style.fill = 'none';
+        return;
+    }
+    const isFav = await StorageManager.isFavorite(text);
+    elements.btnFavorite.querySelector('svg').style.fill = isFav ? 'var(--warning)' : 'none';
 }
 
 

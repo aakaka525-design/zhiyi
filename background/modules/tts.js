@@ -50,8 +50,6 @@ export async function handleTTSGLM(request) {
             return { error: '缺少 ppinfra API Key' };
         }
 
-        console.log('[TTS] GLM 后台请求:', { voice, textLen: text.length });
-
         const response = await fetch('https://api.ppinfra.com/v3/glm-tts', {
             method: 'POST',
             headers: {
@@ -79,7 +77,6 @@ export async function handleTTSGLM(request) {
             reader.readAsDataURL(audioBlob);
         });
 
-        console.log('[TTS] GLM 成功, 数据长度:', audioData.length);
         return { audioData };
     } catch (err) {
         console.error('[TTS] GLM TTS 失败:', err);

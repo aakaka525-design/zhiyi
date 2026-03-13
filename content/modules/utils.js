@@ -36,23 +36,6 @@ ST.showToast = function (message) {
     const toast = document.createElement('div');
     toast.id = 'st-toast';
     toast.textContent = message;
-    toast.style.cssText = `
-        position: fixed;
-        bottom: 30px;
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 12px 24px;
-        background: rgba(141, 163, 153, 0.95);
-        color: #fff;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
-        font-size: 14px;
-        font-weight: 500;
-        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        z-index: 2147483647;
-        animation: st-fade-in 0.3s ease;
-    `;
     document.body.appendChild(toast);
 
     setTimeout(() => {
