@@ -27,5 +27,8 @@ Thumbs.db
 *.swo
 *~
 
+# Worktrees
+.worktrees/
+
 # 日志
 *.log
