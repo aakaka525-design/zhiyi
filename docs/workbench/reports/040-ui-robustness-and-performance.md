@@ -1,13 +1,13 @@
-# 022 — UI 健壮性 & 性能修复报告
+# 040 — UI 健壮性 & 性能修复报告
 
 - 状态: done
-- 对应任务: [tasks/022-ui-robustness-and-performance.md](../tasks/022-ui-robustness-and-performance.md)
-- 来源讨论: [discussions/022-ui-robustness-and-performance.md](../discussions/022-ui-robustness-and-performance.md)
+- 对应任务: [tasks/040-ui-robustness-and-performance.md](../tasks/040-ui-robustness-and-performance.md)
+- 来源讨论: [discussions/040-ui-robustness-and-performance.md](../discussions/040-ui-robustness-and-performance.md)
 - 执行日期: 2026-03-13
 
 ## 结果概览
 
-本轮完成了 `022` 收敛后的主体范围：
+本轮完成了 `040` 收敛后的主体范围：
 
 - **必做**：`A2 + A3 + C2`
 - **推荐**：`B1 + C1 + C3`
@@ -19,11 +19,11 @@
 - `B2` 沉浸模式 `getComputedStyle` 缓存
 - `B3` `transition: all` 逐步替换
 
-按讨论结论，这 4 项统一并入 `023` 的可选范围，不在 `022` 内继续展开。
+按讨论结论，这 4 项统一并入 `041` 的可选范围，不在 `040` 内继续展开。
 
 ## 已完成改动
 
-### 22.1 A2 Popup 字符计数状态集中
+### 40.1 A2 Popup 字符计数状态集中
 
 [popup/popup.js](/Users/xa/Desktop/projiect/zhiyi/.worktrees/feature-ui-update/popup/popup.js) 的字符计数逻辑现在统一收口到 `updateCharCount()`：
 
@@ -36,7 +36,7 @@
 
 这样修掉了讨论里确认的真实问题：程序化写值路径以前只更新数字，不同步超限颜色。
 
-### 22.2 A3 Popup loading 锁定输入
+### 40.2 A3 Popup loading 锁定输入
 
 [popup/popup.js](/Users/xa/Desktop/projiect/zhiyi/.worktrees/feature-ui-update/popup/popup.js) 的 `setLoading(true/false)` 现在除了切换翻译按钮外，也会同步切换：
 
@@ -46,7 +46,7 @@
 
 这次只做最小锁定，没有引入取消请求、去抖或额外状态机。
 
-### 22.3 C2 disabled 样式反馈补齐
+### 40.3 C2 disabled 样式反馈补齐
 
 以下 3 份样式表现在都补了 `:disabled` 反馈：
 
@@ -61,7 +61,7 @@
 
 覆盖范围包括 popup、sidebar、float-window、options 中已有 disabled 路径的控件。
 
-### 22.4 B1 ad-blocker 全量扫描收敛
+### 40.4 B1 ad-blocker 全量扫描收敛
 
 [content/modules/ad-blocker.js](/Users/xa/Desktop/projiect/zhiyi/.worktrees/feature-ui-update/content/modules/ad-blocker.js) 新增：
 
@@ -71,7 +71,7 @@
 
 其中 `removeAds()` 已从“126 次独立 `querySelectorAll`”收敛为“一次 `querySelectorAll(AD_SELECTOR_QUERY)`”，在不改变现有 guard 逻辑的前提下降低全量扫描开销。
 
-### 22.5 C1 键盘焦点态补 `:focus-visible`
+### 40.5 C1 键盘焦点态补 `:focus-visible`
 
 以下样式表补上了键盘焦点可见性：
 
@@ -92,7 +92,7 @@
 
 原有 `outline: none` 保留，因此鼠标交互视觉风格不变，键盘用户则获得了可见焦点反馈。
 
-### 22.6 C3 float-window 拖拽事件生命周期
+### 40.6 C3 float-window 拖拽事件生命周期
 
 [content/modules/float-window.js](/Users/xa/Desktop/projiect/zhiyi/.worktrees/feature-ui-update/content/modules/float-window.js) 的拖拽逻辑不再使用：
 

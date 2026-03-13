@@ -1,13 +1,13 @@
-# 023 — UI 打磨 & CSS 架构修复报告
+# 041 — UI 打磨 & CSS 架构修复报告
 
 - 状态: done
-- 对应任务: [tasks/023-ui-polish-and-architecture.md](../tasks/023-ui-polish-and-architecture.md)
-- 来源讨论: [discussions/023-ui-polish-and-architecture.md](../discussions/023-ui-polish-and-architecture.md)
+- 对应任务: [tasks/041-ui-polish-and-architecture.md](../tasks/041-ui-polish-and-architecture.md)
+- 来源讨论: [discussions/041-ui-polish-and-architecture.md](../discussions/041-ui-polish-and-architecture.md)
 - 执行日期: 2026-03-13
 
 ## 结果概览
 
-本轮完成了 `023` 收敛后的主体范围：
+本轮完成了 `041` 收敛后的主体范围：
 
 - **推荐**：`D2 + E2 + H1`
 
@@ -29,11 +29,11 @@
 - `J3` 沉浸模式 `getComputedStyle` 未缓存
 - `J4` `transition: all` 逐步替换
 
-按讨论结论，这些项目统一留给后续任务按需拾取，不在 `023` 内继续扩展。
+按讨论结论，这些项目统一留给后续任务按需拾取，不在 `041` 内继续扩展。
 
 ## 已完成改动
 
-### 23.1 D2 翻译气泡定位溢出修复
+### 41.1 D2 翻译气泡定位溢出修复
 
 [content/modules/selection.js](/Users/xa/Desktop/projiect/zhiyi/.worktrees/feature-ui-update/content/modules/selection.js) 调整了气泡定位流程：
 
@@ -49,7 +49,7 @@
 
 这样修掉了原先只做左边界保护、没有右溢出和底部翻转的问题。
 
-### 23.2 E2 重复 keyframe 清理
+### 41.2 E2 重复 keyframe 清理
 
 [popup/popup.css](/Users/xa/Desktop/projiect/zhiyi/.worktrees/feature-ui-update/popup/popup.css) 删除了本地的 `@keyframes spin`。
 
@@ -57,7 +57,7 @@ popup 继续复用 [popup/popup.html](/Users/xa/Desktop/projiect/zhiyi/.worktree
 
 本轮没有合并 `slideUp`，也没有删除 `theme.css` 的 `fadeIn`，因为它们在当前代码中仍各自有实际使用点。
 
-### 23.3 H1 `--text-tertiary` 对比度修复
+### 41.3 H1 `--text-tertiary` 对比度修复
 
 以下 token 已调整到更高对比度：
 
