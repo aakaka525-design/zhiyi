@@ -76,16 +76,33 @@ test('updateSettings changes only requested keys and does not backfill new defau
     assert.equal('enableAdBlock' in store.settings, false);
 });
 
-test('addHistory prepends entries and deduplicates by source', async () => {
-    await StorageManager.addHistory({ source: 'hello', target: '你好', provider: 'google' });
-    const latest = await StorageManager.addHistory({ source: 'hello', target: '您好', provider: 'openai' });
+test('addHistory deduplicates entries only when source and targetLang both match', async () => {
+    await StorageManager.addHistory({ source: 'hello', target: '你好', targetLang: 'zh', provider: 'google' });
+    const latest = await StorageManager.addHistory({ source: 'hello', target: '您好', targetLang: 'zh', provider: 'openai' });
 
     const history = await StorageManager.getHistory();
 
     assert.equal(history.length, 1);
     assert.equal(history[0].id, latest.id);
     assert.equal(history[0].target, '您好');
+    assert.equal(history[0].targetLang, 'zh');
     assert.equal(history[0].provider, 'openai');
+});
+
+test('addHistory preserves same source text when targetLang differs', async () => {
+    await StorageManager.addHistory({ source: 'hello', target: '你好', targetLang: 'zh', provider: 'google' });
+    await StorageManager.addHistory({ source: 'hello', target: 'こんにちは', targetLang: 'ja', provider: 'openai' });
+
+    const history = await StorageManager.getHistory();
+
+    assert.equal(history.length, 2);
+    assert.deepEqual(
+        history.map((item) => ({ source: item.source, target: item.target, targetLang: item.targetLang })),
+        [
+            { source: 'hello', target: 'こんにちは', targetLang: 'ja' },
+            { source: 'hello', target: '你好', targetLang: 'zh' },
+        ],
+    );
 });
 
 test('addHistory trims the list to 500 entries', async () => {

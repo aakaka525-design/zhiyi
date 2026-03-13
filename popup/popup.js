@@ -134,6 +134,7 @@ function bindEvents() {
             const text = await navigator.clipboard.readText();
             elements.sourceText.value = text;
             updateCharCount();
+            clearResult();
         } catch (err) {
             console.error('粘贴失败:', err);
         }

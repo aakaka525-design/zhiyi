@@ -148,8 +148,10 @@ export class StorageManager {
                 ...item,
             };
 
-            // 去重：如果源文本相同，移除旧记录
-            const filtered = history.filter(h => h.source !== item.source);
+            // 去重：只移除 source 和 targetLang 都相同的旧记录
+            const filtered = history.filter(
+                h => !(h.source === item.source && h.targetLang === item.targetLang)
+            );
 
             // 添加到开头
             filtered.unshift(newItem);

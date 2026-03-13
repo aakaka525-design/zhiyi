@@ -49,9 +49,14 @@ ST.createFloatWindow = function () {
             <div class="st-float-result" id="st-float-result">
                 <div class="st-result-header" style="margin-bottom: 8px;">
                     <span>结果</span>
-                    <button class="st-control-btn" id="st-float-speak-result" title="朗读译文" style="padding: 2px;">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                    </button>
+                    <div class="st-result-actions">
+                        <button class="st-control-btn" id="st-float-speak-result" title="朗读译文" style="padding: 2px;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                        </button>
+                        <button class="st-control-btn" id="st-float-copy-result" title="复制" style="padding: 2px;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="st-float-result-text" id="st-float-result-text"></div>
             </div>
@@ -69,6 +74,7 @@ ST.createFloatWindow = function () {
     const clearBtn = ST.ui.floatWindow.querySelector('#st-float-clear-btn');
     const speakSourceBtn = ST.ui.floatWindow.querySelector('#st-float-speak-source');
     const speakResultBtn = ST.ui.floatWindow.querySelector('#st-float-speak-result');
+    const copyResultBtn = ST.ui.floatWindow.querySelector('#st-float-copy-result');
     const targetLangSelect = ST.ui.floatWindow.querySelector('#st-float-target-lang');
 
     // 初始化语言
@@ -148,9 +154,22 @@ ST.createFloatWindow = function () {
     speakSourceBtn.onclick = () => speak(input.value, 'auto');
     speakResultBtn.onclick = () => speak(resultText.innerText, targetLangSelect.value);
 
+    const originalCopyIcon = copyResultBtn.innerHTML;
+    copyResultBtn.onclick = async () => {
+        try {
+            await navigator.clipboard.writeText(resultText.innerText);
+            copyResultBtn.innerHTML = '<span style="font-size: 10px; color: var(--accent);">已复制</span>';
+            setTimeout(() => {
+                copyResultBtn.innerHTML = originalCopyIcon;
+            }, 1500);
+        } catch (err) {
+            console.error('复制失败:', err);
+        }
+    };
+
     // 回车翻译
     input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
             e.preventDefault();
             translateBtn.click();
         }
@@ -172,6 +191,7 @@ ST.createFloatWindow = function () {
 
             if (response && response.text) {
                 resultArea.classList.add('active');
+                resultArea.classList.remove('error-state');
                 resultText.innerText = response.text;
                 resultText.style.color = '';
                 ST.sendMessage({
@@ -185,12 +205,12 @@ ST.createFloatWindow = function () {
                     }
                 });
             } else {
-                resultArea.classList.add('active');
+                resultArea.classList.add('active', 'error-state');
                 resultText.textContent = `翻译失败: ${response?.error || '未知错误'}`;
                 resultText.style.color = 'var(--error)';
             }
         } catch (err) {
-            resultArea.classList.add('active');
+            resultArea.classList.add('active', 'error-state');
             resultText.innerText = '错误: ' + err.message;
             resultText.style.color = 'var(--error)';
         } finally {

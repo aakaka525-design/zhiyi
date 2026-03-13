@@ -211,6 +211,7 @@ async function testApiConnection(provider) {
 
     // 显示加载状态
     btn.classList.add('loading');
+    btn.disabled = true;
     statusEl.textContent = '';
     statusEl.className = 'test-status';
 
@@ -290,6 +291,7 @@ async function testApiConnection(provider) {
         statusEl.classList.add('error');
     } finally {
         btn.classList.remove('loading');
+        btn.disabled = false;
     }
 }
 

@@ -474,6 +474,11 @@
     gap: 8px;
 }
 
+.st-sidebar-result-card.error-state .st-result-actions,
+.st-float-result.error-state .st-result-actions {
+    display: none;
+}
+
 .st-result-text {
     font-size: 15px;
     line-height: 1.7;

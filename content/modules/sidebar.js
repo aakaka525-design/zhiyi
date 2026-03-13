@@ -135,6 +135,9 @@ ST.createSidebar = function () {
         if (s !== 'auto') {
             sourceLangSelect.value = t;
             targetLangSelect.value = s;
+            if (resultCard.classList.contains('active') && !resultContent.style.color) {
+                input.value = resultContent.innerText;
+            }
         }
     };
 
@@ -283,6 +286,7 @@ ST.createSidebar = function () {
 
             if (response && response.text) {
                 resultCard.classList.add('active');
+                resultCard.classList.remove('error-state');
                 resultContent.innerText = response.text;
                 resultContent.style.color = '';
                 resultLang.innerText = `翻译结果 (${targetLangSelect.value})`;
@@ -298,12 +302,12 @@ ST.createSidebar = function () {
                 });
                 await ST.refreshSidebarHistory();
             } else {
-                resultCard.classList.add('active');
+                resultCard.classList.add('active', 'error-state');
                 resultContent.textContent = `翻译失败: ${response?.error || '未知错误'}`;
                 resultContent.style.color = 'var(--error)';
             }
         } catch (err) {
-            resultCard.classList.add('active');
+            resultCard.classList.add('active', 'error-state');
             resultContent.textContent = `错误: ${err.message}`;
             resultContent.style.color = 'var(--error)';
         } finally {
@@ -313,12 +317,16 @@ ST.createSidebar = function () {
     };
 
     const originalIcon = copyBtn.innerHTML;
-    copyBtn.onclick = () => {
-        navigator.clipboard.writeText(resultContent.innerText);
-        copyBtn.innerHTML = '<span style="font-size: 10px; color: var(--accent);">已复制</span>';
-        setTimeout(() => {
-            copyBtn.innerHTML = originalIcon;
-        }, 1500);
+    copyBtn.onclick = async () => {
+        try {
+            await navigator.clipboard.writeText(resultContent.innerText);
+            copyBtn.innerHTML = '<span style="font-size: 10px; color: var(--accent);">已复制</span>';
+            setTimeout(() => {
+                copyBtn.innerHTML = originalIcon;
+            }, 1500);
+        } catch (err) {
+            console.error('复制失败:', err);
+        }
     };
 
     // 加载历史记录
@@ -350,6 +358,7 @@ ST.createSidebar = function () {
                         resultContent.innerText = historyItem.dataset.target;
                         resultContent.style.color = '';
                         resultCard.classList.add('active');
+                        resultCard.classList.remove('error-state');
                         if (historyItem.dataset.targetLang) {
                             targetLangSelect.value = historyItem.dataset.targetLang;
                             resultLang.innerText = `翻译结果 (${historyItem.dataset.targetLang})`;
