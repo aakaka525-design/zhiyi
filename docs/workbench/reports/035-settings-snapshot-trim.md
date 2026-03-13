@@ -1,9 +1,9 @@
-# 027 — Settings snapshot 字符串字段 trim 执行报告
+# 035 — Settings snapshot 字符串字段 trim 执行报告
 
 - 日期: 2026-03-13
 - 状态: 已完成
-- 对应任务: [027-settings-snapshot-trim.md](../tasks/027-settings-snapshot-trim.md)
-- 对应讨论: [027-settings-trim-and-voice-dup.md](../discussions/027-settings-trim-and-voice-dup.md)
+- 对应任务: [035-settings-snapshot-trim.md](../tasks/035-settings-snapshot-trim.md)
+- 对应讨论: [035-settings-trim-and-voice-dup.md](../discussions/035-settings-trim-and-voice-dup.md)
 
 ## 执行结果
 
@@ -42,7 +42,7 @@
 ```bash
 node --test tests/options-ui-state.test.mjs
 node --test tests/*.test.mjs
-git diff --check -- options/options-ui-state.js tests/options-ui-state.test.mjs docs/workbench/tasks/027-settings-snapshot-trim.md docs/workbench/reports/027-settings-snapshot-trim.md
+git diff --check -- options/options-ui-state.js tests/options-ui-state.test.mjs docs/workbench/tasks/035-settings-snapshot-trim.md docs/workbench/reports/035-settings-snapshot-trim.md
 ```
 
 结果：

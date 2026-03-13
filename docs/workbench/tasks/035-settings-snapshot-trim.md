@@ -2,14 +2,14 @@
 status: done
 priority: P1
 created: 2026-03-13
-discussion: 027-settings-trim-and-voice-dup
+discussion: 035-settings-trim-and-voice-dup
 ---
 
-# 027 — Settings snapshot 字符串字段 trim
+# 035 — Settings snapshot 字符串字段 trim
 
 ## 背景
 
-027 讨论确认：`options.js` 的测试函数（`testApiConnection()`、`requestTtsTestAudio()`）对 API Key / BaseUrl 做了 `.trim()`，但保存路径 `collectCurrentSettings()` → `buildSettingsSnapshot()` 没有 trim。用户粘贴带尾部空白的 key 时，测试通过但保存后翻译失败（API 返回 401）。
+035 讨论确认：`options.js` 的测试函数（`testApiConnection()`、`requestTtsTestAudio()`）对 API Key / BaseUrl 做了 `.trim()`，但保存路径 `collectCurrentSettings()` → `buildSettingsSnapshot()` 没有 trim。用户粘贴带尾部空白的 key 时，测试通过但保存后翻译失败（API 返回 401）。
 
 修复点在 `buildSettingsSnapshot()`（`options/options-ui-state.js`），这是规范化的唯一收口点，布尔值和数字已经在此强转，字符串 trim 是自然延伸。
 

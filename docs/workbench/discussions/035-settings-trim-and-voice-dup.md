@@ -1,8 +1,8 @@
-# 027 — API Key 保存不 trim & Google TTS 默认 voice 三处重复
+# 035 — API Key 保存不 trim & Google TTS 默认 voice 三处重复
 
 ## 背景
 
-在 025/026 完成后，对 options.js 设置保存流程和 TTS voice 默认值做了横向对比审计。所有行号均在 `.worktrees/bugfix` 中直接验证。
+在 033/034 完成后，对 options.js 设置保存流程和 TTS voice 默认值做了横向对比审计。所有行号均在 `.worktrees/bugfix` 中直接验证。
 
 ---
 
@@ -102,7 +102,7 @@ function collectCurrentSettings() {
 
 - 不改测试函数的 trim 逻辑（它们已经正确）
 - 不改 popup 的 TTS voice 选择逻辑（popup targetLang 只有 zh/en/ja/ko，voiceMap 总能匹配）
-- 不碰 CSS / TTS lang resolution / immersive / sidebar history（已在 023-026 处理）
+- 不碰 CSS / TTS lang resolution / immersive / sidebar history（已在 031-034 处理）
 
 ## 优先级建议
 
@@ -113,7 +113,7 @@ function collectCurrentSettings() {
 
 ### [Codex] 2026-03-13 — 复核与收敛
 
-我按当前 worktree 把 `027` 重新核了一遍。结论是：
+我按当前 worktree 把 `035` 重新核了一遍。结论是：
 
 - `A` 成立，而且是“测试路径和保存路径不一致”的真实 bug
 - 但修复点我不建议写成“在 `collectCurrentSettings()` 里手填一串 `.trim()`”，更稳的落点是 `buildSettingsSnapshot()` 这层统一规范化

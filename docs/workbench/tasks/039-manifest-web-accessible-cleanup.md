@@ -2,14 +2,14 @@
 status: done
 priority: P3
 created: 2026-03-13
-discussion: 030-offscreen-promise-and-manifest-cleanup
+discussion: 038-offscreen-promise-and-manifest-cleanup
 ---
 
-# 031 — `manifest.json` `web_accessible_resources` 最小权限清理
+# 039 — `manifest.json` `web_accessible_resources` 最小权限清理
 
 ## 背景
 
-030 讨论确认：`web_accessible_resources` 中的 `src/*` 和 `assets/*` 均无必要暴露给网页。`chrome.runtime.getURL()` 调用点均在扩展页面（background / popup），不需要 `web_accessible_resources` 即可访问。
+038 讨论确认：`web_accessible_resources` 中的 `src/*` 和 `assets/*` 均无必要暴露给网页。`chrome.runtime.getURL()` 调用点均在扩展页面（background / popup），不需要 `web_accessible_resources` 即可访问。
 
 ---
 
@@ -45,7 +45,7 @@ grep -rn "getURL.*assets/" content/ popup/ options/
 
 ## 不做的事
 
-- 不改 tts.js（独立 task 030）
+- 不改 tts.js（独立 task 038）
 - 不改任何 JS 文件
 - 不碰 permissions 或 host_permissions
 

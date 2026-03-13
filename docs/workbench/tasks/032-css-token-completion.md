@@ -2,14 +2,14 @@
 status: done
 priority: P2
 created: 2026-03-13
-discussion: 023-content-tts-and-css-tokens
+discussion: 031-content-tts-and-css-tokens
 ---
 
-# 024 — content.css Token 体系补全
+# 032 — content.css Token 体系补全
 
 ## 背景
 
-023 讨论中 C 项经 Codex 复核确认成立，拆为独立任务以避免与功能 bugfix 混做。
+031 讨论中 C 项经 Codex 复核确认成立，拆为独立任务以避免与功能 bugfix 混做。
 
 ---
 

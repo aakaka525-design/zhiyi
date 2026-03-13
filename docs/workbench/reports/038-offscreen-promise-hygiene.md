@@ -1,9 +1,9 @@
-# 030 — `ensureOffscreenDocument()` rejected-promise 卫生修复执行报告
+# 038 — `ensureOffscreenDocument()` rejected-promise 卫生修复执行报告
 
 - 日期: 2026-03-13
 - 状态: 已完成
-- 对应任务: [030-offscreen-promise-hygiene.md](../tasks/030-offscreen-promise-hygiene.md)
-- 对应讨论: [030-offscreen-promise-and-manifest-cleanup.md](../discussions/030-offscreen-promise-and-manifest-cleanup.md)
+- 对应任务: [038-offscreen-promise-hygiene.md](../tasks/038-offscreen-promise-hygiene.md)
+- 对应讨论: [038-offscreen-promise-and-manifest-cleanup.md](../discussions/038-offscreen-promise-and-manifest-cleanup.md)
 
 ## 执行结果
 
@@ -34,7 +34,7 @@
 node --test tests/tts.test.mjs tests/manifest-static.test.mjs
 node --test tests/google-tts.test.mjs tests/tts.test.mjs tests/manifest-static.test.mjs
 node --test tests/*.test.mjs
-git diff --check -- background/modules/tts.js manifest.json tests/tts.test.mjs tests/manifest-static.test.mjs docs/workbench/tasks/030-offscreen-promise-hygiene.md docs/workbench/reports/030-offscreen-promise-hygiene.md docs/workbench/tasks/031-manifest-web-accessible-cleanup.md docs/workbench/reports/031-manifest-web-accessible-cleanup.md
+git diff --check -- background/modules/tts.js manifest.json tests/tts.test.mjs tests/manifest-static.test.mjs docs/workbench/tasks/038-offscreen-promise-hygiene.md docs/workbench/reports/038-offscreen-promise-hygiene.md docs/workbench/tasks/039-manifest-web-accessible-cleanup.md docs/workbench/reports/039-manifest-web-accessible-cleanup.md
 ```
 
 结果：

@@ -2,14 +2,14 @@
 status: done
 priority: P2
 created: 2026-03-13
-discussion: 025-history-gap-and-batch-error
+discussion: 033-history-gap-and-batch-error
 ---
 
-# 026 — 沉浸式批量翻译部分失败计数修正
+# 034 — 沉浸式批量翻译部分失败计数修正
 
 ## 背景
 
-025 讨论确认：`openai.js:151` 和 `gemini.js:184` 的 `translateBatch()` 用 `new Array(texts.length).fill('')` 初始化，模型漏回编号时对应槽位保持空字符串。`immersive.js:114-120` 对这些空槽位静默跳过，不计入 `errorCount`，导致 toast 可能显示"翻译完成！共 N 个段落"但实际有若干段落未翻译。
+033 讨论确认：`openai.js:151` 和 `gemini.js:184` 的 `translateBatch()` 用 `new Array(texts.length).fill('')` 初始化，模型漏回编号时对应槽位保持空字符串。`immersive.js:114-120` 对这些空槽位静默跳过，不计入 `errorCount`，导致 toast 可能显示"翻译完成！共 N 个段落"但实际有若干段落未翻译。
 
 ---
 

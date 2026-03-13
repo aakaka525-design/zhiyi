@@ -2,14 +2,14 @@
 status: done
 priority: P2
 created: 2026-03-13
-discussion: 025-history-gap-and-batch-error
+discussion: 033-history-gap-and-batch-error
 ---
 
-# 025 — Sidebar 翻译历史写入缺口修复
+# 033 — Sidebar 翻译历史写入缺口修复
 
 ## 背景
 
-025 讨论经 Codex 复核后收敛。Sidebar 有历史 UI 和 `refreshSidebarHistory()` 刷新逻辑，但翻译成功后无法写入历史，因为 message-router 缺少 `addHistory` action。
+033 讨论经 Codex 复核后收敛。Sidebar 有历史 UI 和 `refreshSidebarHistory()` 刷新逻辑，但翻译成功后无法写入历史，因为 message-router 缺少 `addHistory` action。
 
 本 task 只修 sidebar。float-window 和 selection 本轮不做。
 

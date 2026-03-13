@@ -1,9 +1,9 @@
-# 029 — `Translator.translateBatch()` 回退链补齐执行报告
+# 037 — `Translator.translateBatch()` 回退链补齐执行报告
 
 - 日期: 2026-03-13
 - 状态: 已完成
-- 对应任务: [029-translatebatch-fallback.md](../tasks/029-translatebatch-fallback.md)
-- 对应讨论: [028-sw-init-race-and-batch-fallback.md](../discussions/028-sw-init-race-and-batch-fallback.md)
+- 对应任务: [037-translatebatch-fallback.md](../tasks/037-translatebatch-fallback.md)
+- 对应讨论: [036-sw-init-race-and-batch-fallback.md](../discussions/036-sw-init-race-and-batch-fallback.md)
 
 ## 执行结果
 
@@ -38,7 +38,7 @@
 ```bash
 node --test tests/service-worker.test.mjs tests/translator.test.mjs
 node --test tests/*.test.mjs
-git diff --check -- background/service-worker.js src/core/translator.js tests/service-worker.test.mjs tests/translator.test.mjs docs/workbench/tasks/028-sw-ensureready-race.md docs/workbench/reports/028-sw-ensureready-race.md docs/workbench/tasks/029-translatebatch-fallback.md docs/workbench/reports/029-translatebatch-fallback.md
+git diff --check -- background/service-worker.js src/core/translator.js tests/service-worker.test.mjs tests/translator.test.mjs docs/workbench/tasks/036-sw-ensureready-race.md docs/workbench/reports/036-sw-ensureready-race.md docs/workbench/tasks/037-translatebatch-fallback.md docs/workbench/reports/037-translatebatch-fallback.md
 ```
 
 结果：

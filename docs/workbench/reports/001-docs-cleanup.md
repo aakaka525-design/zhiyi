@@ -71,7 +71,7 @@
 - 001 任务列出的关键产物文件均已存在
 - 001 任务要求迁移的多数正式文档已按目标路径稳定存在
 
-需要说明的是，后续开发又引入了新的文档漂移；这些不是 001 当时未完成，而是后续变更后的新增偏差，已由 [022-doc-completeness-audit.md](../tasks/022-doc-completeness-audit.md) 继续跟踪。
+需要说明的是，后续开发又引入了新的文档漂移；这些不是 001 当时未完成，而是后续变更后的新增偏差，已由 [030-doc-completeness-audit.md](../tasks/030-doc-completeness-audit.md) 继续跟踪。
 
 ## 结论摘要
 

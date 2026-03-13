@@ -2,14 +2,14 @@
 status: done
 priority: P2
 created: 2026-03-13
-discussion: 022-doc-completeness-audit
+discussion: 030-doc-completeness-audit
 ---
 
-# 022 — reference 文档结构漂移修复 + 001 报告补写
+# 030 — reference 文档结构漂移修复 + 001 报告补写
 
 ## 背景
 
-022 讨论经过 Codex 复核和 Claude 二次验证后收敛为 2 项成立的缺陷。本 task 要求修复这两项。
+030 讨论经过 Codex 复核和 Claude 二次验证后收敛为 2 项成立的缺陷。本 task 要求修复这两项。
 
 ---
 

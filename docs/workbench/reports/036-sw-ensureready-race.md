@@ -1,9 +1,9 @@
-# 028 — Service Worker `ensureReady()` 冷启动竞态修复执行报告
+# 036 — Service Worker `ensureReady()` 冷启动竞态修复执行报告
 
 - 日期: 2026-03-13
 - 状态: 已完成
-- 对应任务: [028-sw-ensureready-race.md](../tasks/028-sw-ensureready-race.md)
-- 对应讨论: [028-sw-init-race-and-batch-fallback.md](../discussions/028-sw-init-race-and-batch-fallback.md)
+- 对应任务: [036-sw-ensureready-race.md](../tasks/036-sw-ensureready-race.md)
+- 对应讨论: [036-sw-init-race-and-batch-fallback.md](../discussions/036-sw-init-race-and-batch-fallback.md)
 
 ## 执行结果
 
@@ -34,7 +34,7 @@
 ```bash
 node --test tests/service-worker.test.mjs tests/translator.test.mjs
 node --test tests/*.test.mjs
-git diff --check -- background/service-worker.js src/core/translator.js tests/service-worker.test.mjs tests/translator.test.mjs docs/workbench/tasks/028-sw-ensureready-race.md docs/workbench/reports/028-sw-ensureready-race.md docs/workbench/tasks/029-translatebatch-fallback.md docs/workbench/reports/029-translatebatch-fallback.md
+git diff --check -- background/service-worker.js src/core/translator.js tests/service-worker.test.mjs tests/translator.test.mjs docs/workbench/tasks/036-sw-ensureready-race.md docs/workbench/reports/036-sw-ensureready-race.md docs/workbench/tasks/037-translatebatch-fallback.md docs/workbench/reports/037-translatebatch-fallback.md
 ```
 
 结果：

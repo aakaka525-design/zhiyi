@@ -1,9 +1,9 @@
-# 026 — 沉浸式批量翻译部分失败计数修正执行报告
+# 034 — 沉浸式批量翻译部分失败计数修正执行报告
 
 - 日期: 2026-03-13
 - 状态: 已完成
-- 对应任务: [026-immersive-batch-error-count.md](../tasks/026-immersive-batch-error-count.md)
-- 对应讨论: [025-history-gap-and-batch-error.md](../discussions/025-history-gap-and-batch-error.md)
+- 对应任务: [034-immersive-batch-error-count.md](../tasks/034-immersive-batch-error-count.md)
+- 对应讨论: [033-history-gap-and-batch-error.md](../discussions/033-history-gap-and-batch-error.md)
 
 ## 执行结果
 
@@ -38,7 +38,7 @@
 ```bash
 node --test tests/message-router.test.mjs tests/content-tts-history.test.mjs tests/immersive-batch-error-count.test.mjs
 node --test tests/*.test.mjs
-git diff --check -- background/modules/message-router.js content/modules/sidebar.js content/modules/immersive.js docs/reference/architecture.md tests/message-router.test.mjs tests/content-tts-history.test.mjs tests/immersive-batch-error-count.test.mjs docs/workbench/tasks/025-sidebar-history-write.md docs/workbench/reports/025-sidebar-history-write.md docs/workbench/tasks/026-immersive-batch-error-count.md docs/workbench/reports/026-immersive-batch-error-count.md
+git diff --check -- background/modules/message-router.js content/modules/sidebar.js content/modules/immersive.js docs/reference/architecture.md tests/message-router.test.mjs tests/content-tts-history.test.mjs tests/immersive-batch-error-count.test.mjs docs/workbench/tasks/033-sidebar-history-write.md docs/workbench/reports/033-sidebar-history-write.md docs/workbench/tasks/034-immersive-batch-error-count.md docs/workbench/reports/034-immersive-batch-error-count.md
 ```
 
 结果：

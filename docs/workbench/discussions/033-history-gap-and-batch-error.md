@@ -1,8 +1,8 @@
-# 025 — Content 翻译不入历史 & 沉浸式批量翻译静默跳过
+# 033 — Content 翻译不入历史 & 沉浸式批量翻译静默跳过
 
 ## 背景
 
-在 023/024 完成后，对 popup、sidebar、float-window、selection、immersive 五个翻译入口进行了横向对比，发现两个此前讨论未覆盖的问题。所有行号均在 `.worktrees/bugfix` 中直接验证。
+在 031/032 完成后，对 popup、sidebar、float-window、selection、immersive 五个翻译入口进行了横向对比，发现两个此前讨论未覆盖的问题。所有行号均在 `.worktrees/bugfix` 中直接验证。
 
 ---
 
@@ -134,7 +134,7 @@ if (response && response.results) {
 - 不改 popup 的 addHistory 逻辑（它工作正常）
 - 不给沉浸式翻译保存单条历史（会爆存储限制）
 - 不改 translate action 的副作用语义（避免影响 popup）
-- 不碰 CSS / TTS（已在 023/024 处理）
+- 不碰 CSS / TTS（已在 031/032 处理）
 
 ## 优先级建议
 
@@ -145,7 +145,7 @@ if (response && response.results) {
 
 ### [Codex] 2026-03-13 — 复核与收敛
 
-我按当前 worktree 的代码和测试把 `025` 重新核了一遍。结论是：
+我按当前 worktree 的代码和测试把 `033` 重新核了一遍。结论是：
 
 - `A` 不能整体打包成“content 三个入口都漏历史”；其中只有 `sidebar` 是高置信度 bug，`float-window` 更像产品取舍，`selection` 不建议并入
 - `B` 是真实问题，而且不是假设场景；`openai/gemini` 的 batch 实现本来就会返回空字符串占位，当前 `immersive.js` 会把这类失败静默算成成功

@@ -1,9 +1,9 @@
-# 024 — content.css Token 体系补全执行报告
+# 032 — content.css Token 体系补全执行报告
 
 - 日期: 2026-03-13
 - 状态: 已完成
-- 对应任务: [024-css-token-completion.md](../tasks/024-css-token-completion.md)
-- 对应讨论: [023-content-tts-and-css-tokens.md](../discussions/023-content-tts-and-css-tokens.md)
+- 对应任务: [032-css-token-completion.md](../tasks/032-css-token-completion.md)
+- 对应讨论: [031-content-tts-and-css-tokens.md](../discussions/031-content-tts-and-css-tokens.md)
 
 ## 执行结果
 
@@ -20,7 +20,7 @@
   - 新增静态断言：排除 token 定义行后，不再允许 `#7A9A8B` / `#9CBAB0` / `#333333` / `#F4F4F4` / `#999999` 作为属性值残留
 
 - `tests/error-state-tts-lang.test.mjs`
-  - 放宽 float-window `resolvedLang` 的匹配顺序，适配 023 中把 `resolvedLang` 提前到函数顶部的实现
+  - 放宽 float-window `resolvedLang` 的匹配顺序，适配 031 中把 `resolvedLang` 提前到函数顶部的实现
 
 - `tests/immersive-color-misc.test.mjs`
   - 更新 token scope 断言，接受 `#smart-translator-icon` 加入后的选择器序列

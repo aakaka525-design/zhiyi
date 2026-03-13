@@ -2,14 +2,14 @@
 status: done
 priority: P2
 created: 2026-03-13
-discussion: 023-content-tts-and-css-tokens
+discussion: 031-content-tts-and-css-tokens
 ---
 
-# 023 — Content TTS 语言修复 & Sidebar 历史状态同步
+# 031 — Content TTS 语言修复 & Sidebar 历史状态同步
 
 ## 背景
 
-023 讨论经 Codex 复核后收敛。本 task 覆盖 A（TTS 语言）和 B（历史状态），C（CSS token）拆为独立 task 024。
+031 讨论经 Codex 复核后收敛。本 task 覆盖 A（TTS 语言）和 B（历史状态），C（CSS token）拆为独立 task 032。
 
 ---
 
@@ -122,7 +122,7 @@ if (tl) {
 
 - 不给 float-window 加源语言选择器（product-surface 任务）
 - 不合并 sidebar/float-window 的 speak 函数（架构任务）
-- 不碰 CSS / content.css（024 任务）
+- 不碰 CSS / content.css（032 任务）
 - 不碰 service-worker、manifest、popup、options、translator.js
 
 ## 验收标准

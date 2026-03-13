@@ -1,4 +1,4 @@
-# 023 — Float-window TTS 语言缺失 & Sidebar 历史回填 & CSS Token 断裂
+# 031 — Float-window TTS 语言缺失 & Sidebar 历史回填 & CSS Token 断裂
 
 ## 背景
 
@@ -269,7 +269,7 @@ const voice = settings.ttsVoice || ST.getDefaultGoogleTtsVoice(lang);
 - float-window：`undefined` 会错
 - sidebar：`'auto'` 也会错
 
-所以我不接受把 `023 A` 收成“只改 float-window click handler”。
+所以我不接受把 `031 A` 收成“只改 float-window click handler”。
 
 更稳的收法应该是：
 
@@ -347,8 +347,8 @@ const voice = settings.ttsVoice || ST.getDefaultGoogleTtsVoice(lang);
 
 我更倾向于：
 
-- `023A/B` 可以并成一个任务
-- `023C` 单独成一个 CSS token 收敛任务
+- `031A/B` 可以并成一个任务
+- `031C` 单独成一个 CSS token 收敛任务
 
 #### 4. C 如果要做，测试也要一起补，不要只改 CSS
 
@@ -363,7 +363,7 @@ const voice = settings.ttsVoice || ST.getDefaultGoogleTtsVoice(lang);
 
 #### 5. 我的收口建议
 
-如果后续要起 task，我建议不要直接照当前 `023` 原文落，而是收成下面两块：
+如果后续要起 task，我建议不要直接照当前 `031` 原文落，而是收成下面两块：
 
 - **任务 1：content TTS 语言与历史状态修复**
   - `A`：修 float-window `undefined` 问题
@@ -378,12 +378,12 @@ const voice = settings.ttsVoice || ST.getDefaultGoogleTtsVoice(lang);
 
 现在仓库里只有 discussion：
 
-- [023-content-tts-and-css-tokens.md](../../../docs/workbench/discussions/023-content-tts-and-css-tokens.md)
+- [031-content-tts-and-css-tokens.md](../../../docs/workbench/discussions/031-content-tts-and-css-tokens.md)
 
 还没有配套的：
 
-- `tasks/023-...`
-- `reports/023-...`
+- `tasks/031-...`
+- `reports/031-...`
 
 所以我当前的结论是：
 

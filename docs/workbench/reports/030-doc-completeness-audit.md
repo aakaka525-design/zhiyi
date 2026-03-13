@@ -1,9 +1,9 @@
-# 022 — reference 文档结构漂移修复 + 001 报告补写执行报告
+# 030 — reference 文档结构漂移修复 + 001 报告补写执行报告
 
 - 日期: 2026-03-13
 - 状态: 已完成
-- 对应任务: [022-doc-completeness-audit.md](../tasks/022-doc-completeness-audit.md)
-- 对应讨论: [022-doc-completeness-audit.md](../discussions/022-doc-completeness-audit.md)
+- 对应任务: [030-doc-completeness-audit.md](../tasks/030-doc-completeness-audit.md)
+- 对应讨论: [030-doc-completeness-audit.md](../discussions/030-doc-completeness-audit.md)
 
 ## 执行结果
 
@@ -25,7 +25,7 @@
 
 ### 过程说明
 
-- `022` 讨论收敛后，task 范围被压缩为两项：
+- `030` 讨论收敛后，task 范围被压缩为两项：
   - 修复 `reference` 文档与当前代码结构的漂移
   - 补齐 `001` 缺失的 report
 - `001` 报告没有伪造当次执行细节，明确标注为“基于事后回溯”
@@ -46,7 +46,7 @@
 
 ```bash
 node --test tests/*.test.mjs
-git diff --check -- docs/reference/project-structure.md docs/reference/architecture.md docs/workbench/reports/001-docs-cleanup.md docs/workbench/reports/022-doc-completeness-audit.md docs/workbench/discussions/022-doc-completeness-audit.md docs/workbench/tasks/022-doc-completeness-audit.md
+git diff --check -- docs/reference/project-structure.md docs/reference/architecture.md docs/workbench/reports/001-docs-cleanup.md docs/workbench/reports/030-doc-completeness-audit.md docs/workbench/discussions/030-doc-completeness-audit.md docs/workbench/tasks/030-doc-completeness-audit.md
 ```
 
 结果：
@@ -56,6 +56,6 @@ git diff --check -- docs/reference/project-structure.md docs/reference/architect
 
 ## 结论摘要
 
-1. `022` task 要求的两个正式文档漂移点都已修正。
+1. `030` task 要求的两个正式文档漂移点都已修正。
 2. `001` 缺失的执行报告已按回溯方式补齐。
 3. 本轮只修改文档与 report，没有改动代码行为。

@@ -2,14 +2,14 @@
 status: done
 priority: P2
 created: 2026-03-13
-discussion: 028-sw-init-race-and-batch-fallback
+discussion: 036-sw-init-race-and-batch-fallback
 ---
 
-# 028 — Service Worker `ensureReady()` 冷启动竞态修复
+# 036 — Service Worker `ensureReady()` 冷启动竞态修复
 
 ## 背景
 
-028 讨论确认：`ensureReady()` 只检查 `translator !== null`，但 `init()` 在 `translator = new Translator()` 后 await `translator.init()`。并发消息可能拿到 `settings === null`、`providers === {}` 的半初始化实例。
+036 讨论确认：`ensureReady()` 只检查 `translator !== null`，但 `init()` 在 `translator = new Translator()` 后 await `translator.init()`。并发消息可能拿到 `settings === null`、`providers === {}` 的半初始化实例。
 
 受影响的 action：`translate`、`translateBatch`、`updateSettings`（依赖 translator 内部状态）。
 不受影响：`tts*`（用 tts 依赖）、`getSettings` / `getHistory` / `addHistory`（用 storage 依赖）。
@@ -86,7 +86,7 @@ async function ensureReady() {
 - 不改 `handleMessage()` 的消息分发逻辑
 - 不改 `routeMessage()` 或 message-router
 - 不碰 content script / popup / options
-- 不碰 `translateBatch` fallback（独立 task 029）
+- 不碰 `translateBatch` fallback（独立 task 037）
 
 ---
 

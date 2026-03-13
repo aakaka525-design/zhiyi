@@ -1,9 +1,9 @@
-# 023 — Content TTS 语言修复 & Sidebar 历史状态同步执行报告
+# 031 — Content TTS 语言修复 & Sidebar 历史状态同步执行报告
 
 - 日期: 2026-03-13
 - 状态: 已完成
-- 对应任务: [023-content-tts-and-history-fix.md](../tasks/023-content-tts-and-history-fix.md)
-- 对应讨论: [023-content-tts-and-css-tokens.md](../discussions/023-content-tts-and-css-tokens.md)
+- 对应任务: [031-content-tts-and-history-fix.md](../tasks/031-content-tts-and-history-fix.md)
+- 对应讨论: [031-content-tts-and-css-tokens.md](../discussions/031-content-tts-and-css-tokens.md)
 
 ## 执行结果
 

@@ -1,8 +1,8 @@
-# 028 — Service Worker 冷启动竞态 & translateBatch 缺少 fallback
+# 036 — Service Worker 冷启动竞态 & translateBatch 缺少 fallback
 
 ## 背景
 
-在 022-027 完成后，对 service-worker.js 初始化路径和 translator.js 翻译调度逻辑做了逐行审计。所有行号均在 `.worktrees/bugfix` 中直接验证。
+在 030-035 完成后，对 service-worker.js 初始化路径和 translator.js 翻译调度逻辑做了逐行审计。所有行号均在 `.worktrees/bugfix` 中直接验证。
 
 ---
 
@@ -162,7 +162,7 @@ if (provider === 'openai' || provider === 'gemini') {
 
 ### [Codex] 2026-03-13 — 复核与收敛
 
-我按当前 worktree 把 `028` 逐项重核了一遍。结论先说：
+我按当前 worktree 把 `036` 逐项重核了一遍。结论先说：
 
 - `A` 成立，而且确实是 `ensureReady()` 没有真正守住 “ready” 语义
 - 但原文对受影响 action 的范围写大了，`tts*` / `getSettings` / `getHistory` / `addHistory` 不会因为半初始化 translator 本身而出错
@@ -264,7 +264,7 @@ let initPromise = null;
    - 这些逐条调用仍然不会走 `Translator.translate()` 的 Google fallback
    - 最终大概率得到一串 `''`
 
-在 `026` 做完之后，这些 `''` 现在会被正确计入失败数。  
+在 `034` 做完之后，这些 `''` 现在会被正确计入失败数。  
 所以 `B` 的用户可见结果已经不是“静默成功”，而是“正确显示失败，但没有像单条翻译那样回退到 Google / offline”。
 
 #### 6. B 不是新问题，`010` 已经把它明确挂成后续 backlog
@@ -272,7 +272,7 @@ let initPromise = null;
 这个点我建议保留在讨论里，避免重复发明问题定义。
 
 在 [010-llm-provider-fixes.md](./010-llm-provider-fixes.md) 的 task / discussion 里，`translateBatch` fallback 缺口已经被明确列成后续项。  
-所以 `028` 对 B 的价值更像是：
+所以 `036` 对 B 的价值更像是：
 
 - 补足当前代码证据
 - 说明它现在仍然存在
@@ -312,9 +312,9 @@ let initPromise = null;
 
 两类失败路径也确认了：
 1. 缺 key → `!this.apiKey` 在 try 之前 throw → 整批直接冒到 immersive.js 的 catch
-2. HTTP/网络错误 → provider catch → 逐条 provider retry → 返回 `''` → 026 已确保计入 errorCount
+2. HTTP/网络错误 → provider catch → 逐条 provider retry → 返回 `''` → 034 已确保计入 errorCount
 
-B 已在 010 讨论中被定性为 "translateBatch fallback chain — 架构任务"，后续 014、015、016 均注明"不做"。028 的价值是补足代码证据并提供更清晰的实现边界。
+B 已在 010 讨论中被定性为 "translateBatch fallback chain — 架构任务"，后续 014、015、016 均注明"不做"。036 的价值是补足代码证据并提供更清晰的实现边界。
 
 #### 拆分
 

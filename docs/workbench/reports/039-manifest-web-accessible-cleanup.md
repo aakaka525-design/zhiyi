@@ -1,9 +1,9 @@
-# 031 — `manifest.json` `web_accessible_resources` 最小权限清理执行报告
+# 039 — `manifest.json` `web_accessible_resources` 最小权限清理执行报告
 
 - 日期: 2026-03-13
 - 状态: 已完成
-- 对应任务: [031-manifest-web-accessible-cleanup.md](../tasks/031-manifest-web-accessible-cleanup.md)
-- 对应讨论: [030-offscreen-promise-and-manifest-cleanup.md](../discussions/030-offscreen-promise-and-manifest-cleanup.md)
+- 对应任务: [039-manifest-web-accessible-cleanup.md](../tasks/039-manifest-web-accessible-cleanup.md)
+- 对应讨论: [038-offscreen-promise-and-manifest-cleanup.md](../discussions/038-offscreen-promise-and-manifest-cleanup.md)
 
 ## 执行结果
 
@@ -35,7 +35,7 @@ node --test tests/tts.test.mjs tests/manifest-static.test.mjs
 node --test tests/google-tts.test.mjs tests/tts.test.mjs tests/manifest-static.test.mjs
 node --test tests/*.test.mjs
 node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8'))"
-git diff --check -- background/modules/tts.js manifest.json tests/tts.test.mjs tests/manifest-static.test.mjs docs/workbench/tasks/030-offscreen-promise-hygiene.md docs/workbench/reports/030-offscreen-promise-hygiene.md docs/workbench/tasks/031-manifest-web-accessible-cleanup.md docs/workbench/reports/031-manifest-web-accessible-cleanup.md
+git diff --check -- background/modules/tts.js manifest.json tests/tts.test.mjs tests/manifest-static.test.mjs docs/workbench/tasks/038-offscreen-promise-hygiene.md docs/workbench/reports/038-offscreen-promise-hygiene.md docs/workbench/tasks/039-manifest-web-accessible-cleanup.md docs/workbench/reports/039-manifest-web-accessible-cleanup.md
 ```
 
 结果：

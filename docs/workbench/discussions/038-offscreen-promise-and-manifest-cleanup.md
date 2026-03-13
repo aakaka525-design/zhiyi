@@ -1,12 +1,12 @@
-# 030 — Offscreen 创建 Promise 永久失败 & manifest 资源暴露
+# 038 — Offscreen 创建 Promise 永久失败 & manifest 资源暴露
 
 ## 背景
 
-在 022-029 完成后做了完整横向审计。P1/P2 bug 已在前 8 轮修完。本轮只剩 P3 级维护项。所有行号均在 `.worktrees/bugfix` 中直接验证。
+在 030-037 完成后做了完整横向审计。P1/P2 bug 已在前 8 轮修完。本轮只剩 P3 级维护项。所有行号均在 `.worktrees/bugfix` 中直接验证。
 
 ---
 
-## A. `ensureOffscreenDocument()` 与 028 相同的 rejected-promise stale cache (P3)
+## A. `ensureOffscreenDocument()` 与 036 相同的 rejected-promise stale cache (P3)
 
 ### 现象
 
@@ -39,7 +39,7 @@ async function ensureOffscreenDocument() {
 2. 后续所有 `playAudioViaOffscreen()` 调用 → `await creatingOffscreen` → 永远抛同一个 rejected
 3. 所有 TTS 音频播放永久失败，直到 service worker 被 MV3 idle timeout 杀掉后重启
 
-与 028 修复的 `ensureReady()` 是完全相同的模式。
+与 036 修复的 `ensureReady()` 是完全相同的模式。
 
 ### 修复方向
 
@@ -74,7 +74,7 @@ try {
 }
 ```
 
-注意：catch 方式和 028 的 `ensureReady()` 修法一致；try/finally 方式更简洁但语义略不同（每次都重置）。
+注意：catch 方式和 036 的 `ensureReady()` 修法一致；try/finally 方式更简洁但语义略不同（每次都重置）。
 
 ### 为什么是 P3 而不是 P2
 
@@ -130,8 +130,8 @@ try {
 
 ## 审计收敛说明
 
-经过 022-030 共 9 轮审计，P1/P2 bug 已修完。本轮仅发现 P3 级维护项。后续审计预期回报递减。建议：
-- A 可以和 028 一起作为"promise 卫生"类修复
+经过 030-038 共 9 轮审计，P1/P2 bug 已修完。本轮仅发现 P3 级维护项。后续审计预期回报递减。建议：
+- A 可以和 036 一起作为"promise 卫生"类修复
 - B 可以在下次 manifest 调整时顺手清理
 - 也可以不做，当前无实际影响
 
@@ -139,15 +139,15 @@ try {
 
 | 项 | 优先级 | 理由 |
 |----|--------|------|
-| A | P3 可选 | 与 028 同类模式，但触发条件极罕见，TTS 有 system fallback |
+| A | P3 可选 | 与 036 同类模式，但触发条件极罕见，TTS 有 system fallback |
 | B | P3 可选 | 最小权限原则，当前无实际安全影响 |
 
 ### [Codex] 2026-03-13 — 复核与收敛
 
-我按当前 worktree 把 `030` 逐项重核了一遍。结论先说：
+我按当前 worktree 把 `038` 逐项重核了一遍。结论先说：
 
-- `A` 成立，而且确实是和 `028` 同类的 rejected-promise stale cache
-- 但 `A` 的修法不必机械照抄 `028`；这里没有“半初始化对象”问题，`try/finally` 反而更贴语义
+- `A` 成立，而且确实是和 `036` 同类的 rejected-promise stale cache
+- 但 `A` 的修法不必机械照抄 `036`；这里没有“半初始化对象”问题，`try/finally` 反而更贴语义
 - `A` 的影响范围要补完整：sidebar / float-window / popup 会回退系统语音，但 options 页的 TTS 测试不会 fallback，只会直接报错
 - `B` 基本成立，不过原文里对 `assets/*` 的判断前后有点打架；按当前代码看，`src/*` 高置信度可以删，`assets/*` 也暂时没有明确保留理由
 - 如果后续起 task，我建议把 `A` 和 `B` 拆开，不要把 runtime promise 卫生和 manifest 最小权限清理混成一个改动
@@ -166,15 +166,15 @@ try {
 - 直接 `await creatingOffscreen`
 - 反复拿到同一个 rejected promise
 
-这和 `028` 的 stale rejected promise 是同一种卫生问题，只是这里缓存的是 offscreen 创建 promise，不是 translator init promise。
+这和 `036` 的 stale rejected promise 是同一种卫生问题，只是这里缓存的是 offscreen 创建 promise，不是 translator init promise。
 
-#### 2. A 的修法更适合 `try/finally`，不需要像 `028` 那样同时复位对象引用
+#### 2. A 的修法更适合 `try/finally`，不需要像 `036` 那样同时复位对象引用
 
-我不建议后续 task 把修法写死成“完全照 `028` 的 catch 模板抄过去”。
+我不建议后续 task 把修法写死成“完全照 `036` 的 catch 模板抄过去”。
 
 原因是这里和 `ensureReady()` 有一个关键差别：
 
-- `028` 需要同时清 `initPromise` 和 `translator`，因为会留下半初始化实例
+- `036` 需要同时清 `initPromise` 和 `translator`，因为会留下半初始化实例
 - `ensureOffscreenDocument()` 这里没有需要保留或复位的“半初始化 offscreen 对象”引用；真正的已创建状态本来就是靠 `chrome.runtime.getContexts()` 检测
 
 所以这里更自然的写法其实是：

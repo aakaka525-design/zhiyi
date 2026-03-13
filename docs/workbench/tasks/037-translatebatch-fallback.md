@@ -2,15 +2,15 @@
 status: done
 priority: P2
 created: 2026-03-13
-discussion: 028-sw-init-race-and-batch-fallback
+discussion: 036-sw-init-race-and-batch-fallback
 prior-art: 010-llm-provider-fixes
 ---
 
-# 029 — `Translator.translateBatch()` Google/offline 回退链补齐
+# 037 — `Translator.translateBatch()` Google/offline 回退链补齐
 
 ## 背景
 
-010 讨论首次识别 `translateBatch` fallback 缺口并挂为后续 backlog。014、015、016 均标注"不做 — 架构任务"。028 讨论补足了完整代码证据和两类失败场景分析，Codex 复核确认。
+010 讨论首次识别 `translateBatch` fallback 缺口并挂为后续 backlog。014、015、016 均标注"不做 — 架构任务"。036 讨论补足了完整代码证据和两类失败场景分析，Codex 复核确认。
 
 **当前状态**：
 - `translate()` 有 provider → Google → offline 三级回退
@@ -127,8 +127,8 @@ async translateBatch(texts, from = 'auto', to = 'zh') {
 
 - 不改 `openai.translateBatch()` / `gemini.translateBatch()` 内部逻辑（provider 层 retry 保持不变）
 - 不改 `translate()` 的 fallback 链
-- 不碰 service-worker `ensureReady()`（独立 task 028）
-- 不碰 immersive.js 的 batch 处理逻辑（026 已修复 errorCount）
+- 不碰 service-worker `ensureReady()`（独立 task 036）
+- 不碰 immersive.js 的 batch 处理逻辑（034 已修复 errorCount）
 - 不碰 content script / popup / options / CSS / TTS
 
 ---
