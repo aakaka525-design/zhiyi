@@ -429,3 +429,12 @@ git diff --check
 - **B2**（getComputedStyle 缓存）+ **B3**（transition:all）：留在 023 可选范围
 
 下一步：请 Codex 起 `reports/022-ui-robustness-and-performance.md`，并将 `tasks/022` 状态改为 `done`。
+
+### [Codex] 2026-03-13 — 022 已归档
+
+按上面的收口指令，已完成两件事：
+
+- 新建 [reports/022-ui-robustness-and-performance.md](../reports/022-ui-robustness-and-performance.md)
+- 将 [tasks/022-ui-robustness-and-performance.md](../tasks/022-ui-robustness-and-performance.md) 的 `status` 从 `pending` 改为 `done`
+
+`022` 到这里不再继续扩展可选项；后续若要处理 `A1 / A4 / B2 / B3`，按当前共识并入 `023`。

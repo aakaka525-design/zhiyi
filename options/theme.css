@@ -20,7 +20,7 @@
 
     --text-primary: #333333;  /* 柔和深灰 */
     --text-secondary: #666666;/* 中灰 */
-    --text-tertiary: #999999; /* 浅灰 */
+    --text-tertiary: #767676; /* 提升对比度 */
 
     --border-color: rgba(0, 0, 0, 0.05);
     --glass-bg: rgba(255, 255, 255, 0.85); /* 更高的不透明度，增加实感 */
@@ -81,7 +81,7 @@ body.dark-mode {
 
     --text-primary: #E8E8E8;
     --text-secondary: #B0B0B0;
-    --text-tertiary: #787878;
+    --text-tertiary: #949494;
 
     --border-color: rgba(255, 255, 255, 0.08);
     --glass-bg: rgba(30, 34, 43, 0.85);
@@ -131,6 +131,11 @@ body {
     cursor: pointer;
     transition: all var(--transition-normal);
     outline: none;
+}
+
+.btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
 .btn-primary {
@@ -188,6 +193,11 @@ body {
     outline: none;
 }
 
+.input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
 .input:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
@@ -216,6 +226,16 @@ body {
 .select option {
     background: var(--bg-card-solid);
     color: var(--text-primary);
+}
+
+.btn:disabled,
+.input:disabled,
+.select:disabled,
+button:disabled,
+input:disabled,
+select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 /* 卡片 */

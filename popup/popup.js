@@ -96,13 +96,7 @@ async function saveLanguageSettings() {
 function bindEvents() {
     // 输入框字符计数
     elements.sourceText.addEventListener('input', () => {
-        const len = elements.sourceText.value.length;
-        elements.charCount.textContent = `${len} / ${MAX_CHARS}`;
-        if (len > MAX_CHARS) {
-            elements.charCount.style.color = 'var(--error)';
-        } else {
-            elements.charCount.style.color = 'var(--text-muted)';
-        }
+        updateCharCount();
     });
 
     // 语言切换
@@ -314,6 +308,7 @@ async function checkSelectedText() {
 function updateCharCount() {
     const len = elements.sourceText.value.length;
     elements.charCount.textContent = `${len} / ${MAX_CHARS}`;
+    elements.charCount.classList.toggle('over-limit', len > MAX_CHARS);
 }
 
 // 设置加载状态
@@ -321,6 +316,9 @@ function setLoading(loading) {
     if (loading) {
         elements.btnTranslate.classList.add('loading');
         elements.btnTranslate.disabled = true;
+        elements.sourceText.disabled = true;
+        elements.sourceLang.disabled = true;
+        elements.targetLang.disabled = true;
         elements.btnTranslate.innerHTML = `
             <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="18" height="18" style="animation: spin 1s linear infinite">
                 <path d="M12 2v4m0 12v4M4.22 4.22l2.83 2.83m8.5 8.5l2.83 2.83M2 12h4m12 0h4M4.22 19.78l2.83-2.83m8.5-8.5l2.83-2.83"/>
@@ -330,6 +328,9 @@ function setLoading(loading) {
     } else {
         elements.btnTranslate.classList.remove('loading');
         elements.btnTranslate.disabled = false;
+        elements.sourceText.disabled = false;
+        elements.sourceLang.disabled = false;
+        elements.targetLang.disabled = false;
         elements.btnTranslate.innerHTML = `
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18">
                 <path d="M5 8l6 6M4 14l6-6 2-3M2 5h12M7 2v3M22 22l-5-10-5 10M14 18h6"/>

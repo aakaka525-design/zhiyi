@@ -130,6 +130,11 @@
     outline: none;
 }
 
+.textarea:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
 .input-actions {
     display: flex;
     align-items: center;
@@ -143,6 +148,10 @@
     margin-left: auto;
     font-size: 11px;
     color: var(--text-tertiary);
+}
+
+.char-count.over-limit {
+    color: var(--error);
 }
 
 /* ===== 翻译按钮 ===== */
@@ -265,6 +274,16 @@
     transform: scale(1.1);
 }
 
+.translate-btn:disabled,
+.quick-btn:disabled,
+.btn-icon:disabled,
+.input:disabled,
+.select:disabled,
+.textarea:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* ===== 底部 ===== */
 .popup-footer {
     display: flex;
@@ -314,12 +333,6 @@
     }
 }
 
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
 /* ===== 通用组件 ===== */
 .btn-icon {
     width: 32px;
@@ -343,4 +356,9 @@
 .input {
     outline: none;
     transition: var(--transition);
+}
+
+.btn-icon:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }

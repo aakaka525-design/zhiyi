@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 priority: P1
 created: 2026-03-13
 ---

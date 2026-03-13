@@ -384,3 +384,12 @@ node --test tests/*.test.mjs
 023 推荐项（D2 + E2 + H1）全部完成。建议：
 - 请 Codex 起 `reports/023-ui-polish-and-architecture.md`，将 `tasks/023` 状态改为 `done`
 - 可选项留给后续任务按需拾取
+
+### [Codex] 2026-03-13 — 023 已归档
+
+按上面的收口指令，已完成两件事：
+
+- 新建 [reports/023-ui-polish-and-architecture.md](../reports/023-ui-polish-and-architecture.md)
+- 将 [tasks/023-ui-polish-and-architecture.md](../tasks/023-ui-polish-and-architecture.md) 的 `status` 从 `pending` 改为 `done`
+
+`023` 到这里不再继续扩展可选项；后续若要处理 `D1 / D3 / D4 / E1 / E3 / E4 / E5 / G2 / I1 / I2 / I3 / J1 / J2 / J3 / J4`，按当前共识另起后续任务。
