@@ -33,16 +33,28 @@ function createTranslator() {
 }
 
 function createStorage() {
+    const history = [{ source: 'hello', target: '你好' }];
     return {
         getSettingsCalls: 0,
         getHistoryCalls: 0,
+        addHistoryCalls: [],
         async getSettings() {
             this.getSettingsCalls += 1;
             return { provider: 'google', targetLang: 'zh' };
         },
         async getHistory() {
             this.getHistoryCalls += 1;
-            return [{ source: 'hello', target: '你好' }];
+            return [...history];
+        },
+        async addHistory(item) {
+            this.addHistoryCalls.push(item);
+            const created = {
+                id: `history-${this.addHistoryCalls.length}`,
+                timestamp: '2026-03-13T00:00:00.000Z',
+                ...item,
+            };
+            history.unshift(created);
+            return created;
         },
     };
 }
@@ -187,6 +199,32 @@ test('routeMessage forwards getHistory requests to storage.getHistory', async ()
 
     assert.deepEqual(result, [{ source: 'hello', target: '你好' }]);
     assert.equal(deps.storage.getHistoryCalls, 1);
+});
+
+test('routeMessage forwards addHistory requests to storage.addHistory and persists the entry', async () => {
+    const deps = createDeps();
+    const item = {
+        source: 'new source',
+        target: '新翻译',
+        sourceLang: 'en',
+        targetLang: 'zh',
+        provider: 'google',
+    };
+
+    const created = await routeMessage({ action: 'addHistory', item }, deps);
+    const history = await routeMessage({ action: 'getHistory' }, deps);
+
+    assert.deepEqual(created, {
+        id: 'history-1',
+        timestamp: '2026-03-13T00:00:00.000Z',
+        ...item,
+    });
+    assert.deepEqual(deps.storage.addHistoryCalls, [item]);
+    assert.equal(history[0].source, 'new source');
+    assert.equal(history[0].target, '新翻译');
+    assert.equal(history[0].sourceLang, 'en');
+    assert.equal(history[0].targetLang, 'zh');
+    assert.equal(history[0].provider, 'google');
 });
 
 test('routeMessage refreshes translator settings for updateSettings', async () => {

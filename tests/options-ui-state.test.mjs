@@ -66,6 +66,72 @@ test('hasUnsavedChanges returns true when any tracked setting changes', () => {
     assert.equal(hasUnsavedChanges(baseline, changed), true);
 });
 
+test('buildSettingsSnapshot trims whitespace from string fields', () => {
+    const snapshot = buildSettingsSnapshot({
+        targetLang: 'zh',
+        enableSelection: true,
+        enableShortcut: true,
+        showFloatingBall: false,
+        enableAdBlock: false,
+        provider: 'openai',
+        openaiApiKey: '  sk-abc123  \n',
+        openaiBaseUrl: ' https://api.openai.com/v1 ',
+        openaiModel: ' gpt-4o-mini\t',
+        geminiApiKey: ' gemini-key ',
+        geminiModel: ' gemini-2.5-flash ',
+        deepseekApiKey: '\n deepseek-key \n',
+        deepseekBaseUrl: ' https://api.ppinfra.com/openai ',
+        deepseekModel: ' deepseek-chat ',
+        darkMode: false,
+        debugMode: false,
+        ttsProvider: 'system',
+        ttsSpeed: 1,
+        ttsVoice: ' voice-name ',
+    });
+
+    assert.equal(snapshot.openaiApiKey, 'sk-abc123');
+    assert.equal(snapshot.openaiBaseUrl, 'https://api.openai.com/v1');
+    assert.equal(snapshot.openaiModel, 'gpt-4o-mini');
+    assert.equal(snapshot.geminiApiKey, 'gemini-key');
+    assert.equal(snapshot.geminiModel, 'gemini-2.5-flash');
+    assert.equal(snapshot.deepseekApiKey, 'deepseek-key');
+    assert.equal(snapshot.deepseekBaseUrl, 'https://api.ppinfra.com/openai');
+    assert.equal(snapshot.deepseekModel, 'deepseek-chat');
+    assert.equal(snapshot.ttsVoice, 'voice-name');
+});
+
+test('hasUnsavedChanges returns false when difference is only whitespace', () => {
+    const base = buildSettingsSnapshot({
+        targetLang: 'zh',
+        enableSelection: true,
+        enableShortcut: true,
+        showFloatingBall: false,
+        enableAdBlock: false,
+        provider: 'openai',
+        openaiApiKey: 'sk-abc123',
+        openaiBaseUrl: 'https://api.openai.com/v1',
+        openaiModel: 'gpt-4o-mini',
+        geminiApiKey: '',
+        geminiModel: 'gemini-2.5-flash',
+        deepseekApiKey: '',
+        deepseekBaseUrl: 'https://api.ppinfra.com/openai',
+        deepseekModel: 'deepseek-chat',
+        darkMode: false,
+        debugMode: false,
+        ttsProvider: 'system',
+        ttsSpeed: 1,
+        ttsVoice: '',
+    });
+
+    const withWhitespace = buildSettingsSnapshot({
+        ...base,
+        openaiApiKey: '  sk-abc123  \n',
+        openaiBaseUrl: ' https://api.openai.com/v1 ',
+    });
+
+    assert.equal(hasUnsavedChanges(base, withWhitespace), false);
+});
+
 test('shortcut guidance toast message reflects clipboard success or fallback', () => {
     assert.equal(
         getShortcutSettingsToastMessage(true),

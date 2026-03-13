@@ -49,6 +49,8 @@
 Popup/Content → sendMessage({ action, payload }) → Service Worker → 调用 src/core 或 background/modules → 返回结果
 ```
 
+其中 `service-worker.js` 会先把消息交给 `background/modules/message-router.js` 做 action 分发，再调用具体处理模块。
+
 ### 消息 Action 清单
 
 | Action | 来源 | 目标模块 | 说明 |
@@ -61,6 +63,8 @@ Popup/Content → sendMessage({ action, payload }) → Service Worker → 调用
 | `playAudioOffscreen` | Popup / Content / Options | `background/modules/tts.js` | 通过 Offscreen Document 播放音频 |
 | `getSettings` | Popup / Content | `src/core/storage.js` | 获取设置 |
 | `getHistory` | Popup | `src/core/storage.js` | 获取历史 |
+| `addHistory` | Sidebar | `src/core/storage.js` | 写入翻译历史 |
+| `updateSettings` | Options | `src/core/translator.js` | 刷新翻译引擎设置 |
 
 ## 数据存储
 

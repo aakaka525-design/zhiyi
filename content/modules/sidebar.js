@@ -213,7 +213,8 @@ ST.createSidebar = function () {
             return;
         }
 
-        const voice = settings.ttsVoice || ST.getDefaultGoogleTtsVoice(lang);
+        const resolvedLang = !lang || lang === 'auto' ? ST.detectLanguage(text) : lang;
+        const voice = settings.ttsVoice || ST.getDefaultGoogleTtsVoice(resolvedLang);
 
         const response = await ST.sendMessage({
             action: 'ttsGoogle',
@@ -278,6 +279,16 @@ ST.createSidebar = function () {
                 resultContent.innerText = response.text;
                 resultContent.style.color = '';
                 resultLang.innerText = `翻译结果 (${targetLangSelect.value})`;
+                ST.sendMessage({
+                    action: 'addHistory',
+                    item: {
+                        source: text,
+                        target: response.text,
+                        sourceLang: sourceLangSelect.value,
+                        targetLang: targetLangSelect.value,
+                        provider: response.provider || ''
+                    }
+                });
                 // 刷新历史记录
                 setTimeout(() => ST.refreshSidebarHistory(), 500);
             } else {
@@ -317,6 +328,8 @@ ST.createSidebar = function () {
                     historyItem.className = 'st-history-item';
                     historyItem.dataset.source = item.source;
                     historyItem.dataset.target = item.target;
+                    historyItem.dataset.sourceLang = item.sourceLang || '';
+                    historyItem.dataset.targetLang = item.targetLang || '';
 
                     const sourceDiv = document.createElement('div');
                     sourceDiv.className = 'st-history-source';
@@ -332,6 +345,16 @@ ST.createSidebar = function () {
                         resultContent.innerText = historyItem.dataset.target;
                         resultContent.style.color = '';
                         resultCard.classList.add('active');
+                        const sl = historyItem.dataset.sourceLang;
+                        const tl = historyItem.dataset.targetLang;
+                        if (sl) sourceLangSelect.value = sl;
+                        else sourceLangSelect.value = 'auto';
+                        if (tl) {
+                            targetLangSelect.value = tl;
+                            resultLang.innerText = `翻译结果 (${tl})`;
+                        } else {
+                            resultLang.innerText = '翻译结果';
+                        }
                         translateBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     };
 

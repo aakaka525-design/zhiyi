@@ -30,8 +30,11 @@ async function ensureOffscreenDocument() {
         justification: 'Playing TTS audio for translation extension'
     });
 
-    await creatingOffscreen;
-    creatingOffscreen = null;
+    try {
+        await creatingOffscreen;
+    } finally {
+        creatingOffscreen = null;
+    }
 }
 
 export async function playAudioViaOffscreen(audioData, speed = 1.0) {

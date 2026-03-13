@@ -59,7 +59,7 @@ test('sidebar and float-window system TTS resolve auto or missing languages befo
     );
     assert.match(
         floatWindow,
-        /const langMap = \{ zh: 'zh-CN', en: 'en-US', ja: 'ja-JP', ko: 'ko-KR' \};\s*const resolvedLang = !lang \|\| lang === 'auto' \? ST\.detectLanguage\(text\) : lang;[\s\S]*utterance\.lang = langMap\[resolvedLang\] \|\| resolvedLang;/,
+        /const resolvedLang = !lang \|\| lang === 'auto' \? ST\.detectLanguage\(text\) : lang;[\s\S]*const langMap = \{ zh: 'zh-CN', en: 'en-US', ja: 'ja-JP', ko: 'ko-KR' \};[\s\S]*utterance\.lang = langMap\[resolvedLang\] \|\| resolvedLang;/,
     );
 });
 
