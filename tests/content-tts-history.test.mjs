@@ -16,7 +16,7 @@ test('float window source speech resolves auto language before selecting Google 
     );
     assert.match(
         source,
-        /voice:\s*settings\.ttsVoice \|\| ST\.getDefaultGoogleTtsVoice\(resolvedLang\)/,
+        /voice:\s*settings\.ttsVoiceGoogle \|\| ST\.getDefaultGoogleTtsVoice\(resolvedLang\)/,
     );
 });
 
@@ -25,7 +25,7 @@ test('sidebar Google TTS resolves auto language before selecting the default voi
 
     assert.match(
         source,
-        /const speakGoogle = async \(text, lang, settings\) => \{[\s\S]*const resolvedLang = !lang \|\| lang === 'auto' \? ST\.detectLanguage\(text\) : lang;[\s\S]*const voice = settings\.ttsVoice \|\| ST\.getDefaultGoogleTtsVoice\(resolvedLang\);/,
+        /const speakGoogle = async \(text, lang, settings\) => \{[\s\S]*const resolvedLang = !lang \|\| lang === 'auto' \? ST\.detectLanguage\(text\) : lang;[\s\S]*const voice = settings\.ttsVoiceGoogle \|\| ST\.getDefaultGoogleTtsVoice\(resolvedLang\);/,
     );
 });
 
@@ -48,10 +48,10 @@ test('sidebar translate success writes history before refreshing the history lis
 
     assert.match(
         source,
-        /ST\.sendMessage\(\{\s*action:\s*'addHistory',[\s\S]*source:\s*text,[\s\S]*target:\s*response\.text,[\s\S]*sourceLang:\s*sourceLangSelect\.value,[\s\S]*targetLang:\s*targetLangSelect\.value,[\s\S]*provider:\s*response\.provider \|\| ''[\s\S]*\}\);/,
+        /await ST\.sendMessage\(\{\s*action:\s*'addHistory',[\s\S]*source:\s*text,[\s\S]*target:\s*response\.text,[\s\S]*sourceLang:\s*sourceLangSelect\.value,[\s\S]*targetLang:\s*targetLangSelect\.value,[\s\S]*provider:\s*response\.provider \|\| '',[\s\S]*\}\);/,
     );
     assert.match(
         source,
-        /ST\.sendMessage\(\{\s*action:\s*'addHistory'[\s\S]*\}\);\s*\/\/ 刷新历史记录\s*setTimeout\(\(\) => ST\.refreshSidebarHistory\(\), 500\);/,
+        /await ST\.sendMessage\(\{[\s\S]*action:\s*'addHistory'[\s\S]*\}\);\s*await ST\.refreshSidebarHistory\(\);/,
     );
 });

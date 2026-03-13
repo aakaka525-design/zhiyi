@@ -64,9 +64,10 @@ test('float-window source speech resolves language once and reuses it for Google
 test('sidebar history replay restores target language UI when available and falls back cleanly when absent', async () => {
     const sidebar = await readWorkspaceFile('content/modules/sidebar.js');
 
+    assert.match(sidebar, /historyItem\.dataset\.sourceLang = item\.sourceLang \|\| '';/);
     assert.match(sidebar, /historyItem\.dataset\.targetLang = item\.targetLang \|\| '';/);
     assert.match(
         sidebar,
-        /if \(historyItem\.dataset\.targetLang\) \{\s*targetLangSelect\.value = historyItem\.dataset\.targetLang;\s*resultLang\.innerText = `翻译结果 \(\$\{historyItem\.dataset\.targetLang\}\)`;\s*\} else \{\s*resultLang\.innerText = '翻译结果';\s*\}/,
+        /const sl = historyItem\.dataset\.sourceLang;\s*const tl = historyItem\.dataset\.targetLang;\s*if \(sl\) sourceLangSelect\.value = sl;\s*else sourceLangSelect\.value = 'auto';\s*if \(tl\) \{\s*targetLangSelect\.value = tl;\s*resultLang\.innerText = `翻译结果 \(\$\{tl\}\)`;\s*\} else \{\s*resultLang\.innerText = '翻译结果';\s*\}/,
     );
 });

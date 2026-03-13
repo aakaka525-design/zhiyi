@@ -90,7 +90,9 @@ test('buildSettingsSnapshot trims whitespace from string fields', () => {
         debugMode: false,
         ttsProvider: 'system',
         ttsSpeed: 1,
-        ttsVoice: ' voice-name ',
+        ttsVoiceOpenai: 'nova',
+        ttsVoiceGoogle: 'chirp',
+        ttsVoiceGlm: 'tongtong',
     });
 
     assert.equal(snapshot.openaiApiKey, 'sk-abc123');
@@ -101,7 +103,9 @@ test('buildSettingsSnapshot trims whitespace from string fields', () => {
     assert.equal(snapshot.deepseekApiKey, 'deepseek-key');
     assert.equal(snapshot.deepseekBaseUrl, 'https://api.ppinfra.com/openai');
     assert.equal(snapshot.deepseekModel, 'deepseek-chat');
-    assert.equal(snapshot.ttsVoice, 'voice-name');
+    assert.equal(snapshot.ttsVoiceOpenai, 'nova');
+    assert.equal(snapshot.ttsVoiceGoogle, 'chirp');
+    assert.equal(snapshot.ttsVoiceGlm, 'tongtong');
 });
 
 test('hasUnsavedChanges returns false when difference is only whitespace', () => {
@@ -124,7 +128,9 @@ test('hasUnsavedChanges returns false when difference is only whitespace', () =>
         debugMode: false,
         ttsProvider: 'system',
         ttsSpeed: 1,
-        ttsVoice: '',
+        ttsVoiceOpenai: '',
+        ttsVoiceGoogle: '',
+        ttsVoiceGlm: '',
     });
 
     const withWhitespace = buildSettingsSnapshot({

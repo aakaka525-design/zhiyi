@@ -61,7 +61,7 @@ test('options snapshots and TTS consumers use provider-specific voice fields', a
     assert.match(popup, /voice: settings\.ttsVoiceGlm \|\| 'tongtong',/);
 
     assert.match(sidebar, /voice: settings\.ttsVoiceOpenai \|\| 'nova',/);
-    assert.match(sidebar, /const voice = settings\.ttsVoiceGoogle \|\| ST\.getDefaultGoogleTtsVoice\(lang\);/);
+    assert.match(sidebar, /const voice = settings\.ttsVoiceGoogle \|\| ST\.getDefaultGoogleTtsVoice\(resolvedLang\);/);
     assert.match(sidebar, /const voice = settings\.ttsVoiceGlm \|\| 'tongtong';/);
 
     assert.match(floatWindow, /voice: settings\.ttsVoiceOpenai \|\| 'nova',/);
