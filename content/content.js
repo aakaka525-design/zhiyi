@@ -5,6 +5,35 @@
 
 var ST = window.SmartTranslator;
 
+function mergeDefaults(raw) {
+    const defaults = {
+        provider: 'google',
+        sourceLang: 'auto',
+        targetLang: 'zh',
+        openaiApiKey: '',
+        openaiBaseUrl: 'https://api.openai.com/v1',
+        openaiModel: 'gpt-4o-mini',
+        geminiApiKey: '',
+        geminiModel: 'gemini-2.5-flash',
+        deepseekApiKey: '',
+        deepseekBaseUrl: 'https://api.ppinfra.com/openai',
+        deepseekModel: 'deepseek/deepseek-ocr',
+        darkMode: false,
+        ttsProvider: 'system',
+        ttsVoice: '',
+        ttsSpeed: 1.0,
+        enableSelection: true,
+        enableHover: false,
+        enableShortcut: true,
+        showFloatingBall: false,
+        enableAdBlock: false,
+        showOriginal: true,
+        fontSize: 14,
+        debugMode: false,
+    };
+    return { ...defaults, ...(raw || {}) };
+}
+
 /**
  * 加载设置
  */
@@ -26,7 +55,7 @@ async function loadSettings() {
     } catch (e) {
         console.warn('[智译] Service Worker 未就绪，直接读取存储:', e.message);
         const result = await chrome.storage.local.get('settings');
-        const settings = result.settings || {};
+        const settings = mergeDefaults(result.settings || {});
         ST.state.settings = settings;
         return settings;
     }
@@ -94,8 +123,8 @@ function handleMessage(request, sender, sendResponse) {
 // 监听 storage 变化自动刷新设置
 chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName === 'local' && changes.settings) {
-        ST.state.settings = changes.settings.newValue;
-        if (changes.settings.newValue?.showFloatingBall === true && ST.floatingBall?.init) {
+        ST.state.settings = mergeDefaults(changes.settings.newValue);
+        if (ST.state.settings?.showFloatingBall === true && ST.floatingBall?.init) {
             ST.floatingBall.init();
         }
         console.log('[智译] 设置已自动更新');

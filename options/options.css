@@ -64,12 +64,12 @@ body {
 }
 
 .nav-item:hover {
-    background: white;
+    background: var(--bg-card-solid);
     color: var(--accent);
 }
 
 .nav-item.active {
-    background: white;
+    background: var(--bg-card-solid);
     color: var(--accent);
     box-shadow: var(--shadow-sm);
 }
@@ -93,7 +93,7 @@ body {
     flex: 1;
     padding: 40px 60px;
     overflow-y: auto;
-    background: white;
+    background: var(--bg-card-solid);
 }
 
 .tab-content {
@@ -160,7 +160,7 @@ h3 {
 .input {
     width: 100%;
     padding: 12px 16px;
-    background: white;
+    background: var(--bg-input);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     color: var(--text-primary);
@@ -212,10 +212,14 @@ h3 {
 
 .select {
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236A6A6A'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--text-secondary) 50%),
+        linear-gradient(135deg, var(--text-secondary) 50%, transparent 50%);
     background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 16px;
+    background-position:
+        calc(100% - 18px) calc(50% - 2px),
+        calc(100% - 12px) calc(50% - 2px);
+    background-size: 6px 6px, 6px 6px;
     padding-right: 40px;
 }
 
@@ -481,7 +485,7 @@ input:checked+.slider:before {
 }
 
 .history-item {
-    background: white;
+    background: var(--bg-card-solid);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 16px;
@@ -512,15 +516,6 @@ input:checked+.slider:before {
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-}
-
-
-.history-target {
-    font-size: 14px;
-    color: var(--text-primary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .history-empty {

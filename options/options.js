@@ -59,6 +59,7 @@ let hasPendingSettingsChanges = false;
 
 // 初始化
 async function init() {
+    updateAppVersion();
     await loadSettings();
     bindEvents();
 
@@ -69,6 +70,12 @@ async function init() {
     } else {
         loadTab('general');
     }
+}
+
+function updateAppVersion() {
+    const versionEl = document.getElementById('app-version');
+    if (!versionEl) return;
+    versionEl.textContent = `版本 v${chrome.runtime.getManifest().version}`;
 }
 
 // 加载设置
@@ -380,7 +387,7 @@ async function requestTtsTestAudio(provider, text, speed) {
         case 'glm': {
             const apiKey = elements.deepseekApiKey.value.trim();
             if (!apiKey) {
-                throw new Error('请先填写 ppinfra API Key');
+                throw new Error('请先填写 DeepSeek API Key（用于 GLM TTS）');
             }
             const response = await chrome.runtime.sendMessage({
                 action: 'ttsGLM',

@@ -127,10 +127,17 @@ ST.showBubble = async function (text) {
     `;
 
     // 定位气泡
-    const rect = ST.state.selection.rect;
+    const rect = resolveBubbleRect();
     ST.ui.bubble.style.position = 'fixed';
-    ST.ui.bubble.style.top = `${rect.bottom + 10}px`;
-    ST.ui.bubble.style.left = `${Math.max(10, rect.left)}px`;
+    if (rect) {
+        ST.state.selection.rect = rect;
+        ST.ui.bubble.style.top = `${rect.bottom + 10}px`;
+        ST.ui.bubble.style.left = `${Math.max(10, rect.left)}px`;
+    } else {
+        const fallbackPosition = getFallbackBubblePosition();
+        ST.ui.bubble.style.top = `${fallbackPosition.top}px`;
+        ST.ui.bubble.style.left = `${fallbackPosition.left}px`;
+    }
     ST.ui.bubble.style.zIndex = '2147483647';
 
     document.body.appendChild(ST.ui.bubble);
@@ -168,6 +175,39 @@ ST.showBubble = async function (text) {
         }
     }
 };
+
+function resolveBubbleRect() {
+    if (isUsableRect(ST.state.selection.rect)) {
+        return ST.state.selection.rect;
+    }
+
+    const selection = window.getSelection?.();
+    if (selection?.rangeCount > 0) {
+        const rangeRect = selection.getRangeAt(0).getBoundingClientRect();
+        if (isUsableRect(rangeRect)) {
+            return rangeRect;
+        }
+    }
+
+    return null;
+}
+
+function isUsableRect(rect) {
+    return Boolean(
+        rect
+        && Number.isFinite(rect.left)
+        && Number.isFinite(rect.bottom)
+        && rect.width > 0
+        && rect.height > 0
+    );
+}
+
+function getFallbackBubblePosition() {
+    return {
+        top: 100,
+        left: Math.max(10, (window.innerWidth / 2) - 150),
+    };
+}
 
 function renderBubbleMessage(container, message, isError = false) {
     container.textContent = message;

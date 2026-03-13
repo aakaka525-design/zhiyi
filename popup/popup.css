@@ -110,7 +110,7 @@
 }
 
 .input-section:focus-within {
-    background: white;
+    background: var(--bg-card-solid);
     box-shadow: var(--shadow-md);
     border-color: var(--accent-light);
 }
@@ -176,7 +176,7 @@
 
 /* ===== 结果区域 ===== */
 .result-section {
-    background: white;
+    background: var(--bg-card-solid);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
     border: 1px solid var(--border-color);
@@ -233,7 +233,7 @@
     align-items: center;
     gap: 8px;
     padding: 14px 10px;
-    background: white;
+    background: var(--bg-card-solid);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     color: var(--text-secondary);

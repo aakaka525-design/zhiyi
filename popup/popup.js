@@ -41,6 +41,8 @@ async function init() {
     translator = new Translator();
     await translator.init();
 
+    updateAppVersion();
+
     // 加载用户设置
     await loadSettings();
 
@@ -64,6 +66,22 @@ async function loadSettings() {
     if (settings.targetLang) {
         elements.targetLang.value = settings.targetLang;
     }
+
+    applyDarkMode(settings.darkMode);
+}
+
+function applyDarkMode(enabled) {
+    if (enabled) {
+        document.body.classList.add('dark-mode');
+        return;
+    }
+    document.body.classList.remove('dark-mode');
+}
+
+function updateAppVersion() {
+    const versionEl = document.getElementById('app-version');
+    if (!versionEl) return;
+    versionEl.textContent = `v${chrome.runtime.getManifest().version}`;
 }
 
 // 保存语言设置
@@ -241,6 +259,7 @@ async function handleTranslate() {
     const text = elements.sourceText.value.trim();
     if (!text) return;
     if (text.length > MAX_CHARS) {
+        clearResult();
         showError('文本超出最大长度限制');
         return;
     }
@@ -340,6 +359,7 @@ function clearResult() {
 
 // 显示错误
 function showError(message) {
+    elements.resultSection.classList.add('active');
     elements.resultContent.innerHTML = `<div class="result-error" style="color: var(--error)">${escapeHtml(message)}</div>`;
 }
 
@@ -361,26 +381,30 @@ async function speak(text, lang) {
     const settings = await StorageManager.getSettings();
     const provider = settings.ttsProvider || 'system';
     const speed = settings.ttsSpeed || 1.0;
+
+    if (provider !== 'system') {
+        try {
+            const audioData = await requestTtsAudio(provider, text, lang, settings, speed);
+            const response = await chrome.runtime.sendMessage({
+                action: 'playAudioOffscreen',
+                audioData,
+                speed,
+            });
+            if (response?.error) {
+                throw new Error(response.error);
+            }
+            return;
+        } catch (error) {
+            console.warn(`Popup TTS provider "${provider}" failed, falling back to system speech.`, error);
+        }
+    }
+
     const langMap = {
         'zh': 'zh-CN',
         'en': 'en-US',
         'ja': 'ja-JP',
         'ko': 'ko-KR',
     };
-
-    if (provider !== 'system') {
-        const audioData = await requestTtsAudio(provider, text, lang, settings, speed);
-        const response = await chrome.runtime.sendMessage({
-            action: 'playAudioOffscreen',
-            audioData,
-            speed,
-        });
-        if (response?.error) {
-            throw new Error(response.error);
-        }
-        return;
-    }
-
     const utterance = new SpeechSynthesisUtterance(text);
     speechSynthesis.cancel();
     utterance.rate = speed;
@@ -461,7 +485,7 @@ function showToast(message) {
         left: 50%;
         transform: translateX(-50%);
         padding: 8px 16px;
-        background: var(--text-primary);
+        background: rgba(50, 54, 66, 0.95);
         color: white;
         border-radius: 20px;
         box-shadow: var(--shadow-lg);

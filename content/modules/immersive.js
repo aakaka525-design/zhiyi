@@ -71,6 +71,7 @@ ST.toggleImmersive = async function () {
                 const text = p.innerText.trim();
                 if (/^[\d\s.,!?@#$%^&*()\-+=]+$/.test(text)) return false;
                 if (text.length < 20) return false;
+                if (ST.detectLanguage(text) === targetLang) return false;
 
                 return true;
             })

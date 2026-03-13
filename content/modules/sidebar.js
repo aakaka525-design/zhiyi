@@ -74,12 +74,12 @@ ST.createSidebar = function () {
                     最近记录
                 </div>
                 <div class="st-history-list" id="st-sidebar-history-list">
-                    <div style="font-size: 12px; color: #999; text-align: center; padding: 20px;">暂无记录</div>
+                    <div style="font-size: 12px; color: var(--text-tertiary); text-align: center; padding: 20px;">暂无记录</div>
                 </div>
             </div>
 
             <div class="st-sidebar-info" style="margin-top: auto; font-size: 12px; color: #666; text-align: center; padding-bottom: 20px;">
-                快捷键: <span style="background: #eee; padding: 2px 6px; border-radius: 4px;">Alt + S</span>
+                默认快捷键: <span style="background: var(--bg-secondary); padding: 2px 6px; border-radius: 4px;">Alt + S</span>
             </div>
         </div>
     `;
@@ -334,7 +334,7 @@ ST.createSidebar = function () {
             } else {
                 const emptyState = document.createElement('div');
                 emptyState.style.fontSize = '12px';
-                emptyState.style.color = '#999';
+                emptyState.style.color = 'var(--text-tertiary)';
                 emptyState.style.textAlign = 'center';
                 emptyState.style.padding = '20px';
                 emptyState.textContent = '暂无记录';
@@ -344,13 +344,6 @@ ST.createSidebar = function () {
             console.error('加载历史记录失败:', err);
         }
     };
-
-    // 快捷键 Alt + S
-    document.addEventListener('keydown', (e) => {
-        if (e.altKey && e.key.toLowerCase() === 's') {
-            ST.toggleSidebar();
-        }
-    });
 
     // 首次加载历史记录
     ST.refreshSidebarHistory();

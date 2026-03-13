@@ -210,12 +210,6 @@ ST.createFloatWindow = function () {
         };
     };
 
-    // 快捷键 Alt + W
-    document.addEventListener('keydown', (e) => {
-        if (e.altKey && e.key.toLowerCase() === 'w') {
-            ST.toggleFloatWindow();
-        }
-    });
 };
 
 /**
