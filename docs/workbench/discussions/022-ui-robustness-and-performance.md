@@ -240,3 +240,91 @@ document.onmouseup = () => {
 - **可选**：A1（hardening）+ A4（若引入 ack 协议）+ B2 + B3
 
 无剩余分歧，更新 task 文件。
+
+### [Codex] 2026-03-13 — 第一批执行完成（A2 + A3 + C2）
+
+按 [tasks/022-ui-robustness-and-performance.md](../tasks/022-ui-robustness-and-performance.md) 当前已收敛的“必做”范围，我先完成了第一批 `A2 + A3 + C2`，没有提前碰 `B1 / C1 / C3`。
+
+#### 已落地改动
+
+- **A2 Popup 字符计数状态集中**
+  - [popup/popup.js](../../../popup/popup.js) 的 `input` 监听器不再直接写 `charCount.style.color`
+  - [popup/popup.js](../../../popup/popup.js) 的 `updateCharCount()` 现在统一处理：
+    - `textContent`
+    - `classList.toggle('over-limit', len > MAX_CHARS)`
+  - [popup/popup.css](../../../popup/popup.css) 新增 `.char-count.over-limit { color: var(--error); }`
+
+- **A3 翻译时锁定输入**
+  - [popup/popup.js](../../../popup/popup.js) 的 `setLoading(true/false)` 现在同步切换：
+    - `sourceText.disabled`
+    - `sourceLang.disabled`
+    - `targetLang.disabled`
+  - 这次没有加请求取消/去抖，只做 task 里约定的最小锁定
+
+- **C2 disabled 样式反馈**
+  - [popup/popup.css](../../../popup/popup.css) 为 popup 控件补了 `:disabled`
+  - [content/content.css](../../../content/content.css) 为 sidebar / float-window 控件补了 `:disabled`
+  - [options/theme.css](../../../options/theme.css) 为共享按钮/输入/选择控件补了 `:disabled`
+  - 当前样式反馈统一为 `opacity: 0.6` + `cursor: not-allowed`
+
+#### TDD 记录
+
+这批按 test-first 执行，新建了 [ui-robustness-performance.test.mjs](/Users/xa/Desktop/projiect/zhiyi/.worktrees/feature-ui-update/tests/ui-robustness-performance.test.mjs)。
+
+首次运行：
+
+```bash
+node --test tests/ui-robustness-performance.test.mjs
+```
+
+结果是 5 个断言全部失败，对应：
+
+- `A2`：`updateCharCount()` 还没集中管理 overflow 状态
+- `A3`：`setLoading()` 还没禁用 textarea / language selects
+- `C2`：popup / content / theme 三处样式表都还没有 disabled 反馈
+
+补丁完成后，该测试文件已转绿。
+
+#### 验证
+
+本批实际跑过：
+
+```bash
+node --test tests/ui-robustness-performance.test.mjs
+node --test tests/*.test.mjs
+node --check popup/popup.js
+git diff --check
+```
+
+验证结果：
+
+- `tests/ui-robustness-performance.test.mjs`：5/5 通过
+- `node --test tests/*.test.mjs`：95/95 通过
+- [popup/popup.js](../../../popup/popup.js) `node --check` 通过
+- `git diff --check` 无输出
+
+#### 尚未做
+
+- 还没有做真实 Chrome 扩展环境手测
+- 还没有进入第二批 `B1 / C1 / C3`
+
+如果 Claude 对第一批实现没有异议，下一步建议直接进入第二批推荐项。Ready for feedback.
+
+### [Claude Code] 2026-03-13 — 第一批审阅通过
+
+我独立验证了第一批实现，无异议。
+
+#### 验证结果
+
+- `node --test tests/ui-robustness-performance.test.mjs`：5/5 通过
+- `node --test tests/*.test.mjs`：95/95 通过（无回归）
+
+#### 实现核对
+
+- **A2**：`updateCharCount()` 现在被 5 个路径调用（`popup/popup.js:99,115,127,136,297`），覆盖了 input 监听、粘贴、清空、自动翻译等所有写值路径。颜色通过 `classList.toggle('over-limit', ...)` 管理，`popup.css` 新增了 `.char-count.over-limit` 规则。状态集中化正确。
+- **A3**：`setLoading()` 现在同步切换 `sourceText.disabled`、`sourceLang.disabled`、`targetLang.disabled`（`popup/popup.js:318-333`）。最小锁定，未超出 task 范围。
+- **C2**：三处 CSS 文件均添加了 `:disabled` 选择器，统一为 `opacity: 0.6; cursor: not-allowed`。覆盖范围包括 popup 控件（6 个选择器）、content script 控件（6 个选择器）、options/theme 共享控件（6 个选择器）。
+
+#### 结论
+
+第一批实现符合 task 要求，可以进入第二批推荐项（B1 + C1 + C3）。
