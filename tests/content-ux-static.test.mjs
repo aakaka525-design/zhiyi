@@ -12,7 +12,7 @@ test('content stylesheet defines scoped tokens for extension-owned UI containers
     assert.doesNotMatch(css, /:root\s*\{[\s\S]*--accent:/);
     assert.match(
         css,
-        /#smart-translator-bubble,\s*[\r\n]+\.st-immersive-wrapper,\s*[\r\n]+#st-sidebar,\s*[\r\n]+#st-sidebar-toggle-btn,\s*[\r\n]+#st-float-window,\s*[\r\n]+#st-page-progress,\s*[\r\n]+#st-floating-ball-container,\s*[\r\n]+(?:#smart-translator-icon,\s*[\r\n]+)?(?:\.st-immersive-translation,\s*[\r\n]+\.st-translation-separator,\s*[\r\n]+)?#st-toast\s*\{/,
+        /#smart-translator-bubble,\s*[\r\n]+\.st-immersive-wrapper,\s*[\r\n]+#st-sidebar,\s*[\r\n]+#st-sidebar-toggle-btn,\s*[\r\n]+#st-float-window,\s*[\r\n]+#st-page-progress,\s*[\r\n]+#st-floating-ball-container,\s*[\r\n]+#smart-translator-icon,\s*[\r\n]+\.st-immersive-translation,\s*[\r\n]+\.st-translation-separator,\s*[\r\n]+#st-toast\s*\{/,
     );
     assert.match(css, /--accent:\s*#/);
     assert.match(css, /--accent-light:\s*#/);
@@ -25,6 +25,20 @@ test('content stylesheet defines scoped tokens for extension-owned UI containers
     assert.match(css, /--border-color:\s*rgba\(/);
     assert.match(css, /--transition:\s*all /);
     assert.match(css, /--error:\s*#/);
+});
+
+test('content stylesheet replaces shared semantic hex literals with tokens outside token definitions', async () => {
+    const css = await readWorkspaceFile('content/content.css');
+    const cssWithoutTokenDefinitions = css.replace(
+        /--accent:\s*#7A9A8B;[\s\S]*?--error:\s*#E57373;\n/,
+        '',
+    );
+
+    assert.doesNotMatch(cssWithoutTokenDefinitions, /:\s*#7A9A8B;/);
+    assert.doesNotMatch(cssWithoutTokenDefinitions, /:\s*#9CBAB0;/);
+    assert.doesNotMatch(cssWithoutTokenDefinitions, /:\s*#333333;/);
+    assert.doesNotMatch(cssWithoutTokenDefinitions, /:\s*#F4F4F4;/);
+    assert.doesNotMatch(cssWithoutTokenDefinitions, /:\s*#999999;/);
 });
 
 test('floating ball menu exposes the float window entry', async () => {

@@ -3,7 +3,7 @@
 ```
 zhiyi/
 ├── manifest.json                # 扩展清单 (Manifest V3)
-├── config.txt                   # 本地私有配置（不入库）
+├── config.example.txt           # 配置模板
 ├── README.md                    # 项目说明
 ├── .gitignore                   # Git 忽略规则
 │
@@ -23,6 +23,7 @@ zhiyi/
 │   └── modules/
 │       ├── tts.js               # TTS 消息处理
 │       ├── menus.js             # 右键菜单创建
+│       ├── message-router.js    # 消息路由分发
 │       └── utils.js             # 后台工具函数
 │
 ├── content/                     # 内容脚本（注入网页）
@@ -62,6 +63,8 @@ zhiyi/
 │
 ├── _metadata/                   # Chrome 生成的元数据（不入库）
 │
+├── tests/                       # 测试
+│
 └── docs/                        # 项目文档
     ├── README.md                # 文档索引
     ├── guide/                   # 使用与上手指南
@@ -82,7 +85,7 @@ zhiyi/
 | 层级 | 模块数 | 语言 |
 |------|--------|------|
 | 内容脚本 (`content/modules/`) | 8 | JavaScript |
-| 后台模块 (`background/modules/`) | 3 | JavaScript |
+| 后台模块 (`background/modules/`) | 4 | JavaScript |
 | 核心模块 (`src/core/`) | 8 | JavaScript |
 | 离屏文档 (`offscreen/`) | 2 | HTML / JavaScript |
-| **合计** | **21** | |
+| **合计** | **22** | |

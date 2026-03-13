@@ -227,6 +227,61 @@ test('translateBatch uses provider batch support for openai and gemini', async (
     assert.equal(gemini.calls.length, 1);
 });
 
+test('translateBatch retries empty provider batch slots through translate fallback parity', async () => {
+    const openai = createProvider('unused', {
+        batchResult() {
+            return ['', ''];
+        },
+        error: new Error('openai unavailable'),
+    });
+    const google = createProvider((text) => `google:${text}`);
+    const translator = createTranslator(
+        { provider: 'openai', openaiApiKey: 'sk-test' },
+        { openai, google }
+    );
+
+    const result = await translator.translateBatch(['one', 'two'], 'en', 'zh');
+
+    assert.deepEqual(result, ['google:one', 'google:two']);
+    assert.equal(openai.calls.length, 3);
+    assert.equal(google.calls.length, 2);
+});
+
+test('translateBatch falls back to per-item translate when provider batch throws', async () => {
+    const openai = createProvider('', {
+        batchError: new Error('openai batch failed'),
+        error: new Error('openai translate failed'),
+    });
+    const google = createProvider((text) => `google:${text}`);
+    const translator = createTranslator(
+        { provider: 'openai', openaiApiKey: 'sk-test' },
+        { openai, google }
+    );
+
+    const result = await translator.translateBatch(['hello', 'world'], 'en', 'zh');
+
+    assert.deepEqual(result, ['google:hello', 'google:world']);
+    assert.equal(openai.calls.length, 3);
+    assert.equal(google.calls.length, 2);
+});
+
+test('translateBatch does not fail the whole batch when the selected provider has no key', async () => {
+    const openai = createProvider('', {
+        batchError: new Error('missing openai key'),
+    });
+    const google = createProvider((text) => `google:${text}`);
+    const translator = createTranslator(
+        { provider: 'openai', openaiApiKey: '' },
+        { openai, google }
+    );
+
+    const result = await translator.translateBatch(['hello'], 'en', 'zh');
+
+    assert.deepEqual(result, ['google:hello']);
+    assert.equal(openai.calls.length, 1);
+    assert.equal(google.calls.length, 1);
+});
+
 test('translateBatch falls back to per-item translate for non-batch providers', async () => {
     const translator = createTranslator(
         { provider: 'google' },
@@ -244,4 +299,34 @@ test('translateBatch falls back to per-item translate for non-batch providers', 
         from: 'en',
         to: 'zh',
     });
+});
+
+test('translateBatch keeps processing when one per-item translate call still fails', async () => {
+    const google = {
+        calls: [],
+        async translate(text, from, to) {
+            this.calls.push({ text, from, to });
+            if (text === 'b') {
+                throw new Error('google failed');
+            }
+            return `google:${text}`;
+        },
+    };
+    const offline = {
+        calls: [],
+        async translate(text, from, to) {
+            this.calls.push({ text, from, to });
+            throw new Error(`offline failed:${text}`);
+        },
+    };
+    const translator = createTranslator(
+        { provider: 'google' },
+        { google, offline }
+    );
+
+    const result = await translator.translateBatch(['a', 'b', 'c'], 'en', 'zh');
+
+    assert.deepEqual(result, ['google:a', '', 'google:c']);
+    assert.equal(google.calls.length, 3);
+    assert.equal(offline.calls.length, 1);
 });

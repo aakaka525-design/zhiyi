@@ -67,6 +67,39 @@ async function init() {
     console.log('智译翻译插件已启动');
 }
 
+export function createEnsureReadyManager({ init, getTranslator, resetTranslator }) {
+    let initPromise = null;
+
+    return async function ensureReady() {
+        const readyTranslator = getTranslator();
+        if (readyTranslator) {
+            return readyTranslator;
+        }
+
+        if (!initPromise) {
+            initPromise = (async () => init())()
+                .catch((error) => {
+                    resetTranslator();
+                    throw error;
+                })
+                .finally(() => {
+                    initPromise = null;
+                });
+        }
+
+        await initPromise;
+        return getTranslator();
+    };
+}
+
+const ensureReady = createEnsureReadyManager({
+    init,
+    getTranslator: () => translator,
+    resetTranslator: () => {
+        translator = null;
+    },
+});
+
 // 注册菜单监听器 (必须在顶层注册)
 setupMenuListeners();
 
@@ -107,14 +140,6 @@ async function handleMessage(request, sender) {
             playAudioViaOffscreen,
         },
     });
-}
-
-async function ensureReady() {
-    if (!translator) {
-        await init();
-    }
-
-    return translator;
 }
 
 async function forwardCommandToActiveTab(command) {

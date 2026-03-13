@@ -1,5 +1,9 @@
 export const SHORTCUT_SETTINGS_URL = 'chrome://extensions/shortcuts';
 
+function normalizeString(value) {
+    return (value || '').trim();
+}
+
 export function buildSettingsSnapshot(settings) {
     return {
         targetLang: settings.targetLang,
@@ -8,14 +12,14 @@ export function buildSettingsSnapshot(settings) {
         showFloatingBall: Boolean(settings.showFloatingBall),
         enableAdBlock: Boolean(settings.enableAdBlock),
         provider: settings.provider,
-        openaiApiKey: settings.openaiApiKey || '',
-        openaiBaseUrl: settings.openaiBaseUrl || '',
-        openaiModel: settings.openaiModel || '',
-        geminiApiKey: settings.geminiApiKey || '',
-        geminiModel: settings.geminiModel || '',
-        deepseekApiKey: settings.deepseekApiKey || '',
-        deepseekBaseUrl: settings.deepseekBaseUrl || '',
-        deepseekModel: settings.deepseekModel || '',
+        openaiApiKey: normalizeString(settings.openaiApiKey),
+        openaiBaseUrl: normalizeString(settings.openaiBaseUrl),
+        openaiModel: normalizeString(settings.openaiModel),
+        geminiApiKey: normalizeString(settings.geminiApiKey),
+        geminiModel: normalizeString(settings.geminiModel),
+        deepseekApiKey: normalizeString(settings.deepseekApiKey),
+        deepseekBaseUrl: normalizeString(settings.deepseekBaseUrl),
+        deepseekModel: normalizeString(settings.deepseekModel),
         darkMode: Boolean(settings.darkMode),
         debugMode: Boolean(settings.debugMode),
         ttsProvider: settings.ttsProvider || 'system',

@@ -144,15 +144,48 @@ export class Translator {
         if (provider === 'openai' || provider === 'gemini') {
             const translator = this.providers[provider];
             if (translator.translateBatch) {
-                return translator.translateBatch(texts, from, to);
+                try {
+                    const batchResults = await translator.translateBatch(texts, from, to);
+                    return this.fillMissingBatchResults(texts, batchResults, from, to);
+                } catch (error) {
+                    console.warn(`${provider} batch 翻译失败，回退到逐条翻译:`, error);
+                }
             }
         }
 
-        // 其他服务逐个翻译
+        return this.translateBatchIndividually(texts, from, to);
+    }
+
+    async fillMissingBatchResults(texts, batchResults, from, to) {
+        const normalizedResults = Array.isArray(batchResults) ? batchResults : [];
+        const results = [];
+
+        for (const [index, text] of texts.entries()) {
+            if (normalizedResults[index]) {
+                results.push(normalizedResults[index]);
+                continue;
+            }
+
+            try {
+                const result = await this.translate(text, from, to);
+                results.push(result.text);
+            } catch (error) {
+                results.push('');
+            }
+        }
+
+        return results;
+    }
+
+    async translateBatchIndividually(texts, from, to) {
         const results = [];
         for (const text of texts) {
-            const result = await this.translate(text, from, to);
-            results.push(result.text);
+            try {
+                const result = await this.translate(text, from, to);
+                results.push(result.text);
+            } catch (error) {
+                results.push('');
+            }
         }
         return results;
     }

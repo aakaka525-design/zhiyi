@@ -116,6 +116,8 @@ ST.toggleImmersive = async function () {
                     const translation = response.results[index];
                     if (translation) {
                         ST.injectTranslation(p, translation);
+                    } else {
+                        errorCount++;
                     }
                 });
             } else if (response && response.error) {

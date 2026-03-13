@@ -216,7 +216,8 @@ ST.createSidebar = function () {
             return;
         }
 
-        const voice = settings.ttsVoiceGoogle || ST.getDefaultGoogleTtsVoice(lang);
+        const resolvedLang = !lang || lang === 'auto' ? ST.detectLanguage(text) : lang;
+        const voice = settings.ttsVoiceGoogle || ST.getDefaultGoogleTtsVoice(resolvedLang);
 
         const response = await ST.sendMessage({
             action: 'ttsGoogle',
@@ -342,6 +343,7 @@ ST.createSidebar = function () {
                     historyItem.className = 'st-history-item';
                     historyItem.dataset.source = item.source;
                     historyItem.dataset.target = item.target;
+                    historyItem.dataset.sourceLang = item.sourceLang || '';
                     historyItem.dataset.targetLang = item.targetLang || '';
 
                     const sourceDiv = document.createElement('div');
@@ -359,9 +361,13 @@ ST.createSidebar = function () {
                         resultContent.style.color = '';
                         resultCard.classList.add('active');
                         resultCard.classList.remove('error-state');
-                        if (historyItem.dataset.targetLang) {
-                            targetLangSelect.value = historyItem.dataset.targetLang;
-                            resultLang.innerText = `翻译结果 (${historyItem.dataset.targetLang})`;
+                        const sl = historyItem.dataset.sourceLang;
+                        const tl = historyItem.dataset.targetLang;
+                        if (sl) sourceLangSelect.value = sl;
+                        else sourceLangSelect.value = 'auto';
+                        if (tl) {
+                            targetLangSelect.value = tl;
+                            resultLang.innerText = `翻译结果 (${tl})`;
                         } else {
                             resultLang.innerText = '翻译结果';
                         }
