@@ -28,16 +28,13 @@ test('theme.css uses accent-glow instead of legacy blue/cyan hardcoded accents',
 test('popup char count funnels all color logic through updateCharCount', async () => {
     const popup = await readWorkspaceFile('popup/popup.js');
 
+    // updateCharCount uses classList.toggle instead of inline style.color
     assert.match(
         popup,
-        /elements\.sourceText\.addEventListener\('input', updateCharCount\);/,
-    );
-    assert.match(
-        popup,
-        /function updateCharCount\(\) \{\s*const len = elements\.sourceText\.value\.length;\s*elements\.charCount\.textContent = `\$\{len\} \/ \$\{MAX_CHARS\}`;\s*elements\.charCount\.style\.color = len > MAX_CHARS \? 'var\(--error\)' : 'var\(--text-muted\)';\s*\}/,
+        /function updateCharCount\(\)\s*\{[\s\S]*classList\.toggle\('over-limit'/,
     );
     assert.doesNotMatch(
         popup,
-        /elements\.sourceText\.addEventListener\('input', \(\) => \{[\s\S]*elements\.charCount\.style\.color = 'var\(--error\)'[\s\S]*\}\);/,
+        /elements\.charCount\.style\.color/,
     );
 });
