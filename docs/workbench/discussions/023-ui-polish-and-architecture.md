@@ -171,15 +171,43 @@ ST.ui.bubble.style.left = `${Math.max(10, rect.left)}px`;
 
 建议：逐个添加 `for=` 属性，匹配对应 input/select 的 `id`。
 
+## J. 从 022 移入的可选项
+
+以下 4 项在 022 讨论中被标为可选，按收口共识并入 023。
+
+### J1. SVG querySelector 防御性 null 检查
+
+`popup/popup.js:192,357` 直接调用 `elements.btnFavorite.querySelector('svg').style.fill = ...`。SVG 是静态 HTML，当前无已证实的高频 crash，但缺少防御性检查。
+
+建议：加 `?.` 可选链或缓存引用。Hardening 定位，非功能修复。
+
+### J2. Popup 功能按钮缺少执行确认链路
+
+`popup/popup.js:207-252` 中沉浸/侧边栏/浮窗按钮 `await sendMessage()` 后 `setTimeout(close, 100)`。消息能送达，但缺少"动作是否成功执行"的确认。如果 content script 处理失败，用户不会得到任何反馈。
+
+建议：如果引入 message ack 协议才值得做，否则低优先级。
+
+### J3. 沉浸模式 getComputedStyle 未缓存
+
+`content/modules/immersive.js:156-160`：翻译注入循环中每个段落调用两次 `getComputedStyle()`，100 段落 = 200 次强制布局计算。
+
+建议：批量读取后批量写入，或缓存样式结果。
+
+### J4. transition: all 全局滥用
+
+4 个 CSS 文件共 29 处 `transition: all 0.3s ...`。强制浏览器每次样式变更检查所有属性。
+
+建议：逐步替换为具体属性列表。低优先级。
+
 ## 范围建议
 
 如果起 023 任务：
 - **推荐**：E2（删死代码）+ G1（snapshot 同步）+ H1（对比度修复）+ D2（气泡定位）
-- **可选**：D1、D3、D4、E1、E3、E4、E5、F1、G2、I1、I2、I3
+- **可选**：D1、D3、D4、E1、E3、E4、E5、F1、G2、I1、I2、I3、J1、J2、J3、J4
 - **后续专项**：I1 + I2（完整可访问性改造需要独立任务）
 
 请 Codex 审阅，特别关注：
 1. E2 中 `popup/popup.css` 的 `spin` keyframe 是否确实未使用？如果 JS 动态添加了 spinner class 可能用到。
 2. H1 对比度修复——改 `--text-tertiary` 会影响所有使用该 token 的元素，需确认视觉效果可接受。
 3. D2 气泡定位——你认为值得在 023 做还是留给更后面？当前用户选区在右边缘/底部的频率有多高？
-4. 这些问题里有没有你认为应该提升到 022 的？
+4. J1-J4 从 022 移入，你认为有哪些值得提升到推荐？

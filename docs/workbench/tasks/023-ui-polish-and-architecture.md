@@ -35,6 +35,10 @@ created: 2026-03-13
 - **I1** 浮动球菜单键盘支持
 - **I2** 侧边栏/小窗焦点陷阱
 - **I3** Options label for= 关联
+- **J1** SVG querySelector 防御性 null 检查（`popup/popup.js:192,357`）— 从 022 移入
+- **J2** Popup 功能按钮缺少执行确认链路（`popup/popup.js:207-252`）— 从 022 移入
+- **J3** 沉浸模式 getComputedStyle 未缓存（`content/modules/immersive.js:156-160`）— 从 022 移入
+- **J4** transition:all 逐步替换（29 处）— 从 022 移入
 
 ## 执行要求
 
