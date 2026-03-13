@@ -123,6 +123,7 @@
         '.fake-close',
         '.ad-close-fake',
     ];
+    const AD_SELECTOR_QUERY = AD_SELECTORS.join(',\n');
 
     // 弹窗容器选择器
     const POPUP_SELECTORS = [
@@ -146,7 +147,7 @@
         styleElement = document.createElement('style');
         styleElement.id = 'st-ad-blocker-styles';
         styleElement.textContent = `
-            ${AD_SELECTORS.join(',\n')} {
+            ${AD_SELECTOR_QUERY} {
                 display: none !important;
                 visibility: hidden !important;
                 opacity: 0 !important;
@@ -169,21 +170,19 @@
 
     // 移除广告元素 (更保守，避免误伤内容)
     const removeAds = () => {
-        AD_SELECTORS.forEach(selector => {
-            try {
-                document.querySelectorAll(selector).forEach(el => {
-                    // 不移除插件自身元素
-                    if (ST.isPluginElement(el)) return;
-                    // 不移除包含大量图片的元素 (可能是漫画内容)
-                    if (el.querySelectorAll('img').length > 2) return;
-                    // 不移除漫画阅读器容器
-                    if (el.closest('.reading-content, .chapter-content, .manga-content, #manga-content, .comic-page, .reader-content')) return;
-                    el.remove();
-                });
-            } catch (e) {
-                // 选择器可能无效，忽略
-            }
-        });
+        try {
+            document.querySelectorAll(AD_SELECTOR_QUERY).forEach(el => {
+                // 不移除插件自身元素
+                if (ST.isPluginElement(el)) return;
+                // 不移除包含大量图片的元素 (可能是漫画内容)
+                if (el.querySelectorAll('img').length > 2) return;
+                // 不移除漫画阅读器容器
+                if (el.closest('.reading-content, .chapter-content, .manga-content, #manga-content, .comic-page, .reader-content')) return;
+                el.remove();
+            });
+        } catch (e) {
+            // 选择器可能无效，忽略
+        }
     };
 
     // 检测并关闭弹窗广告

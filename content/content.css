@@ -22,7 +22,7 @@
     --surface: rgba(255, 255, 255, 0.95);
     --text-primary: #333333;
     --text-secondary: #666666;
-    --text-tertiary: #999999;
+    --text-tertiary: #767676;
     --border-color: rgba(0, 0, 0, 0.05);
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --error: #E57373;
@@ -300,6 +300,11 @@
     line-height: 1.6;
 }
 
+.st-sidebar-input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
 .st-sidebar-btn {
     align-self: flex-end;
     background: var(--accent);
@@ -505,6 +510,11 @@
     cursor: pointer;
 }
 
+.st-lang-select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
 .st-control-btn {
     padding: 6px;
     border-radius: 8px;
@@ -521,6 +531,16 @@
 .st-control-btn:hover {
     background: var(--bg-secondary);
     color: var(--accent);
+}
+
+.st-sidebar-btn:disabled,
+.st-float-btn:disabled,
+.st-sidebar-input:disabled,
+.st-float-input:disabled,
+.st-lang-select:disabled,
+.st-control-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 /* 最近记录样式 */
@@ -625,6 +645,11 @@
     resize: vertical;
     outline: none;
     transition: var(--transition);
+}
+
+.st-float-input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
 .st-float-input:focus {

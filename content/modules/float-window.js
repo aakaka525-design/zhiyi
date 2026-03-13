@@ -222,6 +222,19 @@ ST.createFloatWindow = function () {
     // 拖动
     let isDragging = false;
     let startX, startY, initialX, initialY;
+    const handleDragMove = (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        ST.ui.floatWindow.style.left = `${initialX + dx}px`;
+        ST.ui.floatWindow.style.top = `${initialY + dy}px`;
+        ST.ui.floatWindow.style.right = 'auto';
+    };
+    const handleDragEnd = () => {
+        isDragging = false;
+        document.removeEventListener('mousemove', handleDragMove);
+        document.removeEventListener('mouseup', handleDragEnd);
+    };
 
     header.onmousedown = (e) => {
         if (e.target.closest('.st-control-btn') || e.target.closest('.st-float-close')) return;
@@ -231,21 +244,8 @@ ST.createFloatWindow = function () {
         const rect = ST.ui.floatWindow.getBoundingClientRect();
         initialX = rect.left;
         initialY = rect.top;
-
-        document.onmousemove = (e) => {
-            if (!isDragging) return;
-            const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
-            ST.ui.floatWindow.style.left = `${initialX + dx}px`;
-            ST.ui.floatWindow.style.top = `${initialY + dy}px`;
-            ST.ui.floatWindow.style.right = 'auto';
-        };
-
-        document.onmouseup = () => {
-            isDragging = false;
-            document.onmousemove = null;
-            document.onmouseup = null;
-        };
+        document.addEventListener('mousemove', handleDragMove);
+        document.addEventListener('mouseup', handleDragEnd);
     };
 
 };

@@ -131,18 +131,26 @@ ST.showBubble = async function (text) {
     // 定位气泡
     const rect = resolveBubbleRect();
     ST.ui.bubble.style.position = 'fixed';
+    ST.ui.bubble.style.zIndex = '2147483647';
+
+    document.body.appendChild(ST.ui.bubble);
+
     if (rect) {
         ST.state.selection.rect = rect;
-        ST.ui.bubble.style.top = `${rect.bottom + 10}px`;
-        ST.ui.bubble.style.left = `${Math.max(10, rect.left)}px`;
+        const position = calculateBubblePosition(
+            rect,
+            ST.ui.bubble.offsetWidth || 380,
+            ST.ui.bubble.offsetHeight || 120,
+            window.innerWidth,
+            window.innerHeight,
+        );
+        ST.ui.bubble.style.top = `${position.top}px`;
+        ST.ui.bubble.style.left = `${position.left}px`;
     } else {
         const fallbackPosition = getFallbackBubblePosition();
         ST.ui.bubble.style.top = `${fallbackPosition.top}px`;
         ST.ui.bubble.style.left = `${fallbackPosition.left}px`;
     }
-    ST.ui.bubble.style.zIndex = '2147483647';
-
-    document.body.appendChild(ST.ui.bubble);
 
     try {
         const response = await ST.sendMessage({
@@ -209,6 +217,26 @@ function getFallbackBubblePosition() {
         top: 100,
         left: Math.max(10, (window.innerWidth / 2) - 150),
     };
+}
+
+function calculateBubblePosition(
+    rect,
+    bubbleWidth,
+    bubbleHeight,
+    viewportWidth = window.innerWidth,
+    viewportHeight = window.innerHeight,
+) {
+    const padding = 10;
+    const safeBubbleWidth = Number.isFinite(bubbleWidth) && bubbleWidth > 0 ? bubbleWidth : 380;
+    const safeBubbleHeight = Number.isFinite(bubbleHeight) && bubbleHeight > 0 ? bubbleHeight : 120;
+    const maxLeft = Math.max(padding, viewportWidth - safeBubbleWidth - padding);
+    const left = Math.min(Math.max(padding, rect.left), maxLeft);
+    const preferredTop = rect.bottom + padding;
+    const overflowBottom = preferredTop + safeBubbleHeight > viewportHeight - padding;
+    const fallbackTop = Number.isFinite(rect.top) ? rect.top - safeBubbleHeight - padding : padding;
+    const top = overflowBottom ? Math.max(padding, fallbackTop) : preferredTop;
+
+    return { top, left };
 }
 
 function renderBubbleMessage(container, message, isError = false) {
