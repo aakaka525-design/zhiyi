@@ -140,6 +140,7 @@ ST.isPluginElement = function (el) {
         el.closest('#smart-translator-bubble') ||
         el.closest('#st-sidebar') ||
         el.closest('#st-float-window') ||
+        el.closest('#st-floating-ball-container') ||
         el.closest('#st-toast');
 };
 

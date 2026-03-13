@@ -708,6 +708,7 @@ function bindHistoryDeleteEvents() {
 
 // 辅助函数：显示提示
 function showToast(message, type = 'success') {
+    document.querySelectorAll('.toast').forEach(el => el.remove());
     const toast = document.createElement('div');
     toast.className = 'toast fade-in';
     toast.textContent = message;

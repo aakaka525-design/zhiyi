@@ -173,7 +173,7 @@
             try {
                 document.querySelectorAll(selector).forEach(el => {
                     // 不移除插件自身元素
-                    if (el.closest('#st-')) return;
+                    if (ST.isPluginElement(el)) return;
                     // 不移除包含大量图片的元素 (可能是漫画内容)
                     if (el.querySelectorAll('img').length > 2) return;
                     // 不移除漫画阅读器容器
@@ -204,7 +204,7 @@
                         text.includes('sponsored') ||
                         text.includes('推广');
 
-                    if (isAdPopup && !el.closest('#st-')) {
+                    if (isAdPopup && !ST.isPluginElement(el)) {
                         el.remove();
                         // 同时移除可能的遮罩层
                         document.querySelectorAll('[class*="backdrop"], [class*="mask"]').forEach(mask => {
@@ -274,7 +274,7 @@
                         return parseFloat(childStyle.opacity) < 0.05;
                     });
                 // 5. 不是插件元素
-                const notPluginElement = !target.id?.startsWith('st-') && !target.closest('#st-');
+                const notPluginElement = !ST.isPluginElement(target);
 
                 // 只有全部满足才移除
                 if (isFullScreen && isTransparent && isHighZIndex && hasNoVisibleChildren && notPluginElement) {
@@ -324,7 +324,7 @@
                 const rect = el.getBoundingClientRect();
                 const isFullScreen = rect.width > window.innerWidth * 0.7 && rect.height > window.innerHeight * 0.7;
 
-                if (zIndex > 9999 && isFullScreen && !el.closest('#st-')) {
+                if (zIndex > 9999 && isFullScreen && !ST.isPluginElement(el)) {
                     el.remove();
                     console.log('[智译] 已清理高 z-index 覆盖层');
                 }

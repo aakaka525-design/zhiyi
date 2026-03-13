@@ -23,7 +23,6 @@ function mergeDefaults(raw) {
         ttsVoice: '',
         ttsSpeed: 1.0,
         enableSelection: true,
-        enableHover: false,
         enableShortcut: true,
         showFloatingBall: false,
         enableAdBlock: false,
@@ -109,13 +108,6 @@ function handleMessage(request, sender, sendResponse) {
 
         case 'toggleFloatWindow':
             ST.toggleFloatWindow();
-            break;
-
-        case 'refreshSettings':
-            // 当设置更新时刷新
-            loadSettings().then(() => {
-                console.log('[智译] 设置已刷新');
-            });
             break;
     }
 }

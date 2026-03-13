@@ -9,6 +9,7 @@ var ST = window.SmartTranslator;
  * 处理鼠标抬起事件（划词检测）
  */
 ST.handleMouseUp = function (e) {
+    if (!ST.state.settings?.enableSelection) return;
     if (ST.isPluginElement(e.target)) return;
 
     const selection = window.getSelection();
@@ -45,6 +46,7 @@ ST.handleMouseDown = function (e) {
  * 处理双击翻译
  */
 ST.handleDoubleClick = function (e) {
+    if (!ST.state.settings?.enableSelection) return;
     if (e.target.matches('input, textarea, [contenteditable="true"]')) {
         return;
     }
@@ -157,14 +159,14 @@ ST.showBubble = async function (text) {
             renderBubbleMessage(resultDiv, response.text);
 
             // 绑定复制
-            const copyBtn = ST.ui.bubble.querySelector('#st-copy-btn');
-            if (copyBtn) {
-                copyBtn.onclick = () => {
-                    navigator.clipboard.writeText(response.text);
-                    copyBtn.style.color = '#00c853';
-                    setTimeout(() => copyBtn.style.color = '', 1000);
-                };
-            }
+                const copyBtn = ST.ui.bubble.querySelector('#st-copy-btn');
+                if (copyBtn) {
+                    copyBtn.onclick = () => {
+                        navigator.clipboard.writeText(response.text);
+                        copyBtn.style.color = 'var(--accent)';
+                        setTimeout(() => copyBtn.style.color = '', 1000);
+                    };
+                }
         } else {
             renderBubbleMessage(resultDiv, `翻译失败: ${response?.error || '未知错误'}`, true);
         }
@@ -211,7 +213,7 @@ function getFallbackBubblePosition() {
 
 function renderBubbleMessage(container, message, isError = false) {
     container.textContent = message;
-    container.style.color = isError ? '#ff5252' : '';
+    container.style.color = isError ? 'var(--error)' : '';
 }
 
 /**

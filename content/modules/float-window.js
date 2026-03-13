@@ -136,10 +136,12 @@ ST.createFloatWindow = function () {
             console.error('[TTS] 朗读失败:', err);
         }
         // 回退到系统语音
+        const langMap = { zh: 'zh-CN', en: 'en-US', ja: 'ja-JP', ko: 'ko-KR' };
+        const resolvedLang = !lang || lang === 'auto' ? ST.detectLanguage(text) : lang;
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = speed;
-        utterance.lang = lang === 'zh' ? 'zh-CN' : lang;
+        utterance.lang = langMap[resolvedLang] || resolvedLang;
         window.speechSynthesis.speak(utterance);
     };
 
@@ -171,10 +173,16 @@ ST.createFloatWindow = function () {
             if (response && response.text) {
                 resultArea.classList.add('active');
                 resultText.innerText = response.text;
+                resultText.style.color = '';
+            } else {
+                resultArea.classList.add('active');
+                resultText.textContent = `翻译失败: ${response?.error || '未知错误'}`;
+                resultText.style.color = 'var(--error)';
             }
         } catch (err) {
             resultArea.classList.add('active');
             resultText.innerText = '错误: ' + err.message;
+            resultText.style.color = 'var(--error)';
         } finally {
             translateBtn.innerText = '快译';
             translateBtn.disabled = false;

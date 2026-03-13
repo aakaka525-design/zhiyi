@@ -270,16 +270,13 @@
         }
 
         initialized = true;
-        console.log('[SmartTranslator] FloatingBall init called');
         const settings = ST.state.settings || {};
-        console.log('[SmartTranslator] Settings:', settings);
 
         syncVisibility(settings.showFloatingBall);
 
         chrome.storage.onChanged.addListener((changes) => {
             if (changes.settings?.newValue) {
                 const show = changes.settings.newValue.showFloatingBall;
-                console.log('[SmartTranslator] Setting changed, showFloatingBall:', show);
                 syncVisibility(show);
             }
         });

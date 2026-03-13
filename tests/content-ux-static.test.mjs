@@ -12,7 +12,7 @@ test('content stylesheet defines scoped tokens for extension-owned UI containers
     assert.doesNotMatch(css, /:root\s*\{[\s\S]*--accent:/);
     assert.match(
         css,
-        /#smart-translator-bubble,\s*[\r\n]+\.st-immersive-wrapper,\s*[\r\n]+#st-sidebar,\s*[\r\n]+#st-sidebar-toggle-btn,\s*[\r\n]+#st-float-window,\s*[\r\n]+#st-page-progress,\s*[\r\n]+#st-floating-ball-container,\s*[\r\n]+#st-toast\s*\{/,
+        /#smart-translator-bubble,\s*[\r\n]+\.st-immersive-wrapper,\s*[\r\n]+#st-sidebar,\s*[\r\n]+#st-sidebar-toggle-btn,\s*[\r\n]+#st-float-window,\s*[\r\n]+#st-page-progress,\s*[\r\n]+#st-floating-ball-container,\s*[\r\n]+(?:\.st-immersive-translation,\s*[\r\n]+\.st-translation-separator,\s*[\r\n]+)?#st-toast\s*\{/,
     );
     assert.match(css, /--accent:\s*#/);
     assert.match(css, /--accent-light:\s*#/);

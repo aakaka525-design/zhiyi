@@ -63,7 +63,6 @@ const DEFAULT_SETTINGS = {
 
     // 功能开关
     enableSelection: true,    // 划词翻译
-    enableHover: false,       // 悬停翻译
     enableShortcut: true,     // 快捷键
     showFloatingBall: false,
     enableAdBlock: false,

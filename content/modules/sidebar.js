@@ -78,7 +78,7 @@ ST.createSidebar = function () {
                 </div>
             </div>
 
-            <div class="st-sidebar-info" style="margin-top: auto; font-size: 12px; color: #666; text-align: center; padding-bottom: 20px;">
+            <div class="st-sidebar-info" style="margin-top: auto; font-size: 12px; color: var(--text-secondary); text-align: center; padding-bottom: 20px;">
                 默认快捷键: <span style="background: var(--bg-secondary); padding: 2px 6px; border-radius: 4px;">Alt + S</span>
             </div>
         </div>
@@ -149,13 +149,13 @@ ST.createSidebar = function () {
         try {
             switch (provider) {
                 case 'openai':
-                    await speakOpenAI(text, settings);
+                    await speakOpenAI(text, lang, settings);
                     break;
                 case 'google':
                     await speakGoogle(text, lang, settings);
                     break;
                 case 'glm':
-                    await speakGLM(text, settings);
+                    await speakGLM(text, lang, settings);
                     break;
                 default:
                     speakSystem(text, lang, speed);
@@ -167,10 +167,12 @@ ST.createSidebar = function () {
     };
 
     const speakSystem = (text, lang, speed) => {
+        const langMap = { zh: 'zh-CN', en: 'en-US', ja: 'ja-JP', ko: 'ko-KR' };
+        const resolvedLang = !lang || lang === 'auto' ? ST.detectLanguage(text) : lang;
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = speed;
-        utterance.lang = lang === 'zh' ? 'zh-CN' : lang;
+        utterance.lang = langMap[resolvedLang] || resolvedLang;
         window.speechSynthesis.speak(utterance);
     };
 
@@ -184,9 +186,9 @@ ST.createSidebar = function () {
         if (result?.error) throw new Error(result.error);
     };
 
-    const speakOpenAI = async (text, settings) => {
+    const speakOpenAI = async (text, lang, settings) => {
         const apiKey = settings.openaiApiKey;
-        if (!apiKey) { speakSystem(text, 'zh', 1.0); return; }
+        if (!apiKey) { speakSystem(text, lang, settings.ttsSpeed || 1.0); return; }
 
         const response = await ST.sendMessage({
             action: 'ttsOpenAI',
@@ -207,7 +209,7 @@ ST.createSidebar = function () {
     const speakGoogle = async (text, lang, settings) => {
         const apiKey = settings.geminiApiKey;
         if (!apiKey) {
-            speakSystem(text, lang, 1.0);
+            speakSystem(text, lang, settings.ttsSpeed || 1.0);
             return;
         }
 
@@ -228,10 +230,10 @@ ST.createSidebar = function () {
         }
     };
 
-    const speakGLM = async (text, settings) => {
+    const speakGLM = async (text, lang, settings) => {
         const apiKey = settings.deepseekApiKey;
         if (!apiKey) {
-            speakSystem(text, 'zh', 1.0);
+            speakSystem(text, lang, settings.ttsSpeed || 1.0);
             return;
         }
 
@@ -248,7 +250,7 @@ ST.createSidebar = function () {
         if (response?.audioData) {
             await playAudioFromDataUrl(response.audioData);
         } else {
-            speakSystem(text, 'zh', settings.ttsSpeed || 1.0);
+            speakSystem(text, lang, settings.ttsSpeed || 1.0);
         }
     };
 
@@ -278,20 +280,24 @@ ST.createSidebar = function () {
                 resultLang.innerText = `翻译结果 (${targetLangSelect.value})`;
                 // 刷新历史记录
                 setTimeout(() => ST.refreshSidebarHistory(), 500);
+            } else {
+                resultCard.classList.add('active');
+                resultContent.textContent = `翻译失败: ${response?.error || '未知错误'}`;
+                resultContent.style.color = 'var(--error)';
             }
         } catch (err) {
             resultCard.classList.add('active');
             resultContent.textContent = `错误: ${err.message}`;
-            resultContent.style.color = '#ff5252';
+            resultContent.style.color = 'var(--error)';
         } finally {
             translateBtn.innerText = '翻译';
             translateBtn.disabled = false;
         }
     };
 
+    const originalIcon = copyBtn.innerHTML;
     copyBtn.onclick = () => {
         navigator.clipboard.writeText(resultContent.innerText);
-        const originalIcon = copyBtn.innerHTML;
         copyBtn.innerHTML = '<span style="font-size: 10px; color: var(--accent);">已复制</span>';
         setTimeout(() => {
             copyBtn.innerHTML = originalIcon;

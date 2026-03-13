@@ -168,9 +168,9 @@ ST.injectTranslation = function (container, translation) {
         const separator = document.createElement('span');
         separator.className = 'st-translation-separator';
         separator.innerHTML = ' &nbsp;→&nbsp; ';
-        separator.style.cssText = 'color: #8DA399; opacity: 0.6;';
+        separator.style.cssText = 'color: var(--accent); opacity: 0.6;';
 
-        transEl.style.cssText = 'display: inline; font-style: normal; color: #8DA399; margin-left: 4px;';
+        transEl.style.cssText = 'display: inline; font-style: normal; color: var(--accent); margin-left: 4px;';
 
         container.appendChild(separator);
         container.appendChild(transEl);

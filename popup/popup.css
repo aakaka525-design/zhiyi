@@ -211,6 +211,10 @@
     gap: 4px;
 }
 
+.result-section.error-state .result-actions {
+    display: none;
+}
+
 .result-content {
     padding: 16px;
     max-height: 200px;
@@ -285,13 +289,11 @@
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: #D1D1D1;
+    background: var(--text-tertiary);
 }
 
 .status-dot.active {
-    background: #A5D6A7;
-    /* 柔和绿 */
-    box-shadow: 0 0 8px rgba(165, 214, 167, 0.5);
+    background: var(--success);
 }
 
 .version {

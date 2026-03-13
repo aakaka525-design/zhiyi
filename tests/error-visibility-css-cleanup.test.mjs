@@ -15,7 +15,7 @@ test('popup error handling reveals the result section and clears stale state on 
     );
     assert.match(
         source,
-        /function showError\(message\) \{\s*elements\.resultSection\.classList\.add\('active'\);[\s\S]*elements\.resultContent\.innerHTML = `<div class="result-error" style="color: var\(--error\)">\$\{escapeHtml\(message\)\}<\/div>`;/,
+        /function showError\(message\) \{\s*elements\.resultSection\.classList\.add\('active', 'error-state'\);[\s\S]*elements\.resultContent\.innerHTML = `<div class="result-error" style="color: var\(--error\)">\$\{escapeHtml\(message\)\}<\/div>`;/,
     );
 });
 

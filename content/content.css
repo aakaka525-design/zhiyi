@@ -10,6 +10,8 @@
 #st-float-window,
 #st-page-progress,
 #st-floating-ball-container,
+.st-immersive-translation,
+.st-translation-separator,
 #st-toast {
     --accent: #7A9A8B;
     --accent-light: #9CBAB0;
@@ -181,10 +183,10 @@
 
 .st-immersive-translation {
     display: block;
-    color: #7A9A8B;
+    color: var(--accent);
     background: rgba(122, 154, 139, 0.08);
     /* 柔和背景 */
-    border-left: 3px solid #7A9A8B;
+    border-left: 3px solid var(--accent);
     padding: 10px 16px;
     margin: 6px 0;
     border-radius: 4px 12px 12px 4px;
@@ -192,10 +194,6 @@
     line-height: 1.7;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
-
-/* ========================================
-   侧边栏 (Sidebar) 样式
-   ======================================== */
 
 /* ========================================
    侧边栏 (Sidebar) 样式

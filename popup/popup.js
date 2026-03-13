@@ -344,6 +344,7 @@ function setLoading(loading) {
 // 显示结果
 function showResult(text) {
     elements.resultSection.classList.add('active');
+    elements.resultSection.classList.remove('error-state');
     elements.resultContent.innerHTML = `<div class="result-text">${escapeHtml(text)}</div>`;
 }
 
@@ -351,7 +352,7 @@ function showResult(text) {
 // 清空结果
 function clearResult() {
     currentResult = '';
-    elements.resultSection.classList.remove('active');
+    elements.resultSection.classList.remove('active', 'error-state');
     elements.resultContent.innerHTML = '';
     elements.btnFavorite.querySelector('svg').style.fill = 'none';
 }
@@ -359,7 +360,7 @@ function clearResult() {
 
 // 显示错误
 function showError(message) {
-    elements.resultSection.classList.add('active');
+    elements.resultSection.classList.add('active', 'error-state');
     elements.resultContent.innerHTML = `<div class="result-error" style="color: var(--error)">${escapeHtml(message)}</div>`;
 }
 
@@ -476,6 +477,7 @@ async function requestTtsAudio(provider, text, lang, settings, speed) {
 
 // 显示提示
 function showToast(message) {
+    document.querySelectorAll('.toast').forEach(el => el.remove());
     const toast = document.createElement('div');
     toast.className = 'toast';
     toast.textContent = message;
