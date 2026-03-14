@@ -6,6 +6,16 @@
 import { StorageManager } from '../src/core/storage.js';
 import { Translator } from '../src/core/translator.js';
 
+function withTimeout(promise, ms, message = '请求超时') {
+    let timeoutId;
+    return Promise.race([
+        promise,
+        new Promise((_, reject) => {
+            timeoutId = setTimeout(() => reject(new Error(message)), ms);
+        }),
+    ]).finally(() => clearTimeout(timeoutId));
+}
+
 // DOM 元素
 const elements = {
     sourceLang: document.getElementById('source-lang'),
@@ -32,6 +42,8 @@ const elements = {
     btnSidebar: document.getElementById('btn-sidebar'),
     btnFloat: document.getElementById('btn-float'),
 };
+
+const isSupportedPageUrl = (url) => /^https?:\/\//.test(url);
 
 const MAX_CHARS = 5000;
 let translator = null;
@@ -86,10 +98,13 @@ function updateAppVersion() {
 }
 
 // 保存语言设置
-async function saveLanguageSettings() {
-    await StorageManager.updateSettings({
-        sourceLang: elements.sourceLang.value,
-        targetLang: elements.targetLang.value,
+function saveLanguageSettings() {
+    chrome.runtime.sendMessage({
+        action: 'patchSettings',
+        updates: {
+            sourceLang: elements.sourceLang.value,
+            targetLang: elements.targetLang.value,
+        },
     });
 }
 
@@ -154,13 +169,15 @@ function bindEvents() {
 
     // 朗读按钮
     elements.btnSpeak.addEventListener('click', async () => {
-        if (currentResult) {
-            try {
-                await speak(currentResult, elements.targetLang.value);
-            } catch (err) {
-                console.error('朗读失败:', err);
-                showToast(err.message || '朗读失败');
-            }
+        if (!currentResult || elements.btnSpeak.disabled) return;
+        elements.btnSpeak.disabled = true;
+        try {
+            await speak(currentResult, elements.targetLang.value);
+        } catch (err) {
+            console.error('朗读失败:', err);
+            showToast(err.message || '朗读失败');
+        } finally {
+            elements.btnSpeak.disabled = false;
         }
     });
 
@@ -178,19 +195,26 @@ function bindEvents() {
 
     // 收藏按钮
     elements.btnFavorite.addEventListener('click', async () => {
-        if (currentResult && elements.sourceText.value) {
-            const result = await StorageManager.addFavorite({
-                source: elements.sourceText.value,
-                target: currentResult,
-                sourceLang: elements.sourceLang.value,
-                targetLang: elements.targetLang.value,
-            });
-            if (result) {
-                showToast('已添加到收藏');
+        const sourceText = elements.sourceText.value.trim();
+        if (!currentResult || !sourceText) return;
+        try {
+            const favorites = await StorageManager.getFavorites();
+            const existing = favorites.find(f => f.source === sourceText);
+            if (existing) {
+                await StorageManager.removeFavorite(existing.id);
+                showToast('已取消收藏');
             } else {
-                showToast('已在收藏中');
+                await StorageManager.addFavorite({
+                    source: sourceText,
+                    target: currentResult,
+                    sourceLang: elements.sourceLang.value,
+                    targetLang: elements.targetLang.value,
+                });
+                showToast('已添加到收藏');
             }
-            syncFavoriteState();
+            await syncFavoriteState();
+        } catch (err) {
+            console.error('[智译] 收藏操作失败:', err);
         }
     });
 
@@ -208,7 +232,7 @@ function bindEvents() {
     elements.btnImmersive.addEventListener('click', async () => {
         try {
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            if (tab?.id && !tab.url?.startsWith('chrome://')) {
+            if (tab?.id && isSupportedPageUrl(tab.url)) {
                 await chrome.tabs.sendMessage(tab.id, { action: 'toggleImmersive' });
                 setTimeout(() => window.close(), 100);
             } else {
@@ -224,7 +248,7 @@ function bindEvents() {
     elements.btnSidebar.addEventListener('click', async () => {
         try {
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            if (tab?.id && !tab.url?.startsWith('chrome://')) {
+            if (tab?.id && isSupportedPageUrl(tab.url)) {
                 await chrome.tabs.sendMessage(tab.id, { action: 'toggleSidebar' });
                 setTimeout(() => window.close(), 100);
             } else {
@@ -240,7 +264,7 @@ function bindEvents() {
     elements.btnFloat.addEventListener('click', async () => {
         try {
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            if (tab?.id && !tab.url?.startsWith('chrome://')) {
+            if (tab?.id && isSupportedPageUrl(tab.url)) {
                 await chrome.tabs.sendMessage(tab.id, { action: 'toggleFloatWindow' });
                 setTimeout(() => window.close(), 100);
             } else {
@@ -273,19 +297,26 @@ async function handleTranslate() {
     clearResult();
 
     try {
-        const result = await translator.translate(text, sourceLang, targetLang);
+        const result = await withTimeout(
+            translator.translate(text, sourceLang, targetLang),
+            30000,
+            '翻译请求超时'
+        );
         currentResult = result.text;
         showResult(result.text);
 
-        // 保存到历史记录
-        await StorageManager.addHistory({
-            source: text,
-            target: result.text,
-            sourceLang,
-            targetLang,
-            provider: result.provider,
-        });
-        await syncFavoriteState();
+        try {
+            await StorageManager.addHistory({
+                source: text,
+                target: result.text,
+                sourceLang,
+                targetLang,
+                provider: result.provider,
+            });
+            await syncFavoriteState();
+        } catch (auxErr) {
+            console.error('[智译] 辅助操作失败:', auxErr);
+        }
     } catch (error) {
         console.error('翻译失败:', error);
         showError(error.message || '翻译失败，请稍后重试');
@@ -298,7 +329,7 @@ async function handleTranslate() {
 async function checkSelectedText() {
     try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (tab?.id) {
+        if (tab?.id && isSupportedPageUrl(tab.url)) {
             const response = await chrome.tabs.sendMessage(tab.id, { action: 'getSelectedText' });
             if (response?.text) {
                 elements.sourceText.value = response.text;
@@ -327,6 +358,9 @@ function setLoading(loading) {
         elements.sourceText.disabled = true;
         elements.sourceLang.disabled = true;
         elements.targetLang.disabled = true;
+        elements.btnClear.disabled = true;
+        elements.btnPaste.disabled = true;
+        elements.btnSwap.disabled = true;
         elements.btnTranslate.innerHTML = `
             <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="18" height="18" style="animation: spin 1s linear infinite">
                 <path d="M12 2v4m0 12v4M4.22 4.22l2.83 2.83m8.5 8.5l2.83 2.83M2 12h4m12 0h4M4.22 19.78l2.83-2.83m8.5-8.5l2.83-2.83"/>
@@ -339,6 +373,9 @@ function setLoading(loading) {
         elements.sourceText.disabled = false;
         elements.sourceLang.disabled = false;
         elements.targetLang.disabled = false;
+        elements.btnClear.disabled = false;
+        elements.btnPaste.disabled = false;
+        elements.btnSwap.disabled = false;
         elements.btnTranslate.innerHTML = `
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18">
                 <path d="M5 8l6 6M4 14l6-6 2-3M2 5h12M7 2v3M22 22l-5-10-5 10M14 18h6"/>
@@ -405,6 +442,38 @@ async function updateServiceDisplay() {
     }
 }
 
+function speakWithGuard(text, lang, speed) {
+    return new Promise((resolve, reject) => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = speed;
+        utterance.lang = lang;
+
+        let settled = false;
+        let hasStarted = false;
+        let pollId = null;
+
+        const settle = (fn) => {
+            if (settled) return;
+            settled = true;
+            if (pollId) clearInterval(pollId);
+            fn();
+        };
+
+        utterance.onstart = () => { hasStarted = true; };
+        utterance.onend = () => settle(resolve);
+        utterance.onerror = (event) => settle(() => reject(new Error(event.error || '朗读失败')));
+
+        pollId = setInterval(() => {
+            if (hasStarted && !speechSynthesis.speaking && !speechSynthesis.pending) {
+                settle(resolve);
+            }
+        }, 500);
+
+        speechSynthesis.cancel();
+        speechSynthesis.speak(utterance);
+    });
+}
+
 // 朗读文本
 async function speak(text, lang) {
     const settings = await StorageManager.getSettings();
@@ -413,18 +482,26 @@ async function speak(text, lang) {
 
     if (provider !== 'system') {
         try {
-            const audioData = await requestTtsAudio(provider, text, lang, settings, speed);
-            const response = await chrome.runtime.sendMessage({
-                action: 'playAudioOffscreen',
-                audioData,
-                speed,
-            });
+            const audioData = await withTimeout(
+                requestTtsAudio(provider, text, lang, settings, speed),
+                15000,
+                'TTS 请求超时'
+            );
+            const response = await withTimeout(
+                chrome.runtime.sendMessage({
+                    action: 'playAudioOffscreen',
+                    audioData,
+                }),
+                15000,
+                '播放超时'
+            );
             if (response?.error) {
                 throw new Error(response.error);
             }
             return;
         } catch (error) {
             console.warn(`Popup TTS provider "${provider}" failed, falling back to system speech.`, error);
+            chrome.runtime.sendMessage({ action: 'stopAudio' }).catch(() => {});
         }
     }
 
@@ -434,11 +511,7 @@ async function speak(text, lang) {
         'ja': 'ja-JP',
         'ko': 'ko-KR',
     };
-    const utterance = new SpeechSynthesisUtterance(text);
-    speechSynthesis.cancel();
-    utterance.rate = speed;
-    utterance.lang = langMap[lang] || lang;
-    speechSynthesis.speak(utterance);
+    await speakWithGuard(text, langMap[lang] || lang, speed);
 }
 
 async function requestTtsAudio(provider, text, lang, settings, speed) {

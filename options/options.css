@@ -107,6 +107,11 @@ body {
     display: block;
 }
 
+.options-actions {
+    max-width: 900px;
+    margin: 20px auto 0;
+}
+
 h1 {
     margin-bottom: 32px;
     font-size: 32px;

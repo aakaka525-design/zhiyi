@@ -1,3 +1,5 @@
+let settingsQueue = Promise.resolve();
+
 export async function routeMessage(request, deps) {
     const { translator, storage, tts } = deps;
 
@@ -22,6 +24,9 @@ export async function routeMessage(request, deps) {
         case 'playAudioOffscreen':
             return tts.playAudioViaOffscreen(request.audioData, request.speed);
 
+        case 'stopAudio':
+            return tts.stopAudioViaOffscreen();
+
         case 'getSettings':
             return storage.getSettings();
 
@@ -30,6 +35,16 @@ export async function routeMessage(request, deps) {
 
         case 'addHistory':
             return storage.addHistory(request.item);
+
+        case 'patchSettings': {
+            const task = settingsQueue.then(async () => {
+                await storage.updateSettings(request.updates);
+                await translator.refreshSettings();
+                return { success: true };
+            });
+            settingsQueue = task.catch(() => {});
+            return task;
+        }
 
         case 'updateSettings':
             await translator.refreshSettings();

@@ -14,8 +14,8 @@ const DEFAULT_GOOGLE_TTS_VOICES = Object.freeze({
 /**
  * Promise 封装消息发送到 Background
  */
-ST.sendMessage = function (message) {
-    return new Promise((resolve, reject) => {
+ST.sendMessage = function (message, timeoutMs = 0, timeoutMessage = '请求超时') {
+    const request = new Promise((resolve, reject) => {
         chrome.runtime.sendMessage(message, (response) => {
             if (chrome.runtime.lastError) {
                 reject(chrome.runtime.lastError);
@@ -24,6 +24,16 @@ ST.sendMessage = function (message) {
             }
         });
     });
+
+    if (timeoutMs <= 0) return request;
+
+    let timeoutId;
+    return Promise.race([
+        request,
+        new Promise((_, reject) => {
+            timeoutId = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+        }),
+    ]).finally(() => clearTimeout(timeoutId));
 };
 
 /**
@@ -130,7 +140,13 @@ ST.isPluginElement = function (el) {
 /**
  * 进度条控制
  */
+let _hideProgressTimerId = null;
+
 ST.showProgress = function () {
+    if (_hideProgressTimerId) {
+        clearTimeout(_hideProgressTimerId);
+        _hideProgressTimerId = null;
+    }
     if (!ST.ui.progress) {
         ST.ui.progress = document.createElement('div');
         ST.ui.progress.id = 'st-page-progress';
@@ -149,10 +165,49 @@ ST.updateProgress = function (percent) {
 ST.hideProgress = function () {
     if (ST.ui.progress) {
         ST.ui.progress.style.width = '100%';
-        setTimeout(() => {
+        _hideProgressTimerId = setTimeout(() => {
             ST.ui.progress.style.display = 'none';
+            _hideProgressTimerId = null;
         }, 500);
     }
+};
+
+/**
+ * System TTS with Chromium onend bug workaround.
+ * Falls back to polling speaking/pending after playback has started.
+ */
+ST.speakSystemWithGuard = function (text, lang, speed) {
+    return new Promise((resolve, reject) => {
+        const langMap = { zh: 'zh-CN', en: 'en-US', ja: 'ja-JP', ko: 'ko-KR' };
+        const resolvedLang = !lang || lang === 'auto' ? ST.detectLanguage(text) : lang;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = speed;
+        utterance.lang = langMap[resolvedLang] || resolvedLang;
+
+        let settled = false;
+        let hasStarted = false;
+        let pollId = null;
+
+        const settle = (fn) => {
+            if (settled) return;
+            settled = true;
+            if (pollId) clearInterval(pollId);
+            fn();
+        };
+
+        utterance.onstart = () => { hasStarted = true; };
+        utterance.onend = () => settle(resolve);
+        utterance.onerror = (event) => settle(() => reject(new Error(event.error || '朗读失败')));
+
+        pollId = setInterval(() => {
+            if (hasStarted && !window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
+                settle(resolve);
+            }
+        }, 500);
+
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+    });
 };
 
 console.log('[智译] Utils module loaded');

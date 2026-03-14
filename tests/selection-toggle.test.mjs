@@ -11,11 +11,11 @@ test('selection handlers bail out when enableSelection is disabled', async () =>
 
     assert.match(
         selection,
-        /ST\.handleMouseUp = function \(e\) \{\s*if \(!ST\.state\.settings\?\.enableSelection\) return;\s*if \(ST\.isPluginElement\(e\.target\)\) return;/,
+        /ST\.handleMouseUp = function \(e\) \{\s*if \(!ST\.state\.settings\?\.enableSelection\) return;\s*if \(e\.detail >= 2\) return;\s*if \(ST\.isPluginElement\(e\.target\)\) return;/,
     );
     assert.match(
         selection,
-        /ST\.handleDoubleClick = function \(e\) \{\s*if \(!ST\.state\.settings\?\.enableSelection\) return;\s*if \(e\.target\.matches\('input, textarea, \[contenteditable="true"\]'\)\) \{/,
+        /ST\.handleDoubleClick = function \(e\) \{\s*if \(!ST\.state\.settings\?\.enableSelection\) return;\s*if \(e\.target\.matches\('input, textarea, \[contenteditable="true"\]'\)\) \{\s*return;\s*\}\s*ST\.removeIcon\(\);/,
     );
 });
 

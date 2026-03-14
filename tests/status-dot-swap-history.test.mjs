@@ -52,7 +52,7 @@ test('sidebar persists history before refreshing the list', async () => {
 
     assert.match(
         sidebar,
-        /await ST\.sendMessage\(\{\s*action: 'addHistory',\s*item: \{\s*source: text,\s*target: response\.text,\s*sourceLang: sourceLangSelect\.value,\s*targetLang: targetLangSelect\.value,\s*provider: response\.provider \|\| '',\s*\}\s*\}\);\s*(?:await\s+)?ST\.refreshSidebarHistory\(\);/,
+        /try \{\s*await ST\.sendMessage\(\{\s*action: 'addHistory',\s*item: \{\s*source: text,\s*target: response\.text,\s*sourceLang: sourceLangSelect\.value,\s*targetLang: targetLangSelect\.value,\s*provider: response\.provider \|\| '',\s*\}\s*\}\);\s*\} catch \(historyErr\) \{\s*console\.error\('\[智译\] 保存历史失败:', historyErr\);\s*\}\s*await ST\.refreshSidebarHistory\(\);/,
     );
     assert.doesNotMatch(
         sidebar,

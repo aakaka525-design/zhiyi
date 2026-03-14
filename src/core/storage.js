@@ -194,6 +194,18 @@ export class StorageManager {
     }
 
     /**
+     * 清空收藏
+     */
+    static async clearFavorites() {
+        try {
+            await chrome.storage.local.set({ [STORAGE_KEYS.FAVORITES]: [] });
+        } catch (error) {
+            console.error('清空收藏失败:', error);
+            throw error;
+        }
+    }
+
+    /**
      * 获取收藏
      */
     static async getFavorites() {

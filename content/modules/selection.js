@@ -5,12 +5,20 @@
 
 var ST = window.SmartTranslator;
 
+function isImmersiveElement(el) {
+    return el.closest('.st-immersive-wrapper') ||
+        el.classList?.contains('st-immersive-translation') ||
+        el.classList?.contains('st-translation-separator');
+}
+
 /**
  * 处理鼠标抬起事件（划词检测）
  */
 ST.handleMouseUp = function (e) {
     if (!ST.state.settings?.enableSelection) return;
+    if (e.detail >= 2) return;
     if (ST.isPluginElement(e.target)) return;
+    if (isImmersiveElement(e.target)) return;
 
     const selection = window.getSelection();
     const text = selection.toString().trim();
@@ -50,9 +58,11 @@ ST.handleDoubleClick = function (e) {
     if (e.target.matches('input, textarea, [contenteditable="true"]')) {
         return;
     }
+    ST.removeIcon();
     if (ST.isPluginElement(e.target)) {
         return;
     }
+    if (isImmersiveElement(e.target)) return;
 
     const text = window.getSelection().toString().trim();
 
@@ -134,6 +144,7 @@ ST.showBubble = async function (text) {
     ST.ui.bubble.style.zIndex = '2147483647';
 
     document.body.appendChild(ST.ui.bubble);
+    const myBubble = ST.ui.bubble;
 
     if (rect) {
         ST.state.selection.rect = rect;
@@ -152,37 +163,64 @@ ST.showBubble = async function (text) {
         ST.ui.bubble.style.left = `${fallbackPosition.left}px`;
     }
 
+    const sourceLang = ST.detectLanguage(text);
+    const targetLang = ST.state.settings?.targetLang || 'zh';
+
     try {
         const response = await ST.sendMessage({
             action: 'translate',
             text: text,
-            from: ST.detectLanguage(text),
-            to: ST.state.settings?.targetLang || 'zh'
-        });
+            from: sourceLang,
+            to: targetLang
+        }, 30000, '翻译请求超时');
 
-        const resultDiv = ST.ui.bubble?.querySelector('.st-bubble-result');
+        if (ST.ui.bubble !== myBubble) return;
+
+        const resultDiv = myBubble.querySelector('.st-bubble-result');
         if (!resultDiv) return;
 
         if (response && response.text) {
             renderBubbleMessage(resultDiv, response.text);
+            const actionsEl = myBubble.querySelector('.st-bubble-actions');
+            if (actionsEl) actionsEl.style.display = '';
+
+            ST.sendMessage({
+                action: 'addHistory',
+                item: {
+                    source: text,
+                    target: response.text,
+                    sourceLang,
+                    targetLang,
+                    provider: response.provider || '',
+                }
+            });
 
             // 绑定复制
-                const copyBtn = ST.ui.bubble.querySelector('#st-copy-btn');
-                if (copyBtn) {
-                    copyBtn.onclick = () => {
-                        navigator.clipboard.writeText(response.text);
+            const copyBtn = myBubble.querySelector('#st-copy-btn');
+            if (copyBtn) {
+                copyBtn.onclick = async () => {
+                    try {
+                        await navigator.clipboard.writeText(response.text);
                         copyBtn.style.color = 'var(--accent)';
                         setTimeout(() => copyBtn.style.color = '', 1000);
-                    };
-                }
+                    } catch (err) {
+                        console.error('复制失败:', err);
+                    }
+                };
+            }
         } else {
             renderBubbleMessage(resultDiv, `翻译失败: ${response?.error || '未知错误'}`, true);
+            const actionsEl = myBubble.querySelector('.st-bubble-actions');
+            if (actionsEl) actionsEl.style.display = 'none';
         }
     } catch (err) {
-        const resultDiv = ST.ui.bubble?.querySelector('.st-bubble-result');
+        if (ST.ui.bubble !== myBubble) return;
+        const resultDiv = myBubble.querySelector('.st-bubble-result');
         if (resultDiv) {
             renderBubbleMessage(resultDiv, `请求失败: ${err.message || '未知错误'}`, true);
         }
+        const actionsEl = myBubble.querySelector('.st-bubble-actions');
+        if (actionsEl) actionsEl.style.display = 'none';
     }
 };
 

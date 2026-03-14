@@ -78,7 +78,7 @@ test('options snapshots and TTS consumers use provider-specific voice fields', a
     );
 });
 
-test('sidebar Enter shortcut guards IME composition and history view state flows through a shared helper', async () => {
+test('sidebar Enter shortcut guards IME composition and history view state flows through shared helpers', async () => {
     const sidebar = await readWorkspaceFile('content/modules/sidebar.js');
     const options = await readWorkspaceFile('options/options.js');
 
@@ -89,7 +89,11 @@ test('sidebar Enter shortcut guards IME composition and history view state flows
 
     assert.match(
         options,
-        /function switchHistoryTab\(type\) \{\s*elements\.historyTabs\.forEach\(b => b\.classList\.remove\('active'\)\);\s*const targetBtn = document\.querySelector\(`\.history-tab-btn\[data-type="\$\{type\}"\]`\);\s*if \(targetBtn\) targetBtn\.classList\.add\('active'\);\s*const searchInput = document\.getElementById\('history-search'\);\s*if \(searchInput\) searchInput\.value = '';\s*loadHistoryList\(type\);\s*\}/,
+        /function updateClearBtnContext\(type\) \{\s*elements\.clearHistoryBtn\.textContent = type === 'favorite' \? '清空所有收藏' : '清空所有历史';\s*\}/,
+    );
+    assert.match(
+        options,
+        /function switchHistoryTab\(type\) \{\s*elements\.historyTabs\.forEach\(b => b\.classList\.remove\('active'\)\);\s*const targetBtn = document\.querySelector\(`\.history-tab-btn\[data-type="\$\{type\}"\]`\);\s*if \(targetBtn\) targetBtn\.classList\.add\('active'\);\s*const searchInput = document\.getElementById\('history-search'\);\s*if \(searchInput\) searchInput\.value = '';\s*updateClearBtnContext\(type\);\s*loadHistoryList\(type\);\s*\}/,
     );
     assert.match(
         options,
@@ -97,7 +101,7 @@ test('sidebar Enter shortcut guards IME composition and history view state flows
     );
     assert.match(
         options,
-        /elements\.clearHistoryBtn\.addEventListener\('click', async \(\) => \{\s*if \(confirm\('确定要清空所有翻译历史记录吗？'\)\) \{\s*await StorageManager\.clearHistory\(\);\s*switchHistoryTab\('recent'\);\s*\}\s*\}\);/,
+        /elements\.clearHistoryBtn\.addEventListener\('click', async \(\) => \{\s*const isFavorite = currentHistoryType === 'favorite';\s*const label = isFavorite \? '收藏' : '翻译历史';\s*if \(confirm\(`确定要清空所有\$\{label\}记录吗？`\)\) \{\s*if \(isFavorite\) \{\s*await StorageManager\.clearFavorites\(\);\s*\} else \{\s*await StorageManager\.clearHistory\(\);\s*\}\s*loadHistoryList\(currentHistoryType\);\s*\}\s*\}\);/,
     );
     assert.match(
         options,

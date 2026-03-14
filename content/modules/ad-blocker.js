@@ -187,6 +187,8 @@
 
     // 检测并关闭弹窗广告
     const closePopupAds = () => {
+        const hasAdToken = (str) => str.split(/[\s_-]+/).some(t => t === 'ad' || t === 'ads');
+        let removed = false;
         POPUP_SELECTORS.forEach(selector => {
             try {
                 document.querySelectorAll(selector).forEach(el => {
@@ -196,8 +198,8 @@
                     const id = el.id?.toLowerCase() || '';
 
                     const isAdPopup =
-                        className.includes('ad') ||
-                        id.includes('ad') ||
+                        hasAdToken(className) ||
+                        hasAdToken(id) ||
                         text.includes('广告') ||
                         text.includes('advertisement') ||
                         text.includes('sponsored') ||
@@ -205,6 +207,7 @@
 
                     if (isAdPopup && !ST.isPluginElement(el)) {
                         el.remove();
+                        removed = true;
                         // 同时移除可能的遮罩层
                         document.querySelectorAll('[class*="backdrop"], [class*="mask"]').forEach(mask => {
                             if (mask.style.position === 'fixed' || mask.style.position === 'absolute') {
@@ -217,6 +220,7 @@
                 // 忽略
             }
         });
+        return removed;
     };
 
     // 恢复页面滚动（有些广告弹窗会禁用滚动）
@@ -376,8 +380,9 @@
 
             if (hasNewAds) {
                 removeAds();
-                closePopupAds();
-                restoreScroll();
+                if (closePopupAds()) {
+                    restoreScroll();
+                }
             }
         });
 

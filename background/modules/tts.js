@@ -42,6 +42,20 @@ export async function playAudioViaOffscreen(audioData, speed = 1.0) {
     return chrome.runtime.sendMessage({ action: 'playAudio', audioData, speed });
 }
 
+export async function stopAudioViaOffscreen() {
+    const offscreenUrl = chrome.runtime.getURL('offscreen/offscreen.html');
+    const existingContexts = await chrome.runtime.getContexts({
+        contextTypes: ['OFFSCREEN_DOCUMENT'],
+        documentUrls: [offscreenUrl]
+    });
+
+    if (existingContexts.length === 0) {
+        return { success: true };
+    }
+
+    return chrome.runtime.sendMessage({ action: 'stopAudio' });
+}
+
 export async function handleTTSGLM(request) {
     try {
         const apiKey = request.apiKey;
@@ -75,8 +89,9 @@ export async function handleTTSGLM(request) {
 
         const audioBlob = await response.blob();
         const reader = new FileReader();
-        const audioData = await new Promise((resolve) => {
-            reader.onloadend = () => resolve(reader.result); // data:audio/wav;base64,...
+        const audioData = await new Promise((resolve, reject) => {
+            reader.onload = () => resolve(reader.result); // data:audio/wav;base64,...
+            reader.onerror = () => reject(reader.error || new Error('FileReader failed'));
             reader.readAsDataURL(audioBlob);
         });
 
@@ -112,8 +127,9 @@ export async function handleTTSOpenAI(request) {
 
         const audioBlob = await response.blob();
         const reader = new FileReader();
-        const audioData = await new Promise((resolve) => {
-            reader.onloadend = () => resolve(reader.result);
+        const audioData = await new Promise((resolve, reject) => {
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(reader.error || new Error('FileReader failed'));
             reader.readAsDataURL(audioBlob);
         });
 

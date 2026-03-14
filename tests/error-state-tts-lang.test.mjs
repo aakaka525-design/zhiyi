@@ -50,16 +50,21 @@ test('content error states use design tokens instead of hard-coded red values', 
 });
 
 test('sidebar and float-window system TTS resolve auto or missing languages before speaking', async () => {
+    const utils = await readWorkspaceFile('content/modules/utils.js');
     const sidebar = await readWorkspaceFile('content/modules/sidebar.js');
     const floatWindow = await readWorkspaceFile('content/modules/float-window.js');
 
     assert.match(
+        utils,
+        /ST\.speakSystemWithGuard = function \(text, lang, speed\) \{\s*return new Promise\(\(resolve, reject\) => \{\s*const langMap = \{ zh: 'zh-CN', en: 'en-US', ja: 'ja-JP', ko: 'ko-KR' \};\s*const resolvedLang = !lang \|\| lang === 'auto' \? ST\.detectLanguage\(text\) : lang;[\s\S]*utterance\.lang = langMap\[resolvedLang\] \|\| resolvedLang;/,
+    );
+    assert.match(
         sidebar,
-        /const speakSystem = \(text, lang, speed\) => \{\s*const langMap = \{ zh: 'zh-CN', en: 'en-US', ja: 'ja-JP', ko: 'ko-KR' \};\s*const resolvedLang = !lang \|\| lang === 'auto' \? ST\.detectLanguage\(text\) : lang;[\s\S]*utterance\.lang = langMap\[resolvedLang\] \|\| resolvedLang;/,
+        /const speakSystem = \(text, lang, speed\) => ST\.speakSystemWithGuard\(text, lang, speed\);/,
     );
     assert.match(
         floatWindow,
-        /const speed = settings\.ttsSpeed \|\| 1\.0;\s*const resolvedLang = !lang \|\| lang === 'auto' \? ST\.detectLanguage\(text\) : lang;[\s\S]*const langMap = \{ zh: 'zh-CN', en: 'en-US', ja: 'ja-JP', ko: 'ko-KR' \};[\s\S]*utterance\.lang = langMap\[resolvedLang\] \|\| resolvedLang;/,
+        /const speed = settings\.ttsSpeed \|\| 1\.0;\s*const resolvedLang = !lang \|\| lang === 'auto' \? ST\.detectLanguage\(text\) : lang;[\s\S]*await ST\.speakSystemWithGuard\(text, resolvedLang, speed\);/,
     );
 });
 

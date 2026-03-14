@@ -4,6 +4,13 @@
  */
 
 var ST = window.SmartTranslator;
+const EXCLUDE_SELECTORS = [
+    'nav', 'header', 'footer', 'aside',
+    'button', 'a', 'input', 'select', 'label',
+    '.Header', '.AppHeader', '.pagehead',
+    '.btn', '.Button', '.Counter', '.Label',
+    '.sidebar', '.menu', '.toolbar'
+];
 
 /**
  * 切换沉浸式翻译
@@ -11,7 +18,7 @@ var ST = window.SmartTranslator;
 ST.toggleImmersive = async function () {
     if (ST.state.isImmersiveEnabled) {
         // 关闭沉浸式翻译
-        document.querySelectorAll('.st-immersive-translation, .st-immersive-wrapper').forEach(el => el.remove());
+        document.querySelectorAll('.st-immersive-translation, .st-immersive-wrapper, .st-translation-separator').forEach(el => el.remove());
         ST.state.isImmersiveEnabled = false;
         ST.stopMutationObserver();
         ST.showToast('已关闭沉浸式翻译');
@@ -19,6 +26,8 @@ ST.toggleImmersive = async function () {
     }
 
     ST.state.isImmersiveEnabled = true;
+    ST.state.immersiveRunId = (ST.state.immersiveRunId || 0) + 1;
+    const myRunId = ST.state.immersiveRunId;
     ST.showToast('正在启动沉浸式翻译...');
     ST.showProgress();
 
@@ -47,20 +56,12 @@ ST.toggleImmersive = async function () {
             '.comment-body p', '.js-comment-body p'
         ].join(', ');
 
-        const excludeSelectors = [
-            'nav', 'header', 'footer', 'aside',
-            'button', 'a', 'input', 'select', 'label',
-            '.Header', '.AppHeader', '.pagehead',
-            '.btn', '.Button', '.Counter', '.Label',
-            '.sidebar', '.menu', '.toolbar'
-        ];
-
         paragraphs = Array.from(document.querySelectorAll(selectors))
             .filter(p => {
                 const style = window.getComputedStyle(p);
                 if (style.display === 'none' || style.visibility === 'hidden') return false;
 
-                for (const selector of excludeSelectors) {
+                for (const selector of EXCLUDE_SELECTORS) {
                     if (p.closest(selector) || p.matches(selector)) return false;
                 }
 
@@ -99,7 +100,7 @@ ST.toggleImmersive = async function () {
     let errorCount = 0;
 
     for (let i = 0; i < paragraphs.length; i += batchSize) {
-        if (!ST.state.isImmersiveEnabled) break;
+        if (!ST.state.isImmersiveEnabled || ST.state.immersiveRunId !== myRunId) break;
 
         const batch = paragraphs.slice(i, i + batchSize);
         const texts = batch.map(p => p.innerText.trim());
@@ -109,7 +110,9 @@ ST.toggleImmersive = async function () {
                 action: 'translateBatch',
                 texts: texts,
                 to: targetLang
-            });
+            }, 60000, '批量翻译超时');
+
+            if (!ST.state.isImmersiveEnabled || ST.state.immersiveRunId !== myRunId) break;
 
             if (response && response.results) {
                 batch.forEach((p, index) => {
@@ -124,10 +127,12 @@ ST.toggleImmersive = async function () {
                 errorCount += batch.length;
             }
         } catch (err) {
+            if (!ST.state.isImmersiveEnabled || ST.state.immersiveRunId !== myRunId) break;
             console.error('批量翻译出错:', err);
             errorCount += batch.length;
         }
 
+        if (!ST.state.isImmersiveEnabled || ST.state.immersiveRunId !== myRunId) break;
         translatedCount += batch.length;
         ST.updateProgress((translatedCount / paragraphs.length) * 100);
 
@@ -136,21 +141,26 @@ ST.toggleImmersive = async function () {
         }
     }
 
-    ST.hideProgress();
-
-    if (errorCount > 0) {
-        ST.showToast(`翻译完成，${errorCount} 个段落失败`);
-    } else {
-        ST.showToast(`翻译完成！共 ${translatedCount} 个段落`);
+    if (ST.state.immersiveRunId === myRunId) {
+        ST.hideProgress();
     }
 
-    ST.startMutationObserver();
+    if (ST.state.isImmersiveEnabled && ST.state.immersiveRunId === myRunId) {
+        if (errorCount > 0) {
+            ST.showToast(`翻译完成，${errorCount} 个段落失败`);
+        } else {
+            ST.showToast(`翻译完成！共 ${translatedCount} 个段落`);
+        }
+
+        ST.startMutationObserver();
+    }
 };
 
 /**
  * 注入译文到页面
  */
 ST.injectTranslation = function (container, translation) {
+    if (!document.contains(container)) return;
     const nextSibling = container.nextElementSibling;
     if (nextSibling && nextSibling.classList.contains('st-immersive-wrapper')) return;
     if (container.querySelector('.st-immersive-translation')) return;
@@ -197,12 +207,13 @@ ST.injectTranslation = function (container, translation) {
  */
 ST.startMutationObserver = function () {
     if (ST.observers.mutation) return;
+    const observerRunId = ST.state.immersiveRunId;
 
     const isTwitter = window.location.hostname.includes('twitter.com') ||
         window.location.hostname.includes('x.com');
 
     ST.observers.mutation = new MutationObserver(async (mutations) => {
-        if (!ST.state.isImmersiveEnabled) {
+        if (!ST.state.isImmersiveEnabled || ST.state.immersiveRunId !== observerRunId) {
             ST.stopMutationObserver();
             return;
         }
@@ -237,6 +248,12 @@ ST.startMutationObserver = function () {
             const text = el.innerText.trim();
             const minLength = isTwitter ? 5 : 20;
             if (text.length < minLength) return false;
+            if (!isTwitter) {
+                for (const selector of EXCLUDE_SELECTORS) {
+                    if (el.closest(selector) || el.matches(selector)) return false;
+                }
+                if (ST.isPluginElement(el)) return false;
+            }
             if (el.nextElementSibling?.classList.contains('st-immersive-wrapper')) return false;
             if (ST.pendingTranslations.has(el)) return false;
             if (ST.detectLanguage(text) === targetLang) return false;
@@ -254,7 +271,9 @@ ST.startMutationObserver = function () {
                 action: 'translateBatch',
                 texts: texts,
                 to: targetLang
-            });
+            }, 60000, '批量翻译超时');
+
+            if (!ST.state.isImmersiveEnabled || ST.state.immersiveRunId !== observerRunId) return;
 
             if (response && response.results) {
                 newElements.forEach((el, index) => {

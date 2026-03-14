@@ -20,7 +20,7 @@ test('sidebar swap reuses the visible successful result for reverse translation'
 
     assert.match(
         sidebar,
-        /swapBtn\.onclick = \(\) => \{\s*const s = sourceLangSelect\.value;\s*const t = targetLangSelect\.value;\s*if \(s !== 'auto'\) \{\s*sourceLangSelect\.value = t;\s*targetLangSelect\.value = s;\s*if \(resultCard\.classList\.contains\('active'\) && !resultContent\.style\.color\) \{\s*input\.value = resultContent\.innerText;\s*\}\s*\}\s*\};/,
+        /swapBtn\.onclick = \(\) => \{\s*const s = sourceLangSelect\.value;\s*const t = targetLangSelect\.value;\s*if \(s !== 'auto'\) \{\s*sourceLangSelect\.value = t;\s*targetLangSelect\.value = s;\s*saveLanguageSettings\(\{ sourceLang: t, targetLang: s \}\);\s*if \(resultCard\.classList\.contains\('active'\) && !resultContent\.style\.color\) \{\s*input\.value = resultContent\.innerText;\s*\}\s*\}\s*\};/,
     );
 });
 

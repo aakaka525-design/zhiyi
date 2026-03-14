@@ -9,7 +9,10 @@ async function readWorkspaceFile(path) {
 test('float window source speech resolves auto language before selecting Google TTS voice', async () => {
     const source = await readWorkspaceFile('content/modules/float-window.js');
 
-    assert.match(source, /speakSourceBtn\.onclick = \(\) => speak\(input\.value, 'auto'\);/);
+    assert.match(
+        source,
+        /speakSourceBtn\.onclick = \(\) => runSpeak\(speakSourceBtn, \(\) => speak\(input\.value, 'auto'\)\);/,
+    );
     assert.match(
         source,
         /const resolvedLang = !lang \|\| lang === 'auto' \? ST\.detectLanguage\(text\) : lang;/,
@@ -48,10 +51,10 @@ test('sidebar translate success writes history before refreshing the history lis
 
     assert.match(
         source,
-        /await ST\.sendMessage\(\{\s*action:\s*'addHistory',[\s\S]*source:\s*text,[\s\S]*target:\s*response\.text,[\s\S]*sourceLang:\s*sourceLangSelect\.value,[\s\S]*targetLang:\s*targetLangSelect\.value,[\s\S]*provider:\s*response\.provider \|\| '',[\s\S]*\}\);/,
+        /try \{\s*await ST\.sendMessage\(\{\s*action:\s*'addHistory',[\s\S]*source:\s*text,[\s\S]*target:\s*response\.text,[\s\S]*sourceLang:\s*sourceLangSelect\.value,[\s\S]*targetLang:\s*targetLangSelect\.value,[\s\S]*provider:\s*response\.provider \|\| '',[\s\S]*\}\);\s*\} catch \(historyErr\) \{\s*console\.error\('\[智译\] 保存历史失败:', historyErr\);\s*\}/,
     );
     assert.match(
         source,
-        /await ST\.sendMessage\(\{[\s\S]*action:\s*'addHistory'[\s\S]*\}\);\s*await ST\.refreshSidebarHistory\(\);/,
+        /try \{[\s\S]*await ST\.sendMessage\(\{[\s\S]*action:\s*'addHistory'[\s\S]*\}\);[\s\S]*\}\s*catch \(historyErr\) \{[\s\S]*\}\s*await ST\.refreshSidebarHistory\(\);/,
     );
 });

@@ -25,7 +25,33 @@
     --text-tertiary: #767676;
     --border-color: rgba(0, 0, 0, 0.05);
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --surface-ball: rgba(255, 255, 255, 0.6);
     --error: #E57373;
+}
+
+:root[data-st-theme="dark"] #smart-translator-bubble,
+:root[data-st-theme="dark"] .st-immersive-wrapper,
+:root[data-st-theme="dark"] #st-sidebar,
+:root[data-st-theme="dark"] #st-sidebar-toggle-btn,
+:root[data-st-theme="dark"] #st-float-window,
+:root[data-st-theme="dark"] #st-page-progress,
+:root[data-st-theme="dark"] #st-floating-ball-container,
+:root[data-st-theme="dark"] #smart-translator-icon,
+:root[data-st-theme="dark"] .st-immersive-translation,
+:root[data-st-theme="dark"] .st-translation-separator,
+:root[data-st-theme="dark"] #st-toast {
+    --accent: #8FB3A4;
+    --accent-light: #A7C9BD;
+    --accent-glow: rgba(143, 179, 164, 0.3);
+    --bg-secondary: #282C34;
+    --bg-tertiary: #323642;
+    --surface: rgba(30, 34, 43, 0.95);
+    --text-primary: #E8E8E8;
+    --text-secondary: #B0B0B0;
+    --text-tertiary: #949494;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --surface-ball: rgba(30, 34, 43, 0.6);
+    --error: #EF9A9A;
 }
 
 #st-toast {
@@ -50,8 +76,7 @@
 #smart-translator-bubble {
     position: absolute;
     z-index: 2147483647;
-    background: rgba(249, 249, 249, 0.95);
-    /* 暖白背景 #F9F9F9 */
+    background: var(--surface);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(122, 154, 139, 0.15);
@@ -236,11 +261,10 @@
     right: -420px;
     width: 400px;
     height: 100vh;
-    background: rgba(249, 249, 249, 0.98);
-    /* 暖白 */
+    background: var(--surface);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-left: 1px solid rgba(0, 0, 0, 0.05);
+    border-left: 1px solid var(--border-color);
     box-shadow: -20px 0 60px rgba(0, 0, 0, 0.06);
     /* 更柔和的阴影 */
     z-index: 2147483646;
@@ -287,7 +311,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    border: 1px solid rgba(0, 0, 0, 0.03);
+    border: 1px solid var(--border-color);
 }
 
 .st-sidebar-input {
@@ -334,8 +358,8 @@
     top: 100px;
     right: 50px;
     width: 320px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    background: var(--surface);
+    border: 1px solid var(--border-color);
     border-radius: 20px;
     box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
     z-index: 2147483645;
@@ -347,7 +371,7 @@
 
 .st-float-header {
     padding: 14px 18px;
-    background: #F9F9F9;
+    background: var(--bg-secondary);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -407,7 +431,7 @@
     transform: translateY(-50%);
     width: 28px;
     height: 72px;
-    background: rgba(253, 252, 248, 0.95);
+    background: var(--surface);
     backdrop-filter: blur(12px);
     border: 1px solid var(--border-color);
     border-right: none;
@@ -725,8 +749,7 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.6);
-    /* 半透明静止态 */
+    background: var(--surface-ball);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(122, 154, 139, 0.3);

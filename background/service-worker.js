@@ -9,7 +9,7 @@ import { Translator } from '../src/core/translator.js';
 
 // Modules
 import { routeMessage } from './modules/message-router.js';
-import { handleTTSGLM, handleTTSOpenAI, handleTTSGoogle, playAudioViaOffscreen } from './modules/tts.js';
+import { handleTTSGLM, handleTTSOpenAI, handleTTSGoogle, playAudioViaOffscreen, stopAudioViaOffscreen } from './modules/tts.js';
 import { createContextMenus, setupMenuListeners } from './modules/menus.js';
 
 // 翻译器实例
@@ -138,6 +138,7 @@ async function handleMessage(request, sender) {
             handleTTSOpenAI,
             handleTTSGoogle,
             playAudioViaOffscreen,
+            stopAudioViaOffscreen,
         },
     });
 }

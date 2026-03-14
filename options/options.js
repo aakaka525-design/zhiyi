@@ -12,6 +12,16 @@ import {
     hasUnsavedChanges,
 } from './options-ui-state.js';
 
+function withTimeout(promise, ms, message = '请求超时') {
+    let timeoutId;
+    return Promise.race([
+        promise,
+        new Promise((_, reject) => {
+            timeoutId = setTimeout(() => reject(new Error(message)), ms);
+        }),
+    ]).finally(() => clearTimeout(timeoutId));
+}
+
 // DOM 元素
 const elements = {
     navList: document.querySelector('.nav-list'),
@@ -138,12 +148,12 @@ function bindEvents() {
     // 深色模式切换
     elements.enableDarkMode.addEventListener('change', (e) => {
         applyDarkMode(e.target.checked);
-        saveSettings(); // 自动保存
+        saveImmediateToggle({ darkMode: e.target.checked });
     });
 
     // 调试模式切换 - 自动保存并通知内容脚本
     elements.enableDebugMode.addEventListener('change', async (e) => {
-        await saveSettings();
+        await saveImmediateToggle({ debugMode: e.target.checked });
         console.log('[智译] 调试模式:', e.target.checked ? '已开启' : '已关闭');
     });
 
@@ -176,9 +186,15 @@ function bindEvents() {
 
     // 清空历史
     elements.clearHistoryBtn.addEventListener('click', async () => {
-        if (confirm('确定要清空所有翻译历史记录吗？')) {
-            await StorageManager.clearHistory();
-            switchHistoryTab('recent');
+        const isFavorite = currentHistoryType === 'favorite';
+        const label = isFavorite ? '收藏' : '翻译历史';
+        if (confirm(`确定要清空所有${label}记录吗？`)) {
+            if (isFavorite) {
+                await StorageManager.clearFavorites();
+            } else {
+                await StorageManager.clearHistory();
+            }
+            loadHistoryList(currentHistoryType);
         }
     });
 
@@ -214,6 +230,8 @@ async function testApiConnection(provider) {
     btn.disabled = true;
     statusEl.textContent = '';
     statusEl.className = 'test-status';
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     try {
         let success = false;
@@ -230,7 +248,8 @@ async function testApiConnection(provider) {
 
                 const response = await fetch(`${baseUrl}/models`, {
                     method: 'GET',
-                    headers: { 'Authorization': `Bearer ${apiKey}` }
+                    headers: { 'Authorization': `Bearer ${apiKey}` },
+                    signal: controller.signal,
                 });
 
                 if (response.ok) {
@@ -249,7 +268,9 @@ async function testApiConnection(provider) {
                     throw new Error('请先填写 API Key');
                 }
 
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`, {
+                    signal: controller.signal,
+                });
 
                 if (response.ok) {
                     success = true;
@@ -270,7 +291,8 @@ async function testApiConnection(provider) {
 
                 const response = await fetch(`${baseUrl}/models`, {
                     method: 'GET',
-                    headers: { 'Authorization': `Bearer ${apiKey}` }
+                    headers: { 'Authorization': `Bearer ${apiKey}` },
+                    signal: controller.signal,
                 });
 
                 if (response.ok) {
@@ -287,9 +309,14 @@ async function testApiConnection(provider) {
         statusEl.classList.add('success');
 
     } catch (error) {
-        statusEl.textContent = `✗ ${error.message}`;
+        if (error.name === 'AbortError') {
+            statusEl.textContent = '✗ 连接超时';
+        } else {
+            statusEl.textContent = `✗ ${error.message}`;
+        }
         statusEl.classList.add('error');
     } finally {
+        clearTimeout(timeoutId);
         btn.classList.remove('loading');
         btn.disabled = false;
     }
@@ -313,20 +340,28 @@ async function testTTS() {
         const speed = parseFloat(elements.ttsSpeed.value) || 1.0;
 
         if (provider === 'system') {
-            playSystemTtsTest(testText, speed);
-            statusEl.textContent = '✓ 已开始播放';
+            statusEl.textContent = '播放中...';
+            await withTimeout(playSystemTtsTest(testText, speed), 15000, '系统语音播放超时');
+            statusEl.textContent = '✓ 播放完成';
             statusEl.classList.add('success');
             return;
         }
 
-        const audioData = await requestTtsTestAudio(provider, testText, speed);
+        const audioData = await withTimeout(
+            requestTtsTestAudio(provider, testText, speed),
+            15000,
+            'TTS 请求超时',
+        );
         statusEl.textContent = '✓ 已开始播放';
         statusEl.classList.add('success');
-        const playbackResponse = await chrome.runtime.sendMessage({
-            action: 'playAudioOffscreen',
-            audioData,
-            speed,
-        });
+        const playbackResponse = await withTimeout(
+            chrome.runtime.sendMessage({
+                action: 'playAudioOffscreen',
+                audioData,
+            }),
+            15000,
+            '播放超时',
+        );
         if (playbackResponse?.error) {
             throw new Error(playbackResponse.error);
         }
@@ -340,11 +375,35 @@ async function testTTS() {
 }
 
 function playSystemTtsTest(text, speed) {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'zh-CN';
-    utterance.rate = speed;
-    window.speechSynthesis.speak(utterance);
+    return new Promise((resolve, reject) => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'zh-CN';
+        utterance.rate = speed;
+
+        let settled = false;
+        let hasStarted = false;
+        let pollId = null;
+
+        const settle = (fn) => {
+            if (settled) return;
+            settled = true;
+            if (pollId) clearInterval(pollId);
+            fn();
+        };
+
+        utterance.onstart = () => { hasStarted = true; };
+        utterance.onend = () => settle(resolve);
+        utterance.onerror = (e) => settle(() => reject(new Error(e.error || '播放失败')));
+
+        pollId = setInterval(() => {
+            if (hasStarted && !window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
+                settle(resolve);
+            }
+        }, 500);
+
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+    });
 }
 
 async function requestTtsTestAudio(provider, text, speed) {
@@ -429,6 +488,10 @@ function loadTab(name) {
     }
 }
 
+function updateClearBtnContext(type) {
+    elements.clearHistoryBtn.textContent = type === 'favorite' ? '清空所有收藏' : '清空所有历史';
+}
+
 function switchHistoryTab(type) {
     elements.historyTabs.forEach(b => b.classList.remove('active'));
     const targetBtn = document.querySelector(`.history-tab-btn[data-type="${type}"]`);
@@ -437,26 +500,46 @@ function switchHistoryTab(type) {
     const searchInput = document.getElementById('history-search');
     if (searchInput) searchInput.value = '';
 
+    updateClearBtnContext(type);
     loadHistoryList(type);
 }
 
 // 保存设置
 async function saveSettings() {
-    const settings = collectCurrentSettings();
+    const current = collectCurrentSettings();
+    const diff = {};
+    for (const key of Object.keys(current)) {
+        if (current[key] !== initialSettingsSnapshot[key]) {
+            diff[key] = current[key];
+        }
+    }
+
+    if (Object.keys(diff).length === 0) {
+        setDirtyState(false);
+        return;
+    }
 
     try {
-        await StorageManager.updateSettings(settings);
-        // 通知 background 刷新设置
-        const response = await chrome.runtime.sendMessage({ action: 'updateSettings', settings });
+        const response = await chrome.runtime.sendMessage({ action: 'patchSettings', updates: diff });
         if (response?.error) {
             throw new Error(response.error);
         }
-        initialSettingsSnapshot = settings;
+        initialSettingsSnapshot = buildSettingsSnapshot({ ...initialSettingsSnapshot, ...diff });
         setDirtyState(false);
         showToast('设置保存成功');
     } catch (err) {
         refreshDirtyState();
         showToast('保存失败: ' + err.message, 'error');
+    }
+}
+
+async function saveImmediateToggle(partialSettings) {
+    try {
+        await chrome.runtime.sendMessage({ action: 'patchSettings', updates: partialSettings });
+        initialSettingsSnapshot = buildSettingsSnapshot({ ...initialSettingsSnapshot, ...partialSettings });
+        refreshDirtyState();
+    } catch (err) {
+        console.error('[智译] 保存开关设置失败:', err);
     }
 }
 
@@ -599,7 +682,8 @@ async function loadHistoryList(type) {
         : await StorageManager.getHistory();
 
     currentHistoryData = data;
-    renderHistoryList(data);
+    const query = document.getElementById('history-search')?.value || '';
+    filterHistoryList(query);
 }
 
 // 渲染历史记录（支持筛选）

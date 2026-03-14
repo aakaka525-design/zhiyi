@@ -19,15 +19,15 @@ test('sidebar provider fallbacks preserve lang and configured speed', async () =
     );
     assert.match(
         source,
-        /const speakOpenAI = async \(text, lang, settings\) => \{[\s\S]*if \(!apiKey\) \{ speakSystem\(text, lang, settings\.ttsSpeed \|\| 1\.0\); return; \}/,
+        /const speakOpenAI = async \(text, lang, settings\) => \{[\s\S]*if \(!apiKey\) \{ return speakSystem\(text, lang, settings\.ttsSpeed \|\| 1\.0\); \}/,
     );
     assert.match(
         source,
-        /const speakGoogle = async \(text, lang, settings\) => \{[\s\S]*if \(!apiKey\) \{\s*speakSystem\(text, lang, settings\.ttsSpeed \|\| 1\.0\);\s*return;\s*\}/,
+        /const speakGoogle = async \(text, lang, settings\) => \{[\s\S]*if \(!apiKey\) \{\s*return speakSystem\(text, lang, settings\.ttsSpeed \|\| 1\.0\);\s*\}/,
     );
     assert.match(
         source,
-        /const speakGLM = async \(text, lang, settings\) => \{[\s\S]*if \(!apiKey\) \{\s*speakSystem\(text, lang, settings\.ttsSpeed \|\| 1\.0\);[\s\S]*\}[\s\S]*else \{\s*speakSystem\(text, lang, settings\.ttsSpeed \|\| 1\.0\);\s*\}/,
+        /const speakGLM = async \(text, lang, settings\) => \{[\s\S]*if \(!apiKey\) \{\s*return speakSystem\(text, lang, settings\.ttsSpeed \|\| 1\.0\);[\s\S]*\}[\s\S]*else \{\s*return speakSystem\(text, lang, settings\.ttsSpeed \|\| 1\.0\);\s*\}/,
     );
     assert.doesNotMatch(source, /speakSystem\(text, 'zh', 1\.0\)/);
 });

@@ -82,6 +82,14 @@ ST.createFloatWindow = function () {
         targetLangSelect.value = ST.state.settings.targetLang || 'zh';
     }
 
+    const saveLanguageSettings = (partialSettings) => {
+        ST.sendMessage({ action: 'patchSettings', updates: partialSettings });
+    };
+
+    targetLangSelect.addEventListener('change', () => {
+        saveLanguageSettings({ targetLang: targetLangSelect.value });
+    });
+
     closeBtn.onclick = () => ST.toggleFloatWindow();
 
     // 清空
@@ -105,7 +113,7 @@ ST.createFloatWindow = function () {
                 action: 'playAudioOffscreen',
                 audioData: dataUrl,
                 speed: playbackSpeed
-            });
+            }, 15000, '播放超时');
             if (result?.error) throw new Error(result.error);
         };
 
@@ -118,7 +126,7 @@ ST.createFloatWindow = function () {
                     text,
                     voice: settings.ttsVoiceOpenai || 'nova',
                     speed
-                });
+                }, 15000, 'TTS 请求超时');
                 if (response?.audioData) { await playAudio(response.audioData); return; }
             } else if (provider === 'google' && settings.geminiApiKey) {
                 const response = await ST.sendMessage({
@@ -127,7 +135,7 @@ ST.createFloatWindow = function () {
                     text,
                     voice: settings.ttsVoiceGoogle || ST.getDefaultGoogleTtsVoice(resolvedLang),
                     speed
-                });
+                }, 15000, 'TTS 请求超时');
                 if (response?.audioData) { await playAudio(response.audioData); return; }
             } else if (provider === 'glm' && settings.deepseekApiKey) {
                 const response = await ST.sendMessage({
@@ -136,23 +144,31 @@ ST.createFloatWindow = function () {
                     text,
                     voice: settings.ttsVoiceGlm || 'tongtong',
                     speed
-                });
+                }, 15000, 'TTS 请求超时');
                 if (response?.audioData) { await playAudio(response.audioData); return; }
             }
         } catch (err) {
             console.error('[TTS] 朗读失败:', err);
+            ST.sendMessage({ action: 'stopAudio' }).catch(() => {});
         }
         // 回退到系统语音
-        const langMap = { zh: 'zh-CN', en: 'en-US', ja: 'ja-JP', ko: 'ko-KR' };
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = speed;
-        utterance.lang = langMap[resolvedLang] || resolvedLang;
-        window.speechSynthesis.speak(utterance);
+        await ST.speakSystemWithGuard(text, resolvedLang, speed);
     };
 
-    speakSourceBtn.onclick = () => speak(input.value, 'auto');
-    speakResultBtn.onclick = () => speak(resultText.innerText, targetLangSelect.value);
+    const runSpeak = async (btn, fn) => {
+        if (btn.disabled) return;
+        btn.disabled = true;
+        try {
+            await fn();
+        } catch (err) {
+            console.error('[TTS] 朗读失败:', err);
+        } finally {
+            btn.disabled = false;
+        }
+    };
+
+    speakSourceBtn.onclick = () => runSpeak(speakSourceBtn, () => speak(input.value, 'auto'));
+    speakResultBtn.onclick = () => runSpeak(speakResultBtn, () => speak(resultText.innerText, targetLangSelect.value));
 
     const originalCopyIcon = copyResultBtn.innerHTML;
     copyResultBtn.onclick = async () => {
@@ -181,13 +197,16 @@ ST.createFloatWindow = function () {
 
         translateBtn.innerText = '...';
         translateBtn.disabled = true;
+        input.disabled = true;
+        targetLangSelect.disabled = true;
+        clearBtn.disabled = true;
 
         try {
             const response = await ST.sendMessage({
                 action: 'translate',
                 text: text,
                 to: targetLangSelect.value
-            });
+            }, 30000, '翻译请求超时');
 
             if (response && response.text) {
                 resultArea.classList.add('active');
@@ -216,6 +235,9 @@ ST.createFloatWindow = function () {
         } finally {
             translateBtn.innerText = '快译';
             translateBtn.disabled = false;
+            input.disabled = false;
+            targetLangSelect.disabled = false;
+            clearBtn.disabled = false;
         }
     };
 
@@ -226,14 +248,19 @@ ST.createFloatWindow = function () {
         if (!isDragging) return;
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
-        ST.ui.floatWindow.style.left = `${initialX + dx}px`;
-        ST.ui.floatWindow.style.top = `${initialY + dy}px`;
+        const w = ST.ui.floatWindow.offsetWidth;
+        const minVisible = 50;
+        const newLeft = Math.max(minVisible - w, Math.min(window.innerWidth - minVisible, initialX + dx));
+        const newTop = Math.max(0, Math.min(window.innerHeight - header.offsetHeight, initialY + dy));
+        ST.ui.floatWindow.style.left = `${newLeft}px`;
+        ST.ui.floatWindow.style.top = `${newTop}px`;
         ST.ui.floatWindow.style.right = 'auto';
     };
     const handleDragEnd = () => {
         isDragging = false;
         document.removeEventListener('mousemove', handleDragMove);
         document.removeEventListener('mouseup', handleDragEnd);
+        ST.ui.clampFloatWindowPosition?.();
     };
 
     header.onmousedown = (e) => {
@@ -248,6 +275,24 @@ ST.createFloatWindow = function () {
         document.addEventListener('mouseup', handleDragEnd);
     };
 
+    ST.ui.clampFloatWindowPosition = () => {
+        const el = ST.ui.floatWindow;
+        if (!el || el.style.right !== 'auto') return;
+        const left = parseInt(el.style.left, 10);
+        const top = parseInt(el.style.top, 10);
+        if (isNaN(left) || isNaN(top)) return;
+        const w = el.offsetWidth;
+        const minVisible = 50;
+        el.style.left = `${Math.max(minVisible - w, Math.min(window.innerWidth - minVisible, left))}px`;
+        el.style.top = `${Math.max(0, Math.min(window.innerHeight - header.offsetHeight, top))}px`;
+    };
+
+    window.addEventListener('resize', () => {
+        if (ST.ui.floatWindow?.classList.contains('active')) {
+            ST.ui.clampFloatWindowPosition?.();
+        }
+    });
+
 };
 
 /**
@@ -259,6 +304,7 @@ ST.toggleFloatWindow = function () {
     }
     const isActive = ST.ui.floatWindow.classList.toggle('active');
     if (isActive) {
+        ST.ui.clampFloatWindowPosition?.();
         setTimeout(() => {
             ST.ui.floatWindow.querySelector('#st-float-input').focus();
         }, 100);

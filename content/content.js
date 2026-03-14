@@ -47,6 +47,14 @@ function mergeDefaults(raw) {
     return merged;
 }
 
+function applyContentTheme(enabled) {
+    if (enabled) {
+        document.documentElement.setAttribute('data-st-theme', 'dark');
+    } else {
+        document.documentElement.removeAttribute('data-st-theme');
+    }
+}
+
 /**
  * 加载设置
  */
@@ -130,18 +138,40 @@ function handleMessage(request, sender, sendResponse) {
 chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName === 'local' && changes.settings) {
         ST.state.settings = mergeDefaults(changes.settings.newValue);
+        applyContentTheme(ST.state.settings?.darkMode);
         if (ST.state.settings?.showFloatingBall === true && ST.floatingBall?.init) {
             ST.floatingBall.init();
         }
+        ST.syncLanguageSelects?.();
         console.log('[智译] 设置已自动更新');
     }
 });
+
+ST.syncLanguageSelects = function () {
+    const s = ST.state.settings;
+    if (!s) return;
+
+    const sidebar = document.getElementById('st-sidebar');
+    if (sidebar) {
+        const src = sidebar.querySelector('#st-sidebar-source-lang');
+        const tgt = sidebar.querySelector('#st-sidebar-target-lang');
+        if (src && s.sourceLang) src.value = s.sourceLang;
+        if (tgt && s.targetLang) tgt.value = s.targetLang;
+    }
+
+    const fw = document.getElementById('st-float-window');
+    if (fw) {
+        const tgt = fw.querySelector('#st-float-target-lang');
+        if (tgt && s.targetLang) tgt.value = s.targetLang;
+    }
+};
 
 /**
  * 初始化
  */
 async function init() {
     await loadSettings();
+    applyContentTheme(ST.state.settings?.darkMode);
     bindEvents();
     if (ST.state.settings?.enableAdBlock === true && ST.adBlocker?.init) {
         ST.adBlocker.init();

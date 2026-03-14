@@ -95,6 +95,13 @@
         // Hover interactions
         container.addEventListener('mouseenter', () => !isDragging && toggleActive(true));
         container.addEventListener('mouseleave', () => !isDragging && toggleActive(false));
+
+        window.addEventListener('resize', () => {
+            if (!container) return;
+            const currentTop = parseInt(container.style.top, 10) || window.innerHeight * 0.8;
+            const isRight = container.style.right === '0px';
+            dockToEdge(currentTop, isRight);
+        });
     };
 
     const toggleActive = (active) => {
@@ -206,8 +213,8 @@
 
         // Move the container
         // We need to set left/top based on mouse
-        let newLeft = clientX - 20; // Center approximation
-        let newTop = clientY - 20;
+        let newLeft = clientX - dragOffset.x;
+        let newTop = clientY - dragOffset.y;
 
         container.style.left = `${newLeft}px`;
         container.style.top = `${newTop}px`;

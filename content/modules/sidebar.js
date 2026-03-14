@@ -117,7 +117,18 @@ ST.createSidebar = function () {
         targetLangSelect.value = ST.state.settings.targetLang || 'zh';
     }
 
+    const saveLanguageSettings = (partialSettings) => {
+        ST.sendMessage({ action: 'patchSettings', updates: partialSettings });
+    };
+
     // 事件绑定
+    sourceLangSelect.addEventListener('change', () => {
+        saveLanguageSettings({ sourceLang: sourceLangSelect.value });
+    });
+    targetLangSelect.addEventListener('change', () => {
+        saveLanguageSettings({ targetLang: targetLangSelect.value });
+    });
+
     ST.ui.sidebarBtn.onclick = () => ST.toggleSidebar();
     closeBtn.onclick = () => ST.toggleSidebar();
 
@@ -135,6 +146,7 @@ ST.createSidebar = function () {
         if (s !== 'auto') {
             sourceLangSelect.value = t;
             targetLangSelect.value = s;
+            saveLanguageSettings({ sourceLang: t, targetLang: s });
             if (resultCard.classList.contains('active') && !resultContent.style.color) {
                 input.value = resultContent.innerText;
             }
@@ -161,23 +173,16 @@ ST.createSidebar = function () {
                     await speakGLM(text, lang, settings);
                     break;
                 default:
-                    speakSystem(text, lang, speed);
+                    return speakSystem(text, lang, speed);
             }
         } catch (err) {
             console.error('[TTS] 朗读失败:', err);
-            speakSystem(text, lang, speed);
+            ST.sendMessage({ action: 'stopAudio' }).catch(() => {});
+            return speakSystem(text, lang, speed);
         }
     };
 
-    const speakSystem = (text, lang, speed) => {
-        const langMap = { zh: 'zh-CN', en: 'en-US', ja: 'ja-JP', ko: 'ko-KR' };
-        const resolvedLang = !lang || lang === 'auto' ? ST.detectLanguage(text) : lang;
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = speed;
-        utterance.lang = langMap[resolvedLang] || resolvedLang;
-        window.speechSynthesis.speak(utterance);
-    };
+    const speakSystem = (text, lang, speed) => ST.speakSystemWithGuard(text, lang, speed);
 
     // 通用音频播放函数 - 使用 Offscreen 播放以避免 CSP 问题
     const playAudioFromDataUrl = async (dataUrl, speed = 1.0) => {
@@ -185,13 +190,13 @@ ST.createSidebar = function () {
             action: 'playAudioOffscreen',
             audioData: dataUrl,
             speed
-        });
+        }, 15000, '播放超时');
         if (result?.error) throw new Error(result.error);
     };
 
     const speakOpenAI = async (text, lang, settings) => {
         const apiKey = settings.openaiApiKey;
-        if (!apiKey) { speakSystem(text, lang, settings.ttsSpeed || 1.0); return; }
+        if (!apiKey) { return speakSystem(text, lang, settings.ttsSpeed || 1.0); }
 
         const response = await ST.sendMessage({
             action: 'ttsOpenAI',
@@ -200,20 +205,20 @@ ST.createSidebar = function () {
             text,
             voice: settings.ttsVoiceOpenai || 'nova',
             speed: settings.ttsSpeed || 1.0
-        });
+        }, 15000, 'TTS 请求超时');
 
         if (response?.audioData) {
             await playAudioFromDataUrl(response.audioData);
         } else {
-            throw new Error(response?.error || 'OpenAI TTS failed');
+            if (response?.error) console.warn('[TTS] OpenAI 返回错误:', response.error);
+            return speakSystem(text, lang, settings.ttsSpeed || 1.0);
         }
     };
 
     const speakGoogle = async (text, lang, settings) => {
         const apiKey = settings.geminiApiKey;
         if (!apiKey) {
-            speakSystem(text, lang, settings.ttsSpeed || 1.0);
-            return;
+            return speakSystem(text, lang, settings.ttsSpeed || 1.0);
         }
 
         const resolvedLang = !lang || lang === 'auto' ? ST.detectLanguage(text) : lang;
@@ -225,20 +230,19 @@ ST.createSidebar = function () {
             text,
             voice,
             speed: settings.ttsSpeed || 1.0
-        });
+        }, 15000, 'TTS 请求超时');
 
         if (response?.audioData) {
             await playAudioFromDataUrl(response.audioData);
         } else {
-            speakSystem(text, lang, settings.ttsSpeed || 1.0);
+            return speakSystem(text, lang, settings.ttsSpeed || 1.0);
         }
     };
 
     const speakGLM = async (text, lang, settings) => {
         const apiKey = settings.deepseekApiKey;
         if (!apiKey) {
-            speakSystem(text, lang, settings.ttsSpeed || 1.0);
-            return;
+            return speakSystem(text, lang, settings.ttsSpeed || 1.0);
         }
 
         const voice = settings.ttsVoiceGlm || 'tongtong';
@@ -249,17 +253,29 @@ ST.createSidebar = function () {
             text,
             voice,
             speed: settings.ttsSpeed || 1.0
-        });
+        }, 15000, 'TTS 请求超时');
 
         if (response?.audioData) {
             await playAudioFromDataUrl(response.audioData);
         } else {
-            speakSystem(text, lang, settings.ttsSpeed || 1.0);
+            return speakSystem(text, lang, settings.ttsSpeed || 1.0);
         }
     };
 
-    speakSourceBtn.onclick = () => speak(input.value, sourceLangSelect.value);
-    speakResultBtn.onclick = () => speak(resultContent.innerText, targetLangSelect.value);
+    const runSpeak = async (btn, fn) => {
+        if (btn.disabled) return;
+        btn.disabled = true;
+        try {
+            await fn();
+        } catch (err) {
+            console.error('[TTS] 朗读失败:', err);
+        } finally {
+            btn.disabled = false;
+        }
+    };
+
+    speakSourceBtn.onclick = () => runSpeak(speakSourceBtn, () => speak(input.value, sourceLangSelect.value));
+    speakResultBtn.onclick = () => runSpeak(speakResultBtn, () => speak(resultContent.innerText, targetLangSelect.value));
 
     // 键盘快捷翻译 — Enter 发送，Shift+Enter 换行
     input.addEventListener('keydown', (e) => {
@@ -276,6 +292,11 @@ ST.createSidebar = function () {
 
         translateBtn.innerText = '翻译中...';
         translateBtn.disabled = true;
+        input.disabled = true;
+        sourceLangSelect.disabled = true;
+        targetLangSelect.disabled = true;
+        clearBtn.disabled = true;
+        swapBtn.disabled = true;
 
         try {
             const response = await ST.sendMessage({
@@ -283,7 +304,7 @@ ST.createSidebar = function () {
                 text: text,
                 from: sourceLangSelect.value,
                 to: targetLangSelect.value
-            });
+            }, 30000, '翻译请求超时');
 
             if (response && response.text) {
                 resultCard.classList.add('active');
@@ -291,16 +312,20 @@ ST.createSidebar = function () {
                 resultContent.innerText = response.text;
                 resultContent.style.color = '';
                 resultLang.innerText = `翻译结果 (${targetLangSelect.value})`;
-                await ST.sendMessage({
-                    action: 'addHistory',
-                    item: {
-                        source: text,
-                        target: response.text,
-                        sourceLang: sourceLangSelect.value,
-                        targetLang: targetLangSelect.value,
-                        provider: response.provider || '',
-                    }
-                });
+                try {
+                    await ST.sendMessage({
+                        action: 'addHistory',
+                        item: {
+                            source: text,
+                            target: response.text,
+                            sourceLang: sourceLangSelect.value,
+                            targetLang: targetLangSelect.value,
+                            provider: response.provider || '',
+                        }
+                    });
+                } catch (historyErr) {
+                    console.error('[智译] 保存历史失败:', historyErr);
+                }
                 await ST.refreshSidebarHistory();
             } else {
                 resultCard.classList.add('active', 'error-state');
@@ -314,6 +339,11 @@ ST.createSidebar = function () {
         } finally {
             translateBtn.innerText = '翻译';
             translateBtn.disabled = false;
+            input.disabled = false;
+            sourceLangSelect.disabled = false;
+            targetLangSelect.disabled = false;
+            clearBtn.disabled = false;
+            swapBtn.disabled = false;
         }
     };
 

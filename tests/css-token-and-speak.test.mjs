@@ -45,7 +45,10 @@ test('content css extends token scope to the selection icon and uses tokens for 
 test('float-window source speech resolves language once and reuses it for Google and system TTS', async () => {
     const source = await readWorkspaceFile('content/modules/float-window.js');
 
-    assert.match(source, /speakSourceBtn\.onclick = \(\) => speak\(input\.value, 'auto'\);/);
+    assert.match(
+        source,
+        /speakSourceBtn\.onclick = \(\) => runSpeak\(speakSourceBtn, \(\) => speak\(input\.value, 'auto'\)\);/,
+    );
     assert.match(
         source,
         /const speed = settings\.ttsSpeed \|\| 1\.0;\s*const resolvedLang = !lang \|\| lang === 'auto' \? ST\.detectLanguage\(text\) : lang;/,
@@ -56,7 +59,7 @@ test('float-window source speech resolves language once and reuses it for Google
     );
     assert.match(
         source,
-        /utterance\.lang = langMap\[resolvedLang\] \|\| resolvedLang;/,
+        /await ST\.speakSystemWithGuard\(text, resolvedLang, speed\);/,
     );
     assert.doesNotMatch(source, /ST\.getDefaultGoogleTtsVoice\(lang\)/);
 });

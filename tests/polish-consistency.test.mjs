@@ -33,8 +33,8 @@ test('popup remote TTS failures fall back to system speech with a warning', asyn
         speakSection,
         /showToast\(/,
     );
-    assert.match(speakSection, /const utterance = new SpeechSynthesisUtterance\(text\);/);
-    assert.match(speakSection, /speechSynthesis\.speak\(utterance\);/);
+    assert.match(source, /function speakWithGuard\(text, lang, speed\)\s*\{/);
+    assert.match(speakSection, /await speakWithGuard\(text, langMap\[lang\] \|\| lang, speed\);/);
 });
 
 test('content script merges default settings in both fallback and storage change paths', async () => {
