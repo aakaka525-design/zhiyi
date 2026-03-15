@@ -43,9 +43,9 @@ test('popup defines a local speakWithGuard helper with the same hasStarted guard
     );
 });
 
-test('immersive translateBatch calls opt into a 60000ms timeout on both initial and observer paths', async () => {
+test('immersive translateBatch calls opt into a 60000ms timeout on initial, observer, and rescan paths', async () => {
     const immersive = await readWorkspaceFile('content/modules/immersive.js');
 
     const matches = immersive.match(/action: 'translateBatch'[\s\S]*?\}, 60000, '批量翻译超时'\);/g) || [];
-    assert.equal(matches.length, 2);
+    assert.equal(matches.length, 3);
 });

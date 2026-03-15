@@ -116,6 +116,10 @@ ST.removeIcon = function () {
  * 显示翻译气泡
  */
 ST.showBubble = async function (text) {
+    const sourceLang = ST.detectLanguage(text);
+    const targetLang = ST.state.settings?.targetLang || 'zh';
+    if (sourceLang === targetLang) return;
+
     if (ST.ui.bubble) ST.removeBubble();
 
     ST.ui.bubble = document.createElement('div');
@@ -162,9 +166,6 @@ ST.showBubble = async function (text) {
         ST.ui.bubble.style.top = `${fallbackPosition.top}px`;
         ST.ui.bubble.style.left = `${fallbackPosition.left}px`;
     }
-
-    const sourceLang = ST.detectLanguage(text);
-    const targetLang = ST.state.settings?.targetLang || 'zh';
 
     try {
         const response = await ST.sendMessage({

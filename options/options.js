@@ -33,6 +33,7 @@ const elements = {
     targetLang: document.getElementById('default-target-lang'),
     enableSelection: document.getElementById('enable-selection'),
     enableShortcut: document.getElementById('enable-shortcut'),
+    showOriginal: document.getElementById('show-original'),
     showFloatingBall: document.getElementById('show-floating-ball'),
     enableAdBlock: document.getElementById('enable-ad-block'),
     enableDarkMode: document.getElementById('enable-dark-mode'),
@@ -95,6 +96,7 @@ async function loadSettings() {
     elements.targetLang.value = settings.targetLang;
     elements.enableSelection.checked = settings.enableSelection;
     elements.enableShortcut.checked = settings.enableShortcut;
+    elements.showOriginal.checked = settings.showOriginal !== false;
     elements.showFloatingBall.checked = settings.showFloatingBall !== false;
     elements.enableAdBlock.checked = settings.enableAdBlock !== false;
     elements.enableDarkMode.checked = settings.darkMode || false;
@@ -157,6 +159,10 @@ function bindEvents() {
         console.log('[智译] 调试模式:', e.target.checked ? '已开启' : '已关闭');
     });
 
+    elements.showOriginal.addEventListener('change', (e) => {
+        saveImmediateToggle({ showOriginal: e.target.checked });
+    });
+
 
     // 密码显示/隐藏切换
     document.querySelectorAll('.toggle-password').forEach(btn => {
@@ -174,7 +180,7 @@ function bindEvents() {
 
 
     // 保存按钮
-    elements.saveBtn.addEventListener('click', saveSettings);
+    elements.saveBtn.addEventListener('click', flushTextAutosave);
     elements.shortcutSettingsBtn?.addEventListener('click', copyShortcutSettingsUrl);
 
     // 历史记录切换
@@ -383,6 +389,7 @@ function playSystemTtsTest(text, speed) {
         let settled = false;
         let hasStarted = false;
         let pollId = null;
+        let pollCount = 0;
 
         const settle = (fn) => {
             if (settled) return;
@@ -396,8 +403,12 @@ function playSystemTtsTest(text, speed) {
         utterance.onerror = (e) => settle(() => reject(new Error(e.error || '播放失败')));
 
         pollId = setInterval(() => {
+            pollCount++;
             if (hasStarted && !window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
                 settle(resolve);
+            } else if (!hasStarted && pollCount >= 10) {
+                window.speechSynthesis.cancel();
+                settle(() => reject(new Error('系统朗读启动超时')));
             }
         }, 500);
 
@@ -538,9 +549,65 @@ async function saveImmediateToggle(partialSettings) {
         await chrome.runtime.sendMessage({ action: 'patchSettings', updates: partialSettings });
         initialSettingsSnapshot = buildSettingsSnapshot({ ...initialSettingsSnapshot, ...partialSettings });
         refreshDirtyState();
+        showToast('已自动保存');
     } catch (err) {
         console.error('[智译] 保存开关设置失败:', err);
+        showToast('自动保存失败: ' + err.message, 'error');
     }
+}
+
+let pendingTextChanges = {};
+let textAutosaveTimer = null;
+
+function queueTextAutosave(partial) {
+    Object.assign(pendingTextChanges, partial);
+    if (textAutosaveTimer) clearTimeout(textAutosaveTimer);
+    textAutosaveTimer = setTimeout(flushTextAutosave, 800);
+}
+
+async function flushTextAutosave() {
+    if (textAutosaveTimer) {
+        clearTimeout(textAutosaveTimer);
+        textAutosaveTimer = null;
+    }
+    const changes = pendingTextChanges;
+    pendingTextChanges = {};
+    if (Object.keys(changes).length === 0) return;
+    try {
+        await chrome.runtime.sendMessage({ action: 'patchSettings', updates: changes });
+        initialSettingsSnapshot = buildSettingsSnapshot({ ...initialSettingsSnapshot, ...changes });
+        refreshDirtyState();
+        showToast('已自动保存');
+    } catch (err) {
+        console.error('[智译] 自动保存失败:', err);
+        showToast('自动保存失败: ' + err.message, 'error');
+    }
+}
+
+const FIELD_KEY_MAP = {
+    'default-target-lang': 'targetLang',
+    'default-provider': 'provider',
+    'enable-selection': 'enableSelection',
+    'enable-shortcut': 'enableShortcut',
+    'show-floating-ball': 'showFloatingBall',
+    'enable-ad-block': 'enableAdBlock',
+    'openai-api-key': 'openaiApiKey',
+    'openai-base-url': 'openaiBaseUrl',
+    'openai-model': 'openaiModel',
+    'gemini-api-key': 'geminiApiKey',
+    'gemini-model': 'geminiModel',
+    'deepseek-api-key': 'deepseekApiKey',
+    'deepseek-base-url': 'deepseekBaseUrl',
+    'deepseek-model': 'deepseekModel',
+    'tts-provider': 'ttsProvider',
+    'tts-speed': 'ttsSpeed',
+    'tts-voice-openai': 'ttsVoiceOpenai',
+    'tts-voice-google': 'ttsVoiceGoogle',
+    'tts-voice-glm': 'ttsVoiceGlm',
+};
+
+function getFieldKey(element) {
+    return FIELD_KEY_MAP[element.id] || null;
 }
 
 // 更新 API 配置区域可见性
@@ -587,6 +654,7 @@ function collectCurrentSettings() {
         targetLang: elements.targetLang.value,
         enableSelection: elements.enableSelection.checked,
         enableShortcut: elements.enableShortcut.checked,
+        showOriginal: elements.showOriginal.checked,
         showFloatingBall: elements.showFloatingBall.checked,
         enableAdBlock: elements.enableAdBlock.checked,
         provider: elements.provider.value,
@@ -618,15 +686,27 @@ function refreshDirtyState() {
 }
 
 function bindDirtyTracking() {
-    const trackedFields = [
+    const toggleFields = new Set([
+        elements.enableDarkMode,
+        elements.enableDebugMode,
+        elements.showOriginal,
+    ]);
+
+    const selectFields = [
         elements.targetLang,
         elements.enableSelection,
         elements.enableShortcut,
         elements.showFloatingBall,
         elements.enableAdBlock,
-        elements.enableDarkMode,
-        elements.enableDebugMode,
         elements.provider,
+        elements.ttsProvider,
+        elements.ttsSpeed,
+        elements.ttsVoiceOpenai,
+        elements.ttsVoiceGoogle,
+        elements.ttsVoiceGlm,
+    ];
+
+    const textFields = [
         elements.openaiApiKey,
         elements.openaiBaseUrl,
         elements.openaiModel,
@@ -635,20 +715,39 @@ function bindDirtyTracking() {
         elements.deepseekApiKey,
         elements.deepseekBaseUrl,
         elements.deepseekModel,
-        elements.ttsProvider,
-        elements.ttsSpeed,
-        elements.ttsVoiceOpenai,
-        elements.ttsVoiceGoogle,
-        elements.ttsVoiceGlm,
     ];
 
-    trackedFields.forEach((field) => {
-        field?.addEventListener('input', refreshDirtyState);
-        field?.addEventListener('change', refreshDirtyState);
+    selectFields.forEach((field) => {
+        if (!field || toggleFields.has(field)) return;
+        field.addEventListener('change', () => {
+            refreshDirtyState();
+            const key = getFieldKey(field);
+            if (!key) return;
+            const value = field.type === 'checkbox' ? field.checked
+                : field.type === 'range' ? parseFloat(field.value)
+                : field.value;
+            saveImmediateToggle({ [key]: value });
+        });
+    });
+
+    textFields.forEach((field) => {
+        if (!field) return;
+        field.addEventListener('input', () => {
+            refreshDirtyState();
+            const key = getFieldKey(field);
+            if (!key) return;
+            queueTextAutosave({ [key]: field.value });
+        });
     });
 }
 
 function handleBeforeUnload(event) {
+    if (Object.keys(pendingTextChanges).length > 0) {
+        flushTextAutosave();
+        event.preventDefault();
+        event.returnValue = '';
+        return;
+    }
     if (!hasPendingSettingsChanges) return;
     event.preventDefault();
     event.returnValue = '';

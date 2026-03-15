@@ -9,14 +9,32 @@ async function readWorkspaceFile(path) {
 
 async function loadImmersiveHarness() {
     const source = await readWorkspaceFile('content/modules/immersive.js');
+    const bodyClasses = [];
     const paragraphs = [
         'This is the first paragraph for translation.',
         'This is the second paragraph for translation.',
         'This is the third paragraph for translation.',
     ].map((text) => ({
         innerText: text,
+        children: [],
+        className: '',
+        classList: {
+            add() {},
+            remove() {},
+            contains() {
+                return false;
+            },
+        },
         nextElementSibling: null,
         parentNode: null,
+        appendChild(child) {
+            child.parentNode = this;
+            this.children.push(child);
+        },
+        querySelector(selector) {
+            if (!selector.startsWith('.')) return null;
+            return this.children.find((child) => child.className === selector.slice(1)) || null;
+        },
         closest() {
             return null;
         },
@@ -73,11 +91,45 @@ async function loadImmersiveHarness() {
             },
         },
         document: {
+            body: {
+                classList: {
+                    add(...classes) {
+                        classes.forEach((cls) => {
+                            if (!bodyClasses.includes(cls)) bodyClasses.push(cls);
+                        });
+                    },
+                    remove(...classes) {
+                        for (const cls of classes) {
+                            const index = bodyClasses.indexOf(cls);
+                            if (index !== -1) bodyClasses.splice(index, 1);
+                        }
+                    },
+                    contains(cls) {
+                        return bodyClasses.includes(cls);
+                    },
+                },
+            },
             querySelectorAll(selector) {
-                if (selector === '.st-immersive-translation, .st-immersive-wrapper') {
+                if (
+                    selector.includes('.st-immersive-translation') ||
+                    selector.includes('.st-immersive-wrapper') ||
+                    selector.includes('.st-translated')
+                ) {
                     return [];
                 }
                 return paragraphs;
+            },
+            createElement() {
+                return {
+                    className: '',
+                    innerHTML: '',
+                    parentNode: null,
+                    remove() {
+                        if (this.parentNode?.children) {
+                            this.parentNode.children = this.parentNode.children.filter((child) => child !== this);
+                        }
+                    },
+                };
             },
         },
         console: {

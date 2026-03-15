@@ -22,6 +22,7 @@ export function buildSettingsSnapshot(settings) {
         deepseekModel: normalizeString(settings.deepseekModel),
         darkMode: Boolean(settings.darkMode),
         debugMode: Boolean(settings.debugMode),
+        showOriginal: settings.showOriginal !== false,
         ttsProvider: settings.ttsProvider || 'system',
         ttsSpeed: Number(settings.ttsSpeed) || 1,
         ttsVoiceOpenai: settings.ttsVoiceOpenai || '',

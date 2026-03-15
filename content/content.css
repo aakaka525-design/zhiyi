@@ -166,6 +166,7 @@
     word-wrap: break-word;
     color: var(--text-primary);
     font-size: 15px;
+    white-space: pre-wrap;
 }
 
 .st-loading-dots {
@@ -232,7 +233,7 @@
 /* 沉浸式翻译样式 */
 .st-immersive-wrapper {
     display: block;
-    margin: 12px 0 20px 0;
+    margin: 4px 0 6px 0;
     padding: 0;
     animation: st-fade-in 0.4s ease;
 }
@@ -240,15 +241,131 @@
 .st-immersive-translation {
     display: block;
     color: var(--accent);
-    background: rgba(122, 154, 139, 0.08);
-    /* 柔和背景 */
-    border-left: 3px solid var(--accent);
-    padding: 10px 16px;
-    margin: 6px 0;
-    border-radius: 4px 12px 12px 4px;
-    font-size: 0.95em;
-    line-height: 1.7;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    background: transparent;
+    border-left: 2px solid var(--accent);
+    padding: 0 0 0 10px;
+    margin: 2px 0;
+    border-radius: 0;
+    font-size: 0.92em;
+    line-height: 1.6;
+    box-shadow: none;
+    word-wrap: break-word;
+}
+
+.st-immersive-wrapper > .st-immersive-translation {
+    background: rgba(122, 154, 139, 0.05);
+    border-left-width: 3px;
+    line-height: 1.65;
+    font-family: inherit;
+}
+
+td > .st-immersive-translation,
+th > .st-immersive-translation,
+li > .st-immersive-translation,
+figcaption > .st-immersive-translation,
+dt > .st-immersive-translation,
+dd > .st-immersive-translation,
+caption > .st-immersive-translation {
+    background: transparent;
+    border-left: 2px solid var(--accent);
+    padding: 0 0 0 8px;
+    margin: 4px 0 0 0;
+    border-radius: 0;
+    box-shadow: none;
+    font-size: 0.9em;
+}
+
+span.st-immersive-translation {
+    background: transparent;
+    border-left: 2px solid var(--accent);
+    padding: 0 0 0 8px;
+    margin: 4px 0 0 0;
+    border-radius: 0;
+    box-shadow: none;
+    font-size: 0.9em;
+}
+
+/* ========================================
+   替换模式（showOriginal: false）
+   ======================================== */
+
+body.st-replace-mode .st-translated {
+    position: absolute !important;
+    overflow: hidden !important;
+    clip-path: inset(50%) !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    border: 0 !important;
+}
+
+body.st-replace-mode .st-translated-inline {
+    font-size: 0 !important;
+    line-height: 0 !important;
+    color: transparent !important;
+}
+
+body.st-replace-mode .st-translated-inline > *:not(.st-immersive-translation):not(.st-immersive-loading) {
+    position: absolute !important;
+    overflow: hidden !important;
+    clip-path: inset(50%) !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+body.st-replace-mode .st-immersive-translation {
+    border-left: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    color: var(--st-page-color, var(--text-primary));
+}
+
+body.st-replace-mode .st-immersive-wrapper {
+    margin: 0;
+}
+
+body.st-replace-mode .st-translated-inline > .st-immersive-translation {
+    font-size: 0.9rem !important;
+    line-height: 1.65 !important;
+    color: var(--st-page-color, var(--text-primary)) !important;
+}
+
+.st-translate-failed {
+    outline: 1px dashed var(--error, #E57373);
+    outline-offset: -1px;
+}
+
+.st-immersive-loading {
+    display: block;
+    padding: 0 0 0 10px;
+    margin: 2px 0;
+    border-left: 2px solid var(--accent);
+    animation: st-loading-breathe 1.5s infinite ease-in-out;
+}
+
+.st-immersive-loading::before {
+    content: '翻译中...';
+    color: var(--accent);
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+@keyframes st-loading-breathe {
+    0%,
+    100% {
+        opacity: 0.4;
+    }
+
+    50% {
+        opacity: 0.85;
+    }
 }
 
 /* ========================================
@@ -513,6 +630,7 @@
     line-height: 1.7;
     color: var(--text-primary);
     white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 /* 侧边栏功能条 */
@@ -719,6 +837,7 @@
     line-height: 1.6;
     color: var(--text-primary);
     white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 /* ========================================

@@ -40,7 +40,7 @@ test('settings partial writes are routed through background patchSettings instea
 
     assert.match(
         options,
-        /async function saveImmediateToggle\(partialSettings\) \{\s*try \{\s*await chrome\.runtime\.sendMessage\(\{ action: 'patchSettings', updates: partialSettings \}\);\s*initialSettingsSnapshot = buildSettingsSnapshot\(\{ \.\.\.initialSettingsSnapshot, \.\.\.partialSettings \}\);\s*refreshDirtyState\(\);/s,
+        /async function saveImmediateToggle\(partialSettings\) \{\s*try \{\s*await chrome\.runtime\.sendMessage\(\{ action: 'patchSettings', updates: partialSettings \}\);\s*initialSettingsSnapshot = buildSettingsSnapshot\(\{ \.\.\.initialSettingsSnapshot, \.\.\.partialSettings \}\);\s*refreshDirtyState\(\);\s*showToast\('已自动保存'\);/s,
     );
 });
 

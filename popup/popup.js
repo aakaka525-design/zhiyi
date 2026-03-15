@@ -451,6 +451,7 @@ function speakWithGuard(text, lang, speed) {
         let settled = false;
         let hasStarted = false;
         let pollId = null;
+        let pollCount = 0;
 
         const settle = (fn) => {
             if (settled) return;
@@ -464,8 +465,12 @@ function speakWithGuard(text, lang, speed) {
         utterance.onerror = (event) => settle(() => reject(new Error(event.error || '朗读失败')));
 
         pollId = setInterval(() => {
+            pollCount++;
             if (hasStarted && !speechSynthesis.speaking && !speechSynthesis.pending) {
                 settle(resolve);
+            } else if (!hasStarted && pollCount >= 10) {
+                speechSynthesis.cancel();
+                settle(() => reject(new Error('系统朗读启动超时')));
             }
         }, 500);
 

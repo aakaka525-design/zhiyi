@@ -32,7 +32,7 @@ test('content storage change handler syncs sidebar and float-window language sel
 
     assert.match(
         content,
-        /if \(areaName === 'local' && changes\.settings\) \{\s*ST\.state\.settings = mergeDefaults\(changes\.settings\.newValue\);\s*applyContentTheme\(ST\.state\.settings\?\.darkMode\);[\s\S]*ST\.syncLanguageSelects\?\.\(\);[\s\S]*console\.log\('\[智译\] 设置已自动更新'\);/,
+        /if \(areaName === 'local' && changes\.settings\) \{\s*ST\.state\.settings = mergeDefaults\(changes\.settings\.newValue\);\s*applyContentTheme\(ST\.state\.settings\?\.darkMode\);[\s\S]*ST\.syncLanguageSelects\?\.\(\);\s*syncShowOriginalMode\(\);[\s\S]*console\.log\('\[智译\] 设置已自动更新'\);/,
     );
 
     assert.match(

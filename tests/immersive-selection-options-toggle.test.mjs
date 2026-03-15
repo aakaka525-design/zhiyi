@@ -30,7 +30,7 @@ test('options immediate toggles save only their own fields and preserve unrelate
 
     assert.match(
         options,
-        /async function saveImmediateToggle\(partialSettings\) \{\s*try \{\s*await chrome\.runtime\.sendMessage\(\{ action: 'patchSettings', updates: partialSettings \}\);\s*initialSettingsSnapshot = buildSettingsSnapshot\(\{ \.\.\.initialSettingsSnapshot, \.\.\.partialSettings \}\);\s*refreshDirtyState\(\);\s*\} catch \(err\) \{\s*console\.error\('\[智译\] 保存开关设置失败:', err\);\s*\}\s*\}/,
+        /async function saveImmediateToggle\(partialSettings\) \{\s*try \{\s*await chrome\.runtime\.sendMessage\(\{ action: 'patchSettings', updates: partialSettings \}\);\s*initialSettingsSnapshot = buildSettingsSnapshot\(\{ \.\.\.initialSettingsSnapshot, \.\.\.partialSettings \}\);\s*refreshDirtyState\(\);\s*showToast\('已自动保存'\);\s*\} catch \(err\) \{\s*console\.error\('\[智译\] 保存开关设置失败:', err\);\s*showToast\('自动保存失败: ' \+ err\.message, 'error'\);\s*\}\s*\}/,
     );
     assert.match(
         options,

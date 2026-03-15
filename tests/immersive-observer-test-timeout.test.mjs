@@ -11,7 +11,7 @@ test('immersive cancel cleanup also removes inline translation separators', asyn
 
     assert.match(
         immersive,
-        /document\.querySelectorAll\('\.st-immersive-translation, \.st-immersive-wrapper, \.st-translation-separator'\)\.forEach\(el => el\.remove\(\)\);/,
+        /document\.querySelectorAll\('\.st-immersive-translation, \.st-immersive-wrapper, \.st-translation-separator, \.st-immersive-loading'\)\.forEach\(el => el\.remove\(\)\);/,
     );
 });
 
@@ -28,7 +28,7 @@ test('immersive observer captures immersiveRunId and re-checks it after await be
     );
     assert.match(
         immersive,
-        /const response = await ST\.sendMessage\(\{\s*action: 'translateBatch',\s*texts: texts,\s*to: targetLang\s*\}, 60000, '批量翻译超时'\);\s*if \(!ST\.state\.isImmersiveEnabled \|\| ST\.state\.immersiveRunId !== observerRunId\) return;\s*if \(response && response\.results\) \{/,
+        /const response = await ST\.sendMessage\(\{\s*action: 'translateBatch',\s*texts: texts,\s*to: targetLang\s*\}, 60000, '批量翻译超时'\);\s*if \(!ST\.state\.isImmersiveEnabled \|\| ST\.state\.immersiveRunId !== observerRunId\) break;\s*if \(response && response\.results\) \{/,
     );
 });
 

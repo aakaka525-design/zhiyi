@@ -3,6 +3,8 @@
  * 使用 GPT 模型进行高质量翻译
  */
 
+import { fetchWithTimeout } from './fetch-with-timeout.js';
+
 export class OpenAITranslator {
     constructor(apiKey = '', baseUrl = 'https://api.openai.com/v1', model = 'gpt-4o-mini') {
         this.apiKey = apiKey;
@@ -56,7 +58,7 @@ export class OpenAITranslator {
             : `请将以下${sourceLang}文本翻译成${targetLang}：\n\n${text}`;
 
         try {
-            const response = await fetch(`${this.baseUrl}/chat/completions`, {
+            const response = await fetchWithTimeout(`${this.baseUrl}/chat/completions`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -71,7 +73,7 @@ export class OpenAITranslator {
                     temperature: 0.3,
                     max_tokens: 4096,
                 }),
-            });
+            }, 20000, '翻译请求超时');
 
             if (!response.ok) {
                 const error = await response.json().catch(() => ({}));
@@ -121,7 +123,7 @@ export class OpenAITranslator {
 3. 不要添加任何解释或额外内容`;
 
         try {
-            const response = await fetch(`${this.baseUrl}/chat/completions`, {
+            const response = await fetchWithTimeout(`${this.baseUrl}/chat/completions`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -136,7 +138,7 @@ export class OpenAITranslator {
                     temperature: 0.3,
                     max_tokens: 8192,
                 }),
-            });
+            }, 45000, '批量翻译请求超时');
 
             if (!response.ok) {
                 const error = await response.json().catch(() => ({}));

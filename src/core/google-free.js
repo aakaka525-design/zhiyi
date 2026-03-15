@@ -3,6 +3,8 @@
  * 使用公开接口，无需 API Key
  */
 
+import { fetchWithTimeout } from './fetch-with-timeout.js';
+
 export class GoogleFreeTranslator {
     constructor() {
         this.baseUrl = 'https://translate.googleapis.com/translate_a/single';
@@ -42,12 +44,12 @@ export class GoogleFreeTranslator {
         });
 
         try {
-            const response = await fetch(`${this.baseUrl}?${params.toString()}`, {
+            const response = await fetchWithTimeout(`${this.baseUrl}?${params.toString()}`, {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
                 },
-            });
+            }, 8000, '翻译请求超时');
 
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -97,7 +99,12 @@ export class GoogleFreeTranslator {
         });
 
         try {
-            const response = await fetch(`https://clients5.google.com/translate_a/t?${params.toString()}`);
+            const response = await fetchWithTimeout(
+                `https://clients5.google.com/translate_a/t?${params.toString()}`,
+                {},
+                8000,
+                '翻译请求超时'
+            );
 
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
@@ -138,7 +145,12 @@ export class GoogleFreeTranslator {
         });
 
         try {
-            const response = await fetch(`${this.baseUrl}?${params.toString()}`);
+            const response = await fetchWithTimeout(
+                `${this.baseUrl}?${params.toString()}`,
+                {},
+                5000,
+                '语言检测超时'
+            );
             const data = await response.json();
 
             return data.src || 'en';

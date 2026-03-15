@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 
 import {
     SHORTCUT_SETTINGS_URL,
@@ -8,6 +9,10 @@ import {
     getShortcutSettingsToastMessage,
     hasUnsavedChanges,
 } from '../options/options-ui-state.js';
+
+async function readWorkspaceFile(path) {
+    return readFile(new URL(`../${path}`, import.meta.url), 'utf8');
+}
 
 test('hasUnsavedChanges returns false for identical settings snapshots', () => {
     const baseline = buildSettingsSnapshot({
@@ -156,4 +161,40 @@ test('shortcut guidance toast message reflects clipboard success or fallback', (
 test('save button label highlights pending unsaved changes', () => {
     assert.equal(getSaveButtonLabel(false), '保存并应用配置');
     assert.equal(getSaveButtonLabel(true), '保存并应用配置（有未保存更改）');
+});
+
+test('buildSettingsSnapshot preserves explicit showOriginal values and defaults missing values to true', () => {
+    const base = {
+        targetLang: 'zh',
+        enableSelection: true,
+        enableShortcut: true,
+        showFloatingBall: false,
+        enableAdBlock: false,
+        provider: 'google',
+        openaiApiKey: '',
+        openaiBaseUrl: 'https://api.openai.com/v1',
+        openaiModel: 'gpt-4o-mini',
+        geminiApiKey: '',
+        geminiModel: 'gemini-2.5-flash',
+        deepseekApiKey: '',
+        deepseekBaseUrl: 'https://api.ppinfra.com/openai',
+        deepseekModel: 'deepseek/deepseek-ocr',
+        darkMode: false,
+        debugMode: false,
+        ttsProvider: 'system',
+        ttsSpeed: 1,
+        ttsVoiceOpenai: '',
+        ttsVoiceGoogle: '',
+        ttsVoiceGlm: '',
+    };
+
+    assert.equal(buildSettingsSnapshot({ ...base, showOriginal: true }).showOriginal, true);
+    assert.equal(buildSettingsSnapshot({ ...base, showOriginal: false }).showOriginal, false);
+    assert.equal(buildSettingsSnapshot(base).showOriginal, true);
+});
+
+test('options-ui-state source includes showOriginal in buildSettingsSnapshot', async () => {
+    const source = await readWorkspaceFile('options/options-ui-state.js');
+
+    assert.match(source, /showOriginal:\s*settings\.showOriginal !== false/);
 });

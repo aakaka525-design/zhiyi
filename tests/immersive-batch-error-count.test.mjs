@@ -11,8 +11,18 @@ async function loadImmersiveHarness(results) {
         'This is the third paragraph for translation.',
     ].map((text) => ({
         innerText: text,
+        children: [],
+        className: '',
         nextElementSibling: null,
         parentNode: null,
+        appendChild(child) {
+            child.parentNode = this;
+            this.children.push(child);
+        },
+        querySelector(selector) {
+            if (!selector.startsWith('.')) return null;
+            return this.children.find((child) => child.className === selector.slice(1)) || null;
+        },
         closest() {
             return null;
         },
@@ -67,6 +77,18 @@ async function loadImmersiveHarness(results) {
         document: {
             querySelectorAll() {
                 return paragraphs;
+            },
+            createElement() {
+                return {
+                    className: '',
+                    innerHTML: '',
+                    parentNode: null,
+                    remove() {
+                        if (this.parentNode?.children) {
+                            this.parentNode.children = this.parentNode.children.filter((child) => child !== this);
+                        }
+                    },
+                };
             },
         },
         console: {

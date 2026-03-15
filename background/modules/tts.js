@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from '../../src/core/fetch-with-timeout.js';
+
 let creatingOffscreen = null;
 const DEFAULT_GOOGLE_TTS_VOICE = 'cmn-CN-Chirp3-HD-Aoede';
 
@@ -67,7 +69,7 @@ export async function handleTTSGLM(request) {
             return { error: '缺少 ppinfra API Key' };
         }
 
-        const response = await fetch('https://api.ppinfra.com/v3/glm-tts', {
+        const response = await fetchWithTimeout('https://api.ppinfra.com/v3/glm-tts', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${apiKey}`,
@@ -79,7 +81,7 @@ export async function handleTTSGLM(request) {
                 speed: speed,
                 response_format: 'wav'
             })
-        });
+        }, 12000, 'TTS 请求超时');
 
         if (!response.ok) {
             const errText = await response.text();
@@ -107,7 +109,7 @@ export async function handleTTSOpenAI(request) {
         const { apiKey, baseUrl, text, voice, speed } = request;
         if (!apiKey) return { error: '缺少 OpenAI API Key' };
 
-        const response = await fetch(`${baseUrl || 'https://api.openai.com/v1'}/audio/speech`, {
+        const response = await fetchWithTimeout(`${baseUrl || 'https://api.openai.com/v1'}/audio/speech`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${apiKey}`,
@@ -119,7 +121,7 @@ export async function handleTTSOpenAI(request) {
                 voice: voice || 'nova',
                 speed: speed || 1.0
             })
-        });
+        }, 12000, 'TTS 请求超时');
 
         if (!response.ok) {
             return { error: `OpenAI TTS 失败: ${response.status}` };
@@ -147,7 +149,7 @@ export async function handleTTSGoogle(request) {
 
         const selectedVoice = voice || DEFAULT_GOOGLE_TTS_VOICE;
         const voiceLang = getGoogleTtsLanguageCode(selectedVoice);
-        const response = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`, {
+        const response = await fetchWithTimeout(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -155,7 +157,7 @@ export async function handleTTSGoogle(request) {
                 voice: { languageCode: voiceLang, name: selectedVoice },
                 audioConfig: { audioEncoding: 'MP3', speakingRate: speed || 1.0 }
             })
-        });
+        }, 12000, 'TTS 请求超时');
 
         if (!response.ok) {
             const err = await response.json();

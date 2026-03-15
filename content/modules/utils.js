@@ -71,7 +71,7 @@ ST.detectLanguage = function (text) {
     let totalCount = 0;
 
     for (const char of text) {
-        const code = char.charCodeAt(0);
+        const code = char.codePointAt(0);
 
         if (code <= 0x0020 || (code >= 0x2000 && code <= 0x206F)) {
             continue;
@@ -79,7 +79,10 @@ ST.detectLanguage = function (text) {
         totalCount++;
 
         // CJK 统一表意文字
-        if (code >= 0x4E00 && code <= 0x9FFF) {
+        if ((code >= 0x4E00 && code <= 0x9FFF) ||
+            (code >= 0x3400 && code <= 0x4DBF) ||
+            (code >= 0xF900 && code <= 0xFAFF) ||
+            (code >= 0x20000 && code <= 0x2A6DF)) {
             cjkCount++;
         }
         // 平假名
@@ -102,8 +105,9 @@ ST.detectLanguage = function (text) {
 
     if (totalCount === 0) return 'en';
 
-    // 日语：包含平假名或片假名
-    if (hiraganaCount > 0 || katakanaCount > 0) {
+    // 日语：假名占比超过 20%
+    const kanaCount = hiraganaCount + katakanaCount;
+    if (kanaCount / totalCount > 0.2) {
         return 'ja';
     }
 
@@ -187,6 +191,7 @@ ST.speakSystemWithGuard = function (text, lang, speed) {
         let settled = false;
         let hasStarted = false;
         let pollId = null;
+        let pollCount = 0;
 
         const settle = (fn) => {
             if (settled) return;
@@ -200,8 +205,12 @@ ST.speakSystemWithGuard = function (text, lang, speed) {
         utterance.onerror = (event) => settle(() => reject(new Error(event.error || '朗读失败')));
 
         pollId = setInterval(() => {
+            pollCount++;
             if (hasStarted && !window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
                 settle(resolve);
+            } else if (!hasStarted && pollCount >= 10) {
+                window.speechSynthesis.cancel();
+                settle(() => reject(new Error('系统朗读启动超时')));
             }
         }, 500);
 

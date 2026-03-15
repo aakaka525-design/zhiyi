@@ -2,6 +2,8 @@
  * DeepSeek 翻译服务
  */
 
+import { fetchWithTimeout } from './fetch-with-timeout.js';
+
 export class DeepSeekTranslator {
     constructor(apiKey = '', baseUrl = 'https://api.ppinfra.com/openai', model = 'deepseek/deepseek-ocr') {
         this.apiKey = apiKey;
@@ -44,7 +46,7 @@ export class DeepSeekTranslator {
         const prompt = `请将以下文本翻译成${targetLang}，只输出翻译结果，不要任何解释：\n\n${text}`;
 
         try {
-            const response = await fetch(`${this.baseUrl}/v1/chat/completions`, {
+            const response = await fetchWithTimeout(`${this.baseUrl}/v1/chat/completions`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -57,7 +59,7 @@ export class DeepSeekTranslator {
                     ],
                     temperature: 0.3,
                 }),
-            });
+            }, 20000, '翻译请求超时');
 
             if (!response.ok) {
                 const error = await response.json().catch(() => ({}));

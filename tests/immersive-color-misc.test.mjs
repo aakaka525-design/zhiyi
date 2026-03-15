@@ -16,17 +16,15 @@ test('immersive translation uses accent tokens in both token scope and render pa
     );
     assert.match(
         css,
-        /\.st-immersive-translation\s*\{[\s\S]*color:\s*var\(--accent\);[\s\S]*border-left:\s*3px solid var\(--accent\);/,
+        /\.st-immersive-translation\s*\{[\s\S]*color:\s*var\(--accent\);[\s\S]*background:\s*transparent;[\s\S]*border-left:\s*2px solid var\(--accent\);/,
     );
 
     assert.match(
         immersive,
-        /separator\.style\.cssText = 'color: var\(--accent\); opacity: 0\.6;';/,
+        /if \(isFlexItem \|\| isGridItem \|\| isInline\) \{\s*setNodePageColor\(container,\s*originalColor\);\s*container\.classList\.add\('st-translated-inline'\);\s*container\.appendChild\(transEl\);\s*\}/,
     );
-    assert.match(
-        immersive,
-        /transEl\.style\.cssText = 'display: inline; font-style: normal; color: var\(--accent\); margin-left: 4px;';/,
-    );
+    assert.doesNotMatch(immersive, /separator\.style\.cssText = 'color: var\(--accent\); opacity: 0\.6;';/);
+    assert.doesNotMatch(immersive, /transEl\.style\.cssText = 'display: inline;/);
     assert.doesNotMatch(immersive, /#8DA399/);
 });
 

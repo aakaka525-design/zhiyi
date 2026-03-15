@@ -60,7 +60,7 @@ test('generic immersive filtering skips paragraphs already in the target languag
 
     assert.match(
         source,
-        /if \(text\.length < 20\) return false;\s*if \(ST\.detectLanguage\(text\) === targetLang\) return false;/,
+        /if \(text\.length < getImmersiveMinLength\(p, false\)\) return false;\s*if \(ST\.detectLanguage\(text\) === targetLang\) return false;/,
     );
 });
 

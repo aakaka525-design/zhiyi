@@ -33,11 +33,15 @@ test('immersive observer reuses shared exclude selectors and plugin-element filt
     );
     assert.match(
         immersive,
-        /for \(const selector of EXCLUDE_SELECTORS\) \{\s*if \(p\.closest\(selector\) \|\| p\.matches\(selector\)\) return false;\s*\}/,
+        /function isExcludedByImmersiveContext\(el\)\s*\{[\s\S]*for \(const selector of EXCLUDE_SELECTORS\) \{[\s\S]*if \(el\.matches\(selector\)\) return true;[\s\S]*const ancestor = el\.closest\(selector\);[\s\S]*if \(\(ancestor\.tagName === 'HEADER' \|\| ancestor\.tagName === 'FOOTER'\) &&[\s\S]*ancestor\.closest\('article, section'\)\) \{[\s\S]*continue;[\s\S]*\}[\s\S]*return true;[\s\S]*\}[\s\S]*return false;[\s\S]*\}/,
     );
     assert.match(
         immersive,
-        /if \(!isTwitter\) \{\s*for \(const selector of EXCLUDE_SELECTORS\) \{\s*if \(el\.closest\(selector\) \|\| el\.matches\(selector\)\) return false;\s*\}\s*if \(ST\.isPluginElement\(el\)\) return false;\s*\}/,
+        /if \(p\.isContentEditable\) return false;\s*if \(isExcludedByImmersiveContext\(p\)\) return false;/,
+    );
+    assert.match(
+        immersive,
+        /if \(el\.isContentEditable\) return false;\s*if \(!isTwitter\) \{\s*if \(isExcludedByImmersiveContext\(el\)\) return false;\s*if \(ST\.isPluginElement\(el\)\) return false;\s*\}/,
     );
     assert.doesNotMatch(
         immersive,

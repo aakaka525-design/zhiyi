@@ -231,6 +231,8 @@
     font-size: 15px;
     color: var(--text-primary);
     line-height: 1.7;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 /* ===== 快捷功能 ===== */

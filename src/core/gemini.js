@@ -3,6 +3,8 @@
  * 使用 Gemini 模型进行翻译
  */
 
+import { fetchWithTimeout } from './fetch-with-timeout.js';
+
 export class GeminiTranslator {
     constructor(apiKey = '', model = 'gemini-2.5-flash') {
         this.apiKey = apiKey;
@@ -62,7 +64,7 @@ ${promptRequirements}
 ${text}`;
 
         try {
-            const response = await fetch(
+            const response = await fetchWithTimeout(
                 `${this.baseUrl}/models/${this.model}:generateContent?key=${this.apiKey}`,
                 {
                     method: 'POST',
@@ -84,7 +86,9 @@ ${text}`;
                             { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
                         ],
                     }),
-                }
+                },
+                20000,
+                '翻译请求超时'
             );
 
             if (!response.ok) {
@@ -146,7 +150,7 @@ ${text}`;
 ${formattedInput}`;
 
         try {
-            const response = await fetch(
+            const response = await fetchWithTimeout(
                 `${this.baseUrl}/models/${this.model}:generateContent?key=${this.apiKey}`,
                 {
                     method: 'POST',
@@ -168,7 +172,9 @@ ${formattedInput}`;
                             { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
                         ],
                     }),
-                }
+                },
+                45000,
+                '批量翻译请求超时'
             );
 
             if (!response.ok) {

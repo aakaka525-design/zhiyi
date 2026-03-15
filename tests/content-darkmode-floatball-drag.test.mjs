@@ -20,7 +20,7 @@ test('content script applies scoped dark theme overrides from settings and stora
     );
     assert.match(
         content,
-        /if \(areaName === 'local' && changes\.settings\) \{\s*ST\.state\.settings = mergeDefaults\(changes\.settings\.newValue\);\s*applyContentTheme\(ST\.state\.settings\?\.darkMode\);/,
+        /if \(areaName === 'local' && changes\.settings\) \{\s*ST\.state\.settings = mergeDefaults\(changes\.settings\.newValue\);\s*applyContentTheme\(ST\.state\.settings\?\.darkMode\);[\s\S]*syncShowOriginalMode\(\);/,
     );
 
     assert.match(

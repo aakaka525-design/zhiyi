@@ -55,6 +55,15 @@ function applyContentTheme(enabled) {
     }
 }
 
+function syncShowOriginalMode() {
+    if (!ST.state.isImmersiveEnabled) return;
+    if (ST.state.settings?.showOriginal === false) {
+        document.body.classList.add('st-replace-mode');
+    } else {
+        document.body.classList.remove('st-replace-mode');
+    }
+}
+
 /**
  * 加载设置
  */
@@ -143,6 +152,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
             ST.floatingBall.init();
         }
         ST.syncLanguageSelects?.();
+        syncShowOriginalMode();
         console.log('[智译] 设置已自动更新');
     }
 });

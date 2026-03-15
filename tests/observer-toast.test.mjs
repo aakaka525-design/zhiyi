@@ -11,7 +11,11 @@ test('immersive observer releases pending translations in finally and matches th
 
     assert.match(
         immersive,
-        /const minLength = isTwitter \? 5 : 20;\s*if \(text\.length < minLength\) return false;/,
+        /function getImmersiveMinLength\(el, isTwitter\)\s*\{[\s\S]*if \(isTwitter\) return 5;[\s\S]*if \(el\.matches\('\[id\^="message-content-"\], h1, h2, h3, h4, h5, h6, li, td, th, figcaption, dt, dd, caption'\)\) return 2;[\s\S]*return 20;[\s\S]*\}/,
+    );
+    assert.match(
+        immersive,
+        /const minLen = \(isTelegram && el\.matches\('\.translatable-message'\)\) \? 2 : getImmersiveMinLength\(el, isTwitter\);\s*if \(text\.length < minLen\) return false;/,
     );
     assert.match(
         immersive,
@@ -19,7 +23,7 @@ test('immersive observer releases pending translations in finally and matches th
     );
     assert.match(
         immersive,
-        /catch \(err\) \{\s*console\.error\('\[智译\] 动态内容翻译失败:', err\);\s*\} finally \{\s*newElements\.forEach\(el => ST\.pendingTranslations\.delete\(el\)\);\s*\}/,
+        /catch \(err\) \{\s*console\.error\('\[智译\] 动态内容翻译失败:', err\);\s*batch\.forEach\(el => markTranslateFailed\(el\)\);\s*\} finally \{\s*batch\.forEach\(el => removeLoadingPlaceholder\(el\)\);\s*batch\.forEach\(el => ST\.pendingTranslations\.delete\(el\)\);\s*\}/,
     );
     assert.doesNotMatch(
         immersive,
@@ -27,7 +31,7 @@ test('immersive observer releases pending translations in finally and matches th
     );
     assert.doesNotMatch(
         immersive,
-        /catch \(err\) \{[^}]*newElements\.forEach\(el => ST\.pendingTranslations\.delete\(el\)\);/,
+        /catch \(err\) \{[^}]*batch\.forEach\(el => ST\.pendingTranslations\.delete\(el\)\);/,
     );
 });
 
