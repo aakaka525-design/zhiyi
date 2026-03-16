@@ -46,6 +46,6 @@ test('content progress helpers clear any pending hide timer before showing again
     );
     assert.match(
         utils,
-        /ST\.hideProgress = function \(\) \{\s*if \(ST\.ui\.progress\) \{\s*ST\.ui\.progress\.style\.width = '100%';\s*_hideProgressTimerId = setTimeout\(\(\) => \{\s*ST\.ui\.progress\.style\.display = 'none';\s*_hideProgressTimerId = null;\s*\}, 500\);\s*\}\s*\}/s,
+        /ST\.hideProgress = function \(\) \{\s*if \(ST\.ui\.progress\) \{\s*ST\.ui\.progress\.style\.width = '100%';[\s\S]*_hideProgressTimerId = setTimeout\(\(\) => \{\s*ST\.ui\.progress\.style\.display = 'none';[\s\S]*_hideProgressTimerId = null;\s*\}, 500\);\s*\}\s*\}/s,
     );
 });

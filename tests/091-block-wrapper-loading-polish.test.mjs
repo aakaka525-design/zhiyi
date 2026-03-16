@@ -23,7 +23,7 @@ test('091 content CSS lightens block wrapper spacing and translation chrome', as
     );
     assert.doesNotMatch(
         css,
-        /\.st-immersive-translation\s*\{[\s\S]*box-shadow:\s*0 2px 8px rgba/,
+        /\.st-immersive-translation\s*\{[^}]*box-shadow:\s*0 2px 8px rgba[^}]*\}/,
     );
 });
 

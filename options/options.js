@@ -34,6 +34,7 @@ const elements = {
     enableSelection: document.getElementById('enable-selection'),
     enableShortcut: document.getElementById('enable-shortcut'),
     showOriginal: document.getElementById('show-original'),
+    hoverShowOriginal: document.getElementById('hover-show-original'),
     showFloatingBall: document.getElementById('show-floating-ball'),
     enableAdBlock: document.getElementById('enable-ad-block'),
     enableDarkMode: document.getElementById('enable-dark-mode'),
@@ -97,6 +98,7 @@ async function loadSettings() {
     elements.enableSelection.checked = settings.enableSelection;
     elements.enableShortcut.checked = settings.enableShortcut;
     elements.showOriginal.checked = settings.showOriginal !== false;
+    elements.hoverShowOriginal.checked = settings.hoverShowOriginal !== false;
     elements.showFloatingBall.checked = settings.showFloatingBall !== false;
     elements.enableAdBlock.checked = settings.enableAdBlock !== false;
     elements.enableDarkMode.checked = settings.darkMode || false;
@@ -161,6 +163,10 @@ function bindEvents() {
 
     elements.showOriginal.addEventListener('change', (e) => {
         saveImmediateToggle({ showOriginal: e.target.checked });
+    });
+
+    elements.hoverShowOriginal.addEventListener('change', (e) => {
+        saveImmediateToggle({ hoverShowOriginal: e.target.checked });
     });
 
 
@@ -655,6 +661,7 @@ function collectCurrentSettings() {
         enableSelection: elements.enableSelection.checked,
         enableShortcut: elements.enableShortcut.checked,
         showOriginal: elements.showOriginal.checked,
+        hoverShowOriginal: elements.hoverShowOriginal.checked,
         showFloatingBall: elements.showFloatingBall.checked,
         enableAdBlock: elements.enableAdBlock.checked,
         provider: elements.provider.value,
@@ -690,12 +697,14 @@ function bindDirtyTracking() {
         elements.enableDarkMode,
         elements.enableDebugMode,
         elements.showOriginal,
+        elements.hoverShowOriginal,
     ]);
 
     const selectFields = [
         elements.targetLang,
         elements.enableSelection,
         elements.enableShortcut,
+        elements.hoverShowOriginal,
         elements.showFloatingBall,
         elements.enableAdBlock,
         elements.provider,

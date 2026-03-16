@@ -26,6 +26,12 @@ async function loadImmersiveHarness() {
                     this.children.push(child);
                     child.parentNode = this;
                 },
+                querySelector() {
+                    return null;
+                },
+                querySelectorAll() {
+                    return [];
+                },
             };
         },
         querySelectorAll() {
@@ -90,6 +96,7 @@ function createContainer(tagName, { parentDisplay = 'block', display = 'block' }
     const container = {
         __attached: true,
         __computedStyle: { display },
+        innerText: 'Original text',
         nextElementSibling: null,
         parentNode,
         children: [],
@@ -114,6 +121,9 @@ function createContainer(tagName, { parentDisplay = 'block', display = 'block' }
         querySelector(selector) {
             if (selector !== '.st-immersive-translation') return null;
             return this.children.find((child) => child.className === 'st-immersive-translation') || null;
+        },
+        querySelectorAll() {
+            return [];
         },
         matches(selector) {
             return selector.split(',').map((part) => part.trim()).includes(tagName);

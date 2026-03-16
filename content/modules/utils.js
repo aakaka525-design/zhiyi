@@ -158,19 +158,34 @@ ST.showProgress = function () {
     }
     ST.ui.progress.style.width = '0%';
     ST.ui.progress.style.display = 'block';
+    const progress = document.querySelector('.st-orb-progress');
+    const circle = document.querySelector('.st-orb-progress circle');
+    if (circle) {
+        circle.style.strokeDashoffset = '125.6';
+    }
+    if (progress) progress.style.opacity = '1';
 };
 
 ST.updateProgress = function (percent) {
     if (ST.ui.progress) {
         ST.ui.progress.style.width = `${percent}%`;
     }
+    const circle = document.querySelector('.st-orb-progress circle');
+    if (circle) {
+        const circumference = 125.6;
+        circle.style.strokeDashoffset = circumference * (1 - percent / 100);
+    }
 };
 
 ST.hideProgress = function () {
     if (ST.ui.progress) {
         ST.ui.progress.style.width = '100%';
+        const progress = document.querySelector('.st-orb-progress');
         _hideProgressTimerId = setTimeout(() => {
             ST.ui.progress.style.display = 'none';
+            if (progress) {
+                progress.style.opacity = '0';
+            }
             _hideProgressTimerId = null;
         }, 500);
     }

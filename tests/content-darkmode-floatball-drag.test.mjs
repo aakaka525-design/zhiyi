@@ -25,7 +25,7 @@ test('content script applies scoped dark theme overrides from settings and stora
 
     assert.match(
         css,
-        /:root\[data-st-theme="dark"\] #smart-translator-bubble,\s*[\r\n]+:root\[data-st-theme="dark"\] \.st-immersive-wrapper,\s*[\r\n]+:root\[data-st-theme="dark"\] #st-sidebar,\s*[\r\n]+:root\[data-st-theme="dark"\] #st-sidebar-toggle-btn,\s*[\r\n]+:root\[data-st-theme="dark"\] #st-float-window,\s*[\r\n]+:root\[data-st-theme="dark"\] #st-page-progress,\s*[\r\n]+:root\[data-st-theme="dark"\] #st-floating-ball-container,\s*[\r\n]+:root\[data-st-theme="dark"\] #smart-translator-icon,\s*[\r\n]+:root\[data-st-theme="dark"\] \.st-immersive-translation,\s*[\r\n]+:root\[data-st-theme="dark"\] \.st-translation-separator,\s*[\r\n]+:root\[data-st-theme="dark"\] #st-toast\s*\{/,
+        /:root\[data-st-theme="dark"\] #smart-translator-bubble,\s*[\r\n]+:root\[data-st-theme="dark"\] \.st-immersive-wrapper,\s*[\r\n]+:root\[data-st-theme="dark"\] #st-sidebar,\s*[\r\n]+:root\[data-st-theme="dark"\] #st-sidebar-toggle-btn,\s*[\r\n]+:root\[data-st-theme="dark"\] #st-float-window,\s*[\r\n]+:root\[data-st-theme="dark"\] #st-page-progress,\s*[\r\n]+:root\[data-st-theme="dark"\] #st-floating-ball-container,\s*[\r\n]+:root\[data-st-theme="dark"\] #smart-translator-icon,\s*[\r\n]+:root\[data-st-theme="dark"\] \.st-immersive-translation,\s*[\r\n]+:root\[data-st-theme="dark"\] \.st-translation-separator,\s*[\r\n]+:root\[data-st-theme="dark"\] #st-toast,\s*[\r\n]+:root\[data-st-theme="dark"\] #st-original-bubble\s*\{/,
     );
     assert.match(css, /--surface:\s*rgba\(30,\s*34,\s*43,\s*0\.95\);/);
     assert.match(css, /--text-primary:\s*#E8E8E8;/);
@@ -37,7 +37,7 @@ test('floating ball drag follows the original grab offset instead of snapping to
 
     assert.match(
         floatingBall,
-        /dragOffset = \{\s*x: e\.clientX - rect\.left,\s*y: e\.clientY - rect\.top\s*\};/,
+        /const rect = handle\.getBoundingClientRect\(\);[\s\S]*dragOffset = \{\s*x: e\.clientX - rect\.left,?\s*y: e\.clientY - rect\.top,?\s*\};/,
     );
     assert.match(
         floatingBall,

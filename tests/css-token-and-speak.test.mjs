@@ -11,7 +11,7 @@ test('content css extends token scope to the selection icon and uses tokens for 
 
     assert.match(
         css,
-        /#st-floating-ball-container,\s*#smart-translator-icon,\s*\.st-immersive-translation,\s*\.st-translation-separator,\s*#st-toast\s*\{/,
+        /#st-floating-ball-container,\s*#smart-translator-icon,\s*\.st-immersive-translation,\s*\.st-translation-separator,\s*#st-toast,\s*#st-original-bubble\s*\{/,
     );
 
     const expectedRules = [
@@ -33,8 +33,8 @@ test('content css extends token scope to the selection icon and uses tokens for 
         /\.st-float-title\s*\{[\s\S]*color:\s*var\(--accent\);/,
         /#st-floating-ball\s*\{[\s\S]*color:\s*var\(--accent\);/,
         /#st-floating-ball:hover,\s*#st-floating-ball\.active\s*\{[\s\S]*background:\s*var\(--accent\);/,
-        /\.st-orb-menu-item\s*\{[\s\S]*color:\s*var\(--accent\);/,
-        /\.st-orb-menu-item:hover\s*\{[\s\S]*background:\s*var\(--accent\);/,
+        /\.st-capsule-btn\s*\{[\s\S]*background:\s*rgba\(0,\s*0,\s*0,\s*0\.55\);[\s\S]*color:\s*rgba\(255,\s*255,\s*255,\s*0\.9\);/,
+        /\.st-capsule-btn:hover\s*\{[\s\S]*background:\s*rgba\(0,\s*0,\s*0,\s*0\.7\);/,
     ];
 
     for (const rule of expectedRules) {

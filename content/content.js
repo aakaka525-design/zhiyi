@@ -29,7 +29,7 @@ function mergeDefaults(raw) {
         showFloatingBall: false,
         enableAdBlock: false,
         showOriginal: true,
-        fontSize: 14,
+        hoverShowOriginal: true,
         debugMode: false,
     };
     const merged = { ...defaults, ...(raw || {}) };
@@ -96,7 +96,7 @@ async function loadSettings() {
  */
 function bindEvents() {
     // 监听选中文本
-    document.addEventListener('mouseup', ST.handleMouseUp);
+    document.addEventListener('mouseup', ST.handleMouseUp, true);
 
     // 监听点击（关闭气泡）
     document.addEventListener('mousedown', ST.handleMouseDown);

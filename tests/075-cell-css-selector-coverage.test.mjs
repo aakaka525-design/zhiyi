@@ -221,6 +221,7 @@ function createContainer(tagName, { parentDisplay = 'block', display = 'block' }
         __attached: true,
         __tagName: tagName.toLowerCase(),
         __computedStyle: { display },
+        innerText: 'Original text',
         nextElementSibling: null,
         parentNode,
         children: [],
@@ -245,6 +246,9 @@ function createContainer(tagName, { parentDisplay = 'block', display = 'block' }
         querySelector(selector) {
             if (selector !== '.st-immersive-translation') return null;
             return this.children.find((child) => child.className === 'st-immersive-translation') || null;
+        },
+        querySelectorAll() {
+            return [];
         },
         matches(selector) {
             return selector.split(',').map((part) => part.trim()).includes(tagName);

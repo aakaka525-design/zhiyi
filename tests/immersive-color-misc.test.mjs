@@ -12,7 +12,7 @@ test('immersive translation uses accent tokens in both token scope and render pa
 
     assert.match(
         css,
-        /#st-floating-ball-container,\s*#smart-translator-icon,\s*\.st-immersive-translation,\s*\.st-translation-separator,\s*#st-toast\s*\{/,
+        /#st-floating-ball-container,\s*#smart-translator-icon,\s*\.st-immersive-translation,\s*\.st-translation-separator,\s*#st-toast,\s*#st-original-bubble\s*\{/,
     );
     assert.match(
         css,
@@ -21,7 +21,7 @@ test('immersive translation uses accent tokens in both token scope and render pa
 
     assert.match(
         immersive,
-        /if \(isFlexItem \|\| isGridItem \|\| isInline\) \{\s*setNodePageColor\(container,\s*originalColor\);\s*container\.classList\.add\('st-translated-inline'\);\s*container\.appendChild\(transEl\);\s*\}/,
+        /if \(isFlexItem \|\| isGridItem \|\| isInline\) \{\s*setNodePageColor\(container,\s*originalColor\);\s*setOriginalTextAttr\(container,\s*originalText\);\s*container\.classList\.add\('st-translated-inline'\);\s*container\.appendChild\(transEl\);\s*\}/,
     );
     assert.doesNotMatch(immersive, /separator\.style\.cssText = 'color: var\(--accent\); opacity: 0\.6;';/);
     assert.doesNotMatch(immersive, /transEl\.style\.cssText = 'display: inline;/);

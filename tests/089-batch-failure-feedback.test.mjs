@@ -265,7 +265,7 @@ test('089 static wiring covers failed marker css, success removal, and close cle
     assert.match(immersive, /function markTranslateFailed\(el\)\s*\{\s*el\?\.classList\?\.add\?\.\('st-translate-failed'\);/);
     assert.match(immersive, /function clearTranslateFailed\(el\)\s*\{\s*el\?\.classList\?\.remove\?\.\('st-translate-failed'\);/);
     assert.ok((immersive.match(/markTranslateFailed\(/g) || []).length >= 5);
-    assert.match(immersive, /clearTranslateFailed\(p\);\s*const sourceText = p\.innerText\.trim\(\);\s*ST\.injectTranslation/);
+    assert.match(immersive, /const sourceText = p\.innerText\.trim\(\);\s*cacheTranslation\(targetLang, sourceText, translation\);\s*clearTranslateFailed\(p\);\s*ST\.injectTranslation/);
     assert.match(immersive, /document\.querySelectorAll\('\.st-translate-failed'\)\.forEach\(el => \{\s*clearTranslateFailed\(el\);/);
 });
 

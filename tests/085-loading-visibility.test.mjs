@@ -323,12 +323,12 @@ test('085 loading placeholders do not change element innerText and close cleanup
     assert.equal(paragraph.querySelector('.st-immersive-loading'), null);
 });
 
-test('085 source keeps batch-level loading injection while adding initial pre-injection', async () => {
+test('085 source keeps batch-level loading injection while pre-injecting only cache misses', async () => {
     const immersive = await readWorkspaceFile('content/modules/immersive.js');
 
     assert.match(
         immersive,
-        /ST\.showToast\(`找到 \$\{paragraphs\.length\} 个段落，开始翻译\.\.\.`\);\s*paragraphs\.forEach\(p => injectLoadingPlaceholder\(p\)\);/s,
+        /ST\.showToast\(`找到 \$\{paragraphs\.length\} 个段落，开始翻译\.\.\.`\);\s*const \{ cacheHits, cacheMisses \} = splitCachedTranslations\(paragraphs, targetLang\);\s*injectCachedTranslations\(cacheHits\);\s*cacheMisses\.forEach\(p => injectLoadingPlaceholder\(p\)\);/s,
     );
     assert.equal((immersive.match(/batch\.forEach\(\w+ => injectLoadingPlaceholder\(\w+\)\);/g) || []).length, 3);
 });

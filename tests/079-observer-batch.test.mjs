@@ -13,19 +13,21 @@ test('immersive module defines a shared IMMERSIVE_BATCH_SIZE constant and remove
     assert.doesNotMatch(immersive, /const batchSize = 10;/);
 });
 
-test('initial immersive scan reuses IMMERSIVE_BATCH_SIZE in the loop, slice, and batch gap checks', async () => {
+test('initial immersive scan reuses IMMERSIVE_BATCH_SIZE for the cache-miss batch loop, slice, and gap checks', async () => {
     const immersive = await readWorkspaceFile('content/modules/immersive.js');
 
-    assert.match(immersive, /for \(let i = 0; i < paragraphs\.length; i \+= IMMERSIVE_BATCH_SIZE\) \{/);
-    assert.match(immersive, /const batch = paragraphs\.slice\(i, i \+ IMMERSIVE_BATCH_SIZE\);/);
-    assert.match(immersive, /if \(i \+ IMMERSIVE_BATCH_SIZE < paragraphs\.length\) \{/);
+    assert.match(immersive, /const \{ cacheHits, cacheMisses \} = splitCachedTranslations\(paragraphs, targetLang\);/);
+    assert.match(immersive, /for \(let i = 0; i < cacheMisses\.length; i \+= IMMERSIVE_BATCH_SIZE\) \{/);
+    assert.match(immersive, /const batch = cacheMisses\.slice\(i, i \+ IMMERSIVE_BATCH_SIZE\);/);
+    assert.match(immersive, /if \(i \+ IMMERSIVE_BATCH_SIZE < cacheMisses\.length\) \{/);
 });
 
-test('observer translation path batches new elements instead of sending the full array at once', async () => {
+test('observer translation path batches cache misses instead of sending the full filtered array at once', async () => {
     const immersive = await readWorkspaceFile('content/modules/immersive.js');
 
-    assert.match(immersive, /for \(let i = 0; i < newElements\.length; i \+= IMMERSIVE_BATCH_SIZE\) \{/);
-    assert.match(immersive, /const batch = newElements\.slice\(i, i \+ IMMERSIVE_BATCH_SIZE\);/);
+    assert.match(immersive, /const \{ cacheHits, cacheMisses \} = splitCachedTranslations\(newElements, targetLang\);/);
+    assert.match(immersive, /for \(let i = 0; i < cacheMisses\.length; i \+= IMMERSIVE_BATCH_SIZE\) \{/);
+    assert.match(immersive, /const batch = cacheMisses\.slice\(i, i \+ IMMERSIVE_BATCH_SIZE\);/);
     assert.match(immersive, /const texts = batch\.map\(el => el\.innerText\.trim\(\)\);/);
     assert.doesNotMatch(immersive, /const texts = newElements\.map\(el => el\.innerText\.trim\(\)\);/);
 });
@@ -37,5 +39,5 @@ test('observer path manages pendingTranslations per batch and keeps the shared 1
     assert.match(immersive, /finally \{\s*batch\.forEach\(el => removeLoadingPlaceholder\(el\)\);\s*batch\.forEach\(el => ST\.pendingTranslations\.delete\(el\)\);\s*\}/s);
     assert.doesNotMatch(immersive, /newElements\.forEach\(el => ST\.pendingTranslations\.add\(el\)\);/);
     assert.doesNotMatch(immersive, /newElements\.forEach\(el => ST\.pendingTranslations\.delete\(el\)\);/);
-    assert.match(immersive, /if \(i \+ IMMERSIVE_BATCH_SIZE < newElements\.length\) \{\s*await new Promise\(resolve => setTimeout\(resolve, 100\)\);\s*\}/s);
+    assert.match(immersive, /if \(i \+ IMMERSIVE_BATCH_SIZE < cacheMisses\.length\) \{\s*await new Promise\(resolve => setTimeout\(resolve, 100\)\);\s*\}/s);
 });

@@ -74,7 +74,7 @@ test('content stylesheet defines loading dots animation and uses a surface token
     assert.match(css, /@keyframes st-bounce\s*\{/);
     assert.match(css, /\.st-sidebar-result-card\s*\{[\s\S]*background:\s*var\(--surface\);/);
     assert.match(css, /\.st-history-item:hover\s*\{[\s\S]*background:\s*var\(--surface\);/);
-    assert.match(css, /\.st-orb-menu-item\s*\{[\s\S]*background:\s*var\(--surface\);/);
+    assert.match(css, /\.st-capsule-btn\s*\{[\s\S]*background:\s*rgba\(0,\s*0,\s*0,\s*0\.55\);/);
 });
 
 test('sidebar inline colors use content tokens instead of hardcoded gray values', async () => {

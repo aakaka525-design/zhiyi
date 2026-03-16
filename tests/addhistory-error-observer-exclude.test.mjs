@@ -29,7 +29,7 @@ test('immersive observer reuses shared exclude selectors and plugin-element filt
 
     assert.match(
         immersive,
-        /const EXCLUDE_SELECTORS = \[\s*'nav', 'header', 'footer', 'aside',[\s\S]*'\.sidebar', '\.menu', '\.toolbar'\s*\];/,
+        /const EXCLUDE_SELECTORS = \[\s*'nav', 'header', 'footer', 'aside',[\s\S]*'\.sidebar', '\.menu', '\.toolbar',[\s\S]*'pre', 'code', 'kbd', 'samp', 'var',[\s\S]*'\[translate="no"\]', '\[role="code"\]',[\s\S]*'\.highlight'[\s\S]*\];/,
     );
     assert.match(
         immersive,
@@ -37,11 +37,11 @@ test('immersive observer reuses shared exclude selectors and plugin-element filt
     );
     assert.match(
         immersive,
-        /if \(p\.isContentEditable\) return false;\s*if \(isExcludedByImmersiveContext\(p\)\) return false;/,
+        /if \(p\.isContentEditable\) return false;\s*if \(isExcludedByImmersiveContext\(p\)\) return false;\s*if \(containsHardProtectedContent\(p\)\) return false;\s*if \(isGitHubMetadataContext\(p\)\) return false;\s*if \(isLinkedInMetadataContext\(p\)\) return false;/,
     );
     assert.match(
         immersive,
-        /if \(el\.isContentEditable\) return false;\s*if \(!isTwitter\) \{\s*if \(isExcludedByImmersiveContext\(el\)\) return false;\s*if \(ST\.isPluginElement\(el\)\) return false;\s*\}/,
+        /if \(el\.isContentEditable\) return false;\s*if \(!isTwitter\) \{\s*if \(isExcludedByImmersiveContext\(el\)\) return false;\s*if \(containsHardProtectedContent\(el\)\) return false;\s*if \(isGitHubMetadataContext\(el\)\) return false;\s*if \(isLinkedInMetadataContext\(el\)\) return false;\s*if \(ST\.isPluginElement\(el\)\) return false;\s*\}/,
     );
     assert.doesNotMatch(
         immersive,

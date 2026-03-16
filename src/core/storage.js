@@ -84,7 +84,7 @@ const DEFAULT_SETTINGS = {
 
     // 显示设置
     showOriginal: true,       // 沉浸式翻译显示原文
-    fontSize: 14,
+    hoverShowOriginal: true,  // 替换模式悬停显示原文气泡
 
     // 调试模式
     debugMode: false,         // 显示识别框和控制台日志

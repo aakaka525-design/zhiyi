@@ -23,6 +23,7 @@ export function buildSettingsSnapshot(settings) {
         darkMode: Boolean(settings.darkMode),
         debugMode: Boolean(settings.debugMode),
         showOriginal: settings.showOriginal !== false,
+        hoverShowOriginal: settings.hoverShowOriginal !== false,
         ttsProvider: settings.ttsProvider || 'system',
         ttsSpeed: Number(settings.ttsSpeed) || 1,
         ttsVoiceOpenai: settings.ttsVoiceOpenai || '',

@@ -13,7 +13,8 @@
 #smart-translator-icon,
 .st-immersive-translation,
 .st-translation-separator,
-#st-toast {
+#st-toast,
+#st-original-bubble {
     --accent: #7A9A8B;
     --accent-light: #9CBAB0;
     --accent-glow: rgba(122, 154, 139, 0.25);
@@ -39,7 +40,8 @@
 :root[data-st-theme="dark"] #smart-translator-icon,
 :root[data-st-theme="dark"] .st-immersive-translation,
 :root[data-st-theme="dark"] .st-translation-separator,
-:root[data-st-theme="dark"] #st-toast {
+:root[data-st-theme="dark"] #st-toast,
+:root[data-st-theme="dark"] #st-original-bubble {
     --accent: #8FB3A4;
     --accent-light: #A7C9BD;
     --accent-glow: rgba(143, 179, 164, 0.3);
@@ -70,6 +72,27 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     z-index: 2147483647;
     animation: st-toast-fade-in 0.3s ease;
+}
+
+#st-original-bubble {
+    position: fixed;
+    z-index: 2147483647;
+    background: var(--surface);
+    border: 1px solid rgba(122, 154, 139, 0.15);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    color: var(--text-primary);
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 10px 14px;
+    max-width: 400px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+#st-original-bubble.active {
+    opacity: 1;
 }
 
 /* 划词翻译气泡容器 */
@@ -259,6 +282,15 @@
     font-family: inherit;
 }
 
+.st-immersive-translation-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.st-immersive-translation-link:hover {
+    text-decoration: underline;
+}
+
 td > .st-immersive-translation,
 th > .st-immersive-translation,
 li > .st-immersive-translation,
@@ -290,14 +322,14 @@ span.st-immersive-translation {
    ======================================== */
 
 body.st-replace-mode .st-translated {
-    position: absolute !important;
-    overflow: hidden !important;
-    clip-path: inset(50%) !important;
-    width: 1px !important;
-    height: 1px !important;
-    margin: -1px !important;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
+    pointer-events: none;
+    transition: opacity 0.25s ease, max-height 0.3s ease;
 }
 
 body.st-replace-mode .st-translated-inline {
@@ -850,21 +882,26 @@ body.st-replace-mode .st-translated-inline > .st-immersive-translation {
     position: fixed;
     right: 0;
     top: 80%;
-    /* Default to bottom area to avoid center sidebar toggle */
     z-index: 2147483646;
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 0;
-    height: 0;
+    width: auto;
+    height: 40px;
     overflow: visible;
-    /* Ensure children are visible */
     pointer-events: none;
-    /* Let clicks pass through container area */
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#st-floating-ball-container.expand-left {
+    flex-direction: row-reverse;
+}
+
+#st-floating-ball-container.expand-right {
+    flex-direction: row;
 }
 
 #st-floating-ball {
-    position: absolute;
+    position: relative;
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -873,100 +910,106 @@ body.st-replace-mode .st-translated-inline > .st-immersive-translation {
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(122, 154, 139, 0.3);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    cursor: grab;
+    cursor: pointer;
     transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--accent);
     pointer-events: auto;
+    flex-shrink: 0;
 }
 
 #st-floating-ball:hover,
 #st-floating-ball.active {
-    width: 48px;
-    height: 48px;
     background: var(--accent);
-    /* 激活态变为实色 */
     color: white;
     box-shadow: 0 8px 24px rgba(122, 154, 139, 0.4);
-    opacity: 1;
-    transform: scale(1.1);
 }
 
-#st-floating-ball svg {
+#st-floating-ball .st-orb-icon {
     width: 20px;
     height: 20px;
     transition: all 0.3s;
 }
 
-/* 扇形菜单容器 */
-.st-orb-menu {
-    position: absolute;
-    width: 140px;
-    height: 140px;
-    pointer-events: none;
-    opacity: 0;
-    transition: all 0.3s ease;
-    transform: scale(0.8);
+.st-capsule {
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 4px;
+    max-width: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-width 0.3s ease, opacity 0.25s ease;
+    pointer-events: none;
 }
 
-#st-floating-ball-container.active .st-orb-menu {
+#st-floating-ball-container.capsule-open .st-capsule {
+    max-width: 300px;
     opacity: 1;
     pointer-events: auto;
-    transform: scale(1);
 }
 
-/* 菜单项 */
-.st-orb-menu-item {
-    position: absolute;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: var(--surface);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.st-capsule-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    flex-shrink: 0;
+}
+
+.st-capsule-btn:hover {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.st-capsule-btn svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.st-capsule-handle {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--accent);
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    border: 1px solid rgba(122, 154, 139, 0.1);
+    width: 16px;
+    height: 34px;
+    cursor: grab;
+    color: rgba(255, 255, 255, 0.5);
+    flex-shrink: 0;
 }
 
-.st-orb-menu-item:hover {
-    background: var(--accent);
-    color: white;
-    transform: scale(1.15);
-    box-shadow: 0 6px 16px rgba(122, 154, 139, 0.3);
+.st-capsule-handle:active {
+    cursor: grabbing;
 }
 
-.st-orb-menu-item svg {
-    width: 18px;
-    height: 18px;
+.st-capsule-handle svg {
+    display: block;
 }
 
-/* Tooltip for menu items */
-.st-orb-menu-item::after {
-    content: attr(data-tooltip);
+.st-orb-progress {
     position: absolute;
-    bottom: -24px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    white-space: nowrap;
+    width: 44px;
+    height: 44px;
+    top: -2px;
+    left: -2px;
     opacity: 0;
+    transition: opacity 0.3s ease;
     pointer-events: none;
-    transition: opacity 0.2s;
 }
 
-.st-orb-menu-item:hover::after {
-    opacity: 1;
+.st-orb-progress circle {
+    transition: stroke-dashoffset 0.3s ease;
 }

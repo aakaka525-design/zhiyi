@@ -9,7 +9,11 @@ const EXCLUDE_SELECTORS = [
     'button', 'a', 'input', 'select', 'label',
     '.Header', '.AppHeader', '.pagehead',
     '.btn', '.Button', '.Counter', '.Label',
-    '.sidebar', '.menu', '.toolbar'
+    '.sidebar', '.menu', '.toolbar',
+    'pre', 'code', 'kbd', 'samp', 'var',
+    '[translate="no"]', '[role="code"]',
+    '.highlight',
+    '.sr-only'
 ];
 
 function getImmersiveMinLength(el, isTwitter) {
@@ -36,6 +40,43 @@ function isExcludedByImmersiveContext(el) {
     return false;
 }
 
+const HARD_PROTECTED_SELECTORS = 'pre, [translate="no"], [role="code"], .highlight';
+const isGitHub = window.location.hostname === 'github.com';
+const isLinkedIn = window.location.hostname === 'linkedin.com' ||
+    window.location.hostname === 'www.linkedin.com' ||
+    window.location.hostname.endsWith('.linkedin.com');
+const GITHUB_METADATA_ANCESTORS = [
+    '.react-directory-row',
+    '.js-navigation-item',
+    '[data-testid="repos-file-tree"]',
+    '.file-info',
+    '.Breadcrumb',
+    '[aria-labelledby="folders-and-files"]',
+];
+const LINKEDIN_METADATA_ANCESTORS = [
+    '[data-job-id]',
+];
+
+function containsHardProtectedContent(el) {
+    return el.querySelector(HARD_PROTECTED_SELECTORS) !== null;
+}
+
+function isGitHubMetadataContext(el) {
+    if (!isGitHub) return false;
+    for (const sel of GITHUB_METADATA_ANCESTORS) {
+        if (el.closest(sel)) return true;
+    }
+    return false;
+}
+
+function isLinkedInMetadataContext(el) {
+    if (!isLinkedIn) return false;
+    for (const sel of LINKEDIN_METADATA_ANCESTORS) {
+        if (el.closest(sel)) return true;
+    }
+    return false;
+}
+
 function filterContainedImmersiveElements(elements) {
     const elementSet = new Set(elements);
     return elements.filter(el => {
@@ -54,6 +95,8 @@ const DISCORD_GENERIC_SELECTORS = 'p, h1, h2, h3, h4, h5, h6, td, th, blockquote
 const DISCORD_CHAT_GENERIC_SELECTORS = 'p, h4, h5, h6, td, th, blockquote, figcaption, dt, dd, caption';
 const INITIAL_SCAN_EXTRA_SELECTORS = '.markdown-body p, .markdown-body li, .comment-body p, .js-comment-body p';
 const translatedSources = new WeakMap();
+const translationCache = new Map();
+let originalBubble = null;
 
 function hashText(text) {
     let h = 5381;
@@ -61,6 +104,42 @@ function hashText(text) {
         h = ((h << 5) + h + text.charCodeAt(i)) | 0;
     }
     return h;
+}
+
+function cacheTranslation(targetLang, sourceText, translation) {
+    if (!translationCache.has(targetLang)) {
+        translationCache.set(targetLang, new Map());
+    }
+    translationCache.get(targetLang).set(sourceText, translation);
+}
+
+function getCachedTranslation(targetLang, sourceText) {
+    return translationCache.get(targetLang)?.get(sourceText) || null;
+}
+
+function splitCachedTranslations(elements, targetLang) {
+    const cacheHits = [];
+    const cacheMisses = [];
+
+    elements.forEach(el => {
+        const sourceText = el.innerText.trim();
+        const translation = getCachedTranslation(targetLang, sourceText);
+        if (translation) {
+            cacheHits.push({ el, sourceText, translation });
+        } else {
+            cacheMisses.push(el);
+        }
+    });
+
+    return { cacheHits, cacheMisses };
+}
+
+function injectCachedTranslations(cacheHits) {
+    cacheHits.forEach(({ el, sourceText, translation }) => {
+        clearTranslateFailed(el);
+        ST.injectTranslation(el, translation);
+        translatedSources.set(el, hashText(sourceText));
+    });
 }
 
 function hasOwnTranslationArtifacts(el) {
@@ -133,6 +212,46 @@ function clearNodePageColor(el) {
     }
 }
 
+function setOriginalTextAttr(el, text) {
+    if (!el) return;
+    if (typeof el.setAttribute === 'function') {
+        el.setAttribute('data-st-original-text', text);
+        return;
+    }
+    el.__stOriginalText = text;
+}
+
+function getOriginalTextAttr(el) {
+    if (!el) return '';
+    if (typeof el.getAttribute === 'function') {
+        return el.getAttribute('data-st-original-text') || '';
+    }
+    return el.__stOriginalText || '';
+}
+
+function removeOriginalTextAttr(el) {
+    if (!el) return;
+    if (typeof el.removeAttribute === 'function') {
+        el.removeAttribute('data-st-original-text');
+        return;
+    }
+    delete el.__stOriginalText;
+}
+
+function getOriginalTextSource(el) {
+    let current = el;
+    while (current) {
+        if (
+            current.classList?.contains?.('st-immersive-wrapper') ||
+            current.classList?.contains?.('st-translated-inline')
+        ) {
+            return getOriginalTextAttr(current) ? current : null;
+        }
+        current = current.parentNode;
+    }
+    return null;
+}
+
 function markTranslateFailed(el) {
     el?.classList?.add?.('st-translate-failed');
 }
@@ -141,12 +260,106 @@ function clearTranslateFailed(el) {
     el?.classList?.remove?.('st-translate-failed');
 }
 
+function ensureOriginalBubble() {
+    if (originalBubble) return originalBubble;
+    originalBubble = document.createElement('div');
+    originalBubble.id = 'st-original-bubble';
+    document.body.appendChild(originalBubble);
+    return originalBubble;
+}
+
+function positionOriginalBubble(rect, bubbleWidth, bubbleHeight, viewportW, viewportH) {
+    const padding = 8;
+    const safeW = Number.isFinite(bubbleWidth) && bubbleWidth > 0 ? bubbleWidth : 300;
+    const safeH = Number.isFinite(bubbleHeight) && bubbleHeight > 0 ? bubbleHeight : 60;
+
+    const maxLeft = Math.max(padding, viewportW - safeW - padding);
+    const left = Math.min(Math.max(padding, rect.left), maxLeft);
+
+    const preferTop = rect.top - safeH - padding;
+    const preferBottom = rect.bottom + padding;
+    const top = preferTop >= padding ? preferTop
+        : preferBottom + safeH <= viewportH - padding ? preferBottom
+        : padding;
+
+    return { top, left };
+}
+
+function showOriginalBubble(translationEl) {
+    const source = getOriginalTextSource(translationEl);
+    if (!source) return;
+    const text = getOriginalTextAttr(source);
+    if (!text) return;
+
+    const bubble = ensureOriginalBubble();
+    bubble.textContent = text;
+    bubble.classList.add('active');
+
+    const rect = translationEl.getBoundingClientRect();
+    const pos = positionOriginalBubble(
+        rect,
+        bubble.offsetWidth,
+        bubble.offsetHeight,
+        window.innerWidth,
+        window.innerHeight,
+    );
+    bubble.style.left = `${pos.left}px`;
+    bubble.style.top = `${pos.top}px`;
+}
+
+function hideOriginalBubble() {
+    if (originalBubble) {
+        originalBubble.classList.remove('active');
+    }
+}
+
+function wrapTranslationWithLink(container, translationEl) {
+    const links = container.querySelectorAll('a[href]');
+    if (links.length !== 1) return translationEl;
+
+    const link = links[0];
+    const linkText = link.textContent.trim();
+    const fullText = container.textContent.trim();
+    const nonLinkText = fullText.replace(linkText, '').replace(/[\s/\-·:,.|]+/g, '');
+    if (nonLinkText.length > 0) return translationEl;
+
+    const wrapper = document.createElement('a');
+    wrapper.href = link.href;
+    if (link.target) wrapper.target = link.target;
+    if (link.rel) wrapper.rel = link.rel;
+    if (link.download !== undefined && link.download !== '') wrapper.download = link.download;
+    wrapper.className = 'st-immersive-translation-link';
+    wrapper.appendChild(translationEl);
+    return wrapper;
+}
+
+function handleBubbleMouseOver(e) {
+    if (ST.state.settings?.showOriginal !== false) return;
+    if (ST.state.settings?.hoverShowOriginal === false) return;
+    const translation = e.target.closest('.st-immersive-translation');
+    if (translation) showOriginalBubble(translation);
+}
+
+function handleBubbleMouseOut(e) {
+    const translation = e.target.closest('.st-immersive-translation');
+    if (translation) hideOriginalBubble();
+}
+
 /**
  * 切换沉浸式翻译
  */
 ST.toggleImmersive = async function () {
     if (ST.state.isImmersiveEnabled) {
         // 关闭沉浸式翻译
+        if (originalBubble) {
+            originalBubble.remove();
+            originalBubble = null;
+        }
+        document.removeEventListener?.('mouseover', handleBubbleMouseOver);
+        document.removeEventListener?.('mouseout', handleBubbleMouseOut);
+        document.querySelectorAll('.st-immersive-wrapper, .st-translated-inline').forEach(el => {
+            removeOriginalTextAttr(el);
+        });
         document.querySelectorAll('.st-translated-inline, .st-immersive-wrapper').forEach(el => {
             clearNodePageColor(el);
         });
@@ -158,6 +371,7 @@ ST.toggleImmersive = async function () {
         document.querySelectorAll('.st-translated, .st-translated-inline').forEach(el => {
             el.classList.remove('st-translated', 'st-translated-inline');
         });
+        translationCache.clear();
         ST.state.isImmersiveEnabled = false;
         ST.stopMutationObserver();
         ST.showToast('已关闭沉浸式翻译');
@@ -172,6 +386,10 @@ ST.toggleImmersive = async function () {
     if (!showOriginal) {
         document.body.classList.add('st-replace-mode');
     }
+    document.removeEventListener?.('mouseover', handleBubbleMouseOver);
+    document.removeEventListener?.('mouseout', handleBubbleMouseOut);
+    document.addEventListener?.('mouseover', handleBubbleMouseOver);
+    document.addEventListener?.('mouseout', handleBubbleMouseOut);
     ST.showProgress();
 
     // 获取要翻译的段落
@@ -199,8 +417,9 @@ ST.toggleImmersive = async function () {
             const discordMessages = document.querySelectorAll('[id^="message-content-"]');
             if (discordMessages.length > 0) {
                 paragraphs = Array.from(discordMessages).filter(el => {
-                    if (el.querySelector('.st-immersive-translation')) return false;
                     if (el.isContentEditable) return false;
+                    if (containsHardProtectedContent(el)) return false;
+                    if (el.querySelector('.st-immersive-translation')) return false;
                     const text = el.innerText.trim();
                     if (text.length < getImmersiveMinLength(el, false)) return false;
                     if (ST.detectLanguage(text) === targetLang) return false;
@@ -213,8 +432,9 @@ ST.toggleImmersive = async function () {
             const telegramMessages = document.querySelectorAll('.translatable-message');
             if (telegramMessages.length > 0) {
                 paragraphs = Array.from(telegramMessages).filter(el => {
-                    if (el.querySelector('.st-immersive-translation')) return false;
                     if (el.isContentEditable) return false;
+                    if (containsHardProtectedContent(el)) return false;
+                    if (el.querySelector('.st-immersive-translation')) return false;
                     const text = el.innerText.trim();
                     if (text.length < 2) return false;
                     if (ST.detectLanguage(text) === targetLang) return false;
@@ -231,10 +451,13 @@ ST.toggleImmersive = async function () {
                 .filter(p => {
                     if (p.isContentEditable) return false;
 
-                    if (isExcludedByImmersiveContext(p)) return false;
+                        if (isExcludedByImmersiveContext(p)) return false;
+                        if (containsHardProtectedContent(p)) return false;
+                        if (isGitHubMetadataContext(p)) return false;
+                        if (isLinkedInMetadataContext(p)) return false;
 
-                    if (p.nextElementSibling?.classList.contains('st-immersive-wrapper')) return false;
-                    if (p.querySelector('.st-immersive-translation')) return false;
+                        if (p.nextElementSibling?.classList.contains('st-immersive-wrapper')) return false;
+                        if (p.querySelector('.st-immersive-translation')) return false;
                     if (ST.isPluginElement(p)) return false;
 
                     const text = p.innerText.trim();
@@ -261,16 +484,19 @@ ST.toggleImmersive = async function () {
     }
 
     ST.showToast(`找到 ${paragraphs.length} 个段落，开始翻译...`);
-    paragraphs.forEach(p => injectLoadingPlaceholder(p));
+    const { cacheHits, cacheMisses } = splitCachedTranslations(paragraphs, targetLang);
+    injectCachedTranslations(cacheHits);
+    cacheMisses.forEach(p => injectLoadingPlaceholder(p));
 
     // 分批翻译
-    let translatedCount = 0;
+    let translatedCount = cacheHits.length;
     let errorCount = 0;
+    ST.updateProgress((translatedCount / paragraphs.length) * 100);
 
-    for (let i = 0; i < paragraphs.length; i += IMMERSIVE_BATCH_SIZE) {
+    for (let i = 0; i < cacheMisses.length; i += IMMERSIVE_BATCH_SIZE) {
         if (!ST.state.isImmersiveEnabled || ST.state.immersiveRunId !== myRunId) break;
 
-        const batch = paragraphs.slice(i, i + IMMERSIVE_BATCH_SIZE);
+        const batch = cacheMisses.slice(i, i + IMMERSIVE_BATCH_SIZE);
         const texts = batch.map(p => p.innerText.trim());
         batch.forEach(p => injectLoadingPlaceholder(p));
 
@@ -287,8 +513,9 @@ ST.toggleImmersive = async function () {
                 batch.forEach((p, index) => {
                     const translation = response.results[index];
                     if (translation) {
-                        clearTranslateFailed(p);
                         const sourceText = p.innerText.trim();
+                        cacheTranslation(targetLang, sourceText, translation);
+                        clearTranslateFailed(p);
                         ST.injectTranslation(p, translation);
                         translatedSources.set(p, hashText(sourceText));
                     } else {
@@ -313,7 +540,7 @@ ST.toggleImmersive = async function () {
         translatedCount += batch.length;
         ST.updateProgress((translatedCount / paragraphs.length) * 100);
 
-        if (i + IMMERSIVE_BATCH_SIZE < paragraphs.length) {
+        if (i + IMMERSIVE_BATCH_SIZE < cacheMisses.length) {
             await new Promise(resolve => setTimeout(resolve, 100));
         }
     }
@@ -363,10 +590,13 @@ async function rescanUntranslatedElements(observerRunId, targetLang, isTwitter, 
             if (el.querySelector('.st-immersive-translation')) return false;
             if (ST.pendingTranslations.has(el)) return false;
             if (el.isContentEditable) return false;
-            if (!isTwitter && !isTelegram) {
-                if (isExcludedByImmersiveContext(el)) return false;
-                if (ST.isPluginElement(el)) return false;
-            }
+                if (!isTwitter) {
+                    if (isExcludedByImmersiveContext(el)) return false;
+                    if (containsHardProtectedContent(el)) return false;
+                    if (isGitHubMetadataContext(el)) return false;
+                    if (isLinkedInMetadataContext(el)) return false;
+                    if (ST.isPluginElement(el)) return false;
+                }
 
             const text = el.innerText.trim();
             if (!text) return false;
@@ -384,11 +614,14 @@ async function rescanUntranslatedElements(observerRunId, targetLang, isTwitter, 
 
     const filtered = filterContainedImmersiveElements(candidates);
     if (filtered.length === 0) return;
+    const { cacheHits, cacheMisses } = splitCachedTranslations(filtered, targetLang);
+    injectCachedTranslations(cacheHits);
+    if (cacheMisses.length === 0) return;
 
-    for (let i = 0; i < filtered.length; i += IMMERSIVE_BATCH_SIZE) {
+    for (let i = 0; i < cacheMisses.length; i += IMMERSIVE_BATCH_SIZE) {
         if (!ST.state.isImmersiveEnabled || ST.state.immersiveRunId !== observerRunId) break;
 
-        const batch = filtered.slice(i, i + IMMERSIVE_BATCH_SIZE);
+        const batch = cacheMisses.slice(i, i + IMMERSIVE_BATCH_SIZE);
         batch.forEach(el => ST.pendingTranslations.add(el));
         const texts = batch.map(el => el.innerText.trim());
         batch.forEach(el => injectLoadingPlaceholder(el));
@@ -406,8 +639,9 @@ async function rescanUntranslatedElements(observerRunId, targetLang, isTwitter, 
                 batch.forEach((el, index) => {
                     const translation = response.results[index];
                     if (translation) {
-                        clearTranslateFailed(el);
                         const sourceText = el.innerText.trim();
+                        cacheTranslation(targetLang, sourceText, translation);
+                        clearTranslateFailed(el);
                         ST.injectTranslation(el, translation);
                         translatedSources.set(el, hashText(sourceText));
                     } else {
@@ -425,7 +659,7 @@ async function rescanUntranslatedElements(observerRunId, targetLang, isTwitter, 
             batch.forEach(el => ST.pendingTranslations.delete(el));
         }
 
-        if (i + IMMERSIVE_BATCH_SIZE < filtered.length) {
+        if (i + IMMERSIVE_BATCH_SIZE < cacheMisses.length) {
             await new Promise(resolve => setTimeout(resolve, 100));
         }
     }
@@ -444,6 +678,7 @@ ST.injectTranslation = function (container, translation) {
     const parentDisplay = parentStyle?.display || 'block';
     const containerStyle = window.getComputedStyle(container);
     const originalColor = containerStyle.color;
+    const originalText = container.innerText.trim();
     const isInline = containerStyle.display.includes('inline');
     const isFlexItem = parentDisplay === 'flex' || parentDisplay === 'inline-flex';
     const isGridItem = parentDisplay === 'grid' || parentDisplay === 'inline-grid';
@@ -454,6 +689,7 @@ ST.injectTranslation = function (container, translation) {
 
     if (isFlexItem || isGridItem || isInline) {
         setNodePageColor(container, originalColor);
+        setOriginalTextAttr(container, originalText);
         container.classList.add('st-translated-inline');
         container.appendChild(transEl);
     } else if (container.matches('td, th, li, figcaption, dt, dd, caption')) {
@@ -461,12 +697,14 @@ ST.injectTranslation = function (container, translation) {
         blockTransEl.className = 'st-immersive-translation';
         blockTransEl.innerText = translation;
         setNodePageColor(container, originalColor);
+        setOriginalTextAttr(container, originalText);
         container.classList.add('st-translated-inline');
         container.appendChild(blockTransEl);
     } else {
         const wrapper = document.createElement('div');
         wrapper.className = 'st-immersive-wrapper';
         setNodePageColor(wrapper, originalColor);
+        setOriginalTextAttr(wrapper, originalText);
 
         const blockTransEl = document.createElement('div');
         blockTransEl.className = 'st-immersive-translation';
@@ -478,7 +716,7 @@ ST.injectTranslation = function (container, translation) {
             blockTransEl.style.fontWeight = headingStyle.fontWeight;
         }
 
-        wrapper.appendChild(blockTransEl);
+        wrapper.appendChild(wrapTranslationWithLink(container, blockTransEl));
 
         if (container.parentNode) {
             container.classList.add('st-translated');
@@ -564,10 +802,13 @@ ST.startMutationObserver = function () {
             const minLen = (isTelegram && el.matches('.translatable-message')) ? 2 : getImmersiveMinLength(el, isTwitter);
             if (text.length < minLen) return false;
             if (el.isContentEditable) return false;
-            if (!isTwitter) {
-                if (isExcludedByImmersiveContext(el)) return false;
-                if (ST.isPluginElement(el)) return false;
-            }
+                if (!isTwitter) {
+                    if (isExcludedByImmersiveContext(el)) return false;
+                    if (containsHardProtectedContent(el)) return false;
+                    if (isGitHubMetadataContext(el)) return false;
+                    if (isLinkedInMetadataContext(el)) return false;
+                    if (ST.isPluginElement(el)) return false;
+                }
                 if (el.nextElementSibling?.classList.contains('st-immersive-wrapper')) return false;
                 if (el.querySelector('.st-immersive-translation')) return false;
                 if (ST.pendingTranslations.has(el)) return false;
@@ -578,11 +819,14 @@ ST.startMutationObserver = function () {
         newElements = filterContainedImmersiveElements(newElements);
 
         if (newElements.length === 0) return;
+        const { cacheHits, cacheMisses } = splitCachedTranslations(newElements, targetLang);
+        injectCachedTranslations(cacheHits);
+        if (cacheMisses.length === 0) return;
 
-        for (let i = 0; i < newElements.length; i += IMMERSIVE_BATCH_SIZE) {
+        for (let i = 0; i < cacheMisses.length; i += IMMERSIVE_BATCH_SIZE) {
             if (!ST.state.isImmersiveEnabled || ST.state.immersiveRunId !== observerRunId) break;
 
-            const batch = newElements.slice(i, i + IMMERSIVE_BATCH_SIZE);
+            const batch = cacheMisses.slice(i, i + IMMERSIVE_BATCH_SIZE);
             batch.forEach(el => ST.pendingTranslations.add(el));
             const texts = batch.map(el => el.innerText.trim());
             batch.forEach(el => injectLoadingPlaceholder(el));
@@ -600,8 +844,9 @@ ST.startMutationObserver = function () {
                     batch.forEach((el, index) => {
                         const translation = response.results[index];
                         if (translation) {
-                            clearTranslateFailed(el);
                             const sourceText = el.innerText.trim();
+                            cacheTranslation(targetLang, sourceText, translation);
+                            clearTranslateFailed(el);
                             ST.injectTranslation(el, translation);
                             translatedSources.set(el, hashText(sourceText));
                         } else {
@@ -619,7 +864,7 @@ ST.startMutationObserver = function () {
                 batch.forEach(el => ST.pendingTranslations.delete(el));
             }
 
-            if (i + IMMERSIVE_BATCH_SIZE < newElements.length) {
+            if (i + IMMERSIVE_BATCH_SIZE < cacheMisses.length) {
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
         }

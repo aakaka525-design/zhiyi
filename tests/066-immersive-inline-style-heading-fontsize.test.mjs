@@ -11,7 +11,7 @@ test('immersive inline translation path appends directly without separator or in
 
     assert.match(
         immersive,
-        /if \(isFlexItem \|\| isGridItem \|\| isInline\) \{\s*setNodePageColor\(container,\s*originalColor\);\s*container\.classList\.add\('st-translated-inline'\);\s*container\.appendChild\(transEl\);\s*\}/,
+        /if \(isFlexItem \|\| isGridItem \|\| isInline\) \{\s*setNodePageColor\(container,\s*originalColor\);\s*setOriginalTextAttr\(container,\s*originalText\);\s*container\.classList\.add\('st-translated-inline'\);\s*container\.appendChild\(transEl\);\s*\}/,
     );
     assert.doesNotMatch(immersive, /transEl\.style\.cssText = 'display: inline;/);
     assert.doesNotMatch(immersive, /container\.appendChild\(separator\);/);

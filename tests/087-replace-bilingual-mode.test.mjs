@@ -277,8 +277,10 @@ test('087 static wiring covers replace-mode CSS, immersive tags, and options sho
     const optionsHtml = await readWorkspaceFile('options/options.html');
     const optionsJs = await readWorkspaceFile('options/options.js');
 
-    assert.match(contentCss, /body\.st-replace-mode \.st-translated\s*\{[^}]*clip-path:\s*inset\(50%\)\s*!important;[^}]*\}/);
+    assert.match(contentCss, /body\.st-replace-mode \.st-translated\s*\{[\s\S]*opacity:\s*0;[\s\S]*max-height:\s*0;[\s\S]*pointer-events:\s*none;/);
+    assert.doesNotMatch(contentCss, /body\.st-replace-mode \.st-translated:has\(\+ \.st-immersive-wrapper:hover\),[\s\S]*body\.st-replace-mode \.st-translated:hover\s*\{/);
     assert.doesNotMatch(contentCss, /body\.st-replace-mode \.st-translated\s*\{[^}]*display:\s*none/);
+    assert.doesNotMatch(contentCss, /body\.st-replace-mode \.st-translated\s*\{[^}]*clip-path:/);
     assert.match(contentCss, /body\.st-replace-mode \.st-translated-inline\s*\{[\s\S]*font-size:\s*0\s*!important;/);
     assert.match(contentCss, /\.st-translated-inline > \*:not\(\.st-immersive-translation\):not\(\.st-immersive-loading\)\s*\{[^}]*clip-path:\s*inset\(50%\)\s*!important;[^}]*\}/);
     assert.doesNotMatch(contentCss, /\.st-translated-inline > \*:not\(\.st-immersive-translation\):not\(\.st-immersive-loading\)\s*\{[^}]*display:\s*none/);

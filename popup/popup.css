@@ -12,18 +12,16 @@
     gap: 18px;
     position: relative;
     overflow: hidden;
+    --popup-lang-radius: 10px;
+    --popup-translate-bg: rgba(122, 154, 139, 0.12);
+    --popup-translate-bg-hover: rgba(122, 154, 139, 0.2);
+    --popup-translate-border: rgba(122, 154, 139, 0.2);
 }
 
-/* 装饰性背景球 - 增加柔和感 */
-.popup-container::before {
-    content: '';
-    position: absolute;
-    top: -50px;
-    right: -50px;
-    width: 150px;
-    height: 150px;
-    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-    z-index: 0;
+body.dark-mode .popup-container {
+    --popup-translate-bg: rgba(143, 179, 164, 0.15);
+    --popup-translate-bg-hover: rgba(143, 179, 164, 0.25);
+    --popup-translate-border: rgba(143, 179, 164, 0.25);
 }
 
 /* ===== 头部 ===== */
@@ -65,7 +63,7 @@
     gap: 12px;
     background: var(--bg-secondary);
     padding: 6px;
-    border-radius: var(--radius-xl);
+    border-radius: var(--popup-lang-radius);
     border: 1px solid var(--border-color);
 }
 
@@ -158,9 +156,9 @@
 .translate-btn {
     width: 100%;
     padding: 14px;
-    background: var(--accent);
-    color: white;
-    border: none;
+    background: var(--popup-translate-bg);
+    color: var(--accent);
+    border: 1px solid var(--popup-translate-border);
     border-radius: var(--radius-lg);
     font-size: 15px;
     font-weight: 600;
@@ -169,14 +167,14 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    box-shadow: 0 4px 12px var(--accent-glow);
+    box-shadow: none;
     transition: var(--transition);
 }
 
 .translate-btn:hover {
-    background: var(--accent-light);
+    background: var(--popup-translate-bg-hover);
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px var(--accent-glow);
+    box-shadow: none;
 }
 
 .translate-btn:active {
